@@ -29,6 +29,22 @@ resource "azurerm_resource_group" "this" {
   location = "West Europe"
 }
 
+module "vnet" {
+  source  = "Azure/subnets/azurerm"
+  version = "1.0.0"
+
+  resource_group_name = azurerm_resource_group.this.name
+  subnets             = {
+    subnet0 = {
+      address_prefixes  = ["10.52.0.0/16"]
+      service_endpoints = ["Microsoft.CognitiveServices"]
+    }
+  }
+  virtual_network_address_space = ["10.52.0.0/16"]
+  virtual_network_location      = azurerm_resource_group.this.location
+  virtual_network_name          = "vnet"
+}
+
 resource "random_pet" "pet" {}
 
 # This is the module call
@@ -46,15 +62,29 @@ module "test" {
 
   cognitive_deployments = {
     "gpt-35-turbo" = {
-      name = "gpt-35-turbo"
+      name  = "gpt-35-turbo"
       model = {
-        format = "OpenAI"
-        name = "gpt-35-turbo"
+        format  = "OpenAI"
+        name    = "gpt-35-turbo"
         version = "0301"
       }
       scale = {
         type = "Standard"
       }
     }
+  }
+
+  private_endpoint = {
+    pe_endpoint = {
+      name                            = "pe_endpoint"
+      private_dns_entry_enabled       = true
+      dns_zone_virtual_network_link   = "dns_zone_link"
+      is_manual_connection            = false
+      private_service_connection_name = "pe_endpoint_connection"
+      subnet_id                       = module.vnet.vnet_subnets_name_id["subnet0"]
+    }
+  }
+  green_field_private_dns_zone = {
+    resource_group_name = azurerm_resource_group.this.name
   }
 }
