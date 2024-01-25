@@ -1,7 +1,7 @@
 resource "random_string" "default_custom_subdomain_name_suffix" {
   length  = 5
-  upper   = false
   special = false
+  upper   = false
 }
 
 resource "azurerm_cognitive_account" "this" {

@@ -9,7 +9,7 @@ resource "azurerm_private_endpoint" "this" {
   location            = azurerm_cognitive_account.this.location
   name                = each.value.name
   resource_group_name = coalesce(each.value.resource_group_name, azurerm_cognitive_account.this.resource_group_name)
-  subnet_id           = each.value.subnet_id
+  subnet_id           = var.private_endpoint_subnets[each.value.vnet_key].subnets[each.value.subnet_key].id
   tags                = each.value.tags
 
   private_service_connection {
@@ -46,16 +46,18 @@ resource "azurerm_private_dns_zone" "dns_zone" {
   }
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_zone_link" {
-  for_each = var.private_endpoint
+locals {
+  private_dns_zone_resource_group_name = try(azurerm_private_dns_zone.dns_zone[0].resource_group_name, var.brown_field_private_dns_zone.resource_group_name)
+  private_endpoint_vnet_keys           = toset([for pe in var.private_endpoint : pe.vnet_key])
+}
 
-  name                  = each.value.dns_zone_virtual_network_link_name
+resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_zone_link" {
+  for_each = var.green_field_private_dns_zone == null ? [] : local.private_endpoint_vnet_keys
+
+  name                  = coalesce(var.private_endpoint_subnets[each.value].vnet_dns_zone_link_name, "${local.private_dns_zone_name}-${each.value}")
   private_dns_zone_name = local.private_dns_zone_name
-  resource_group_name   = coalesce(each.value.resource_group_name, local.private_dns_zone_resource_group_name)
-  #           0  1              2                                   3              4          5          6               7                 8    9
-  # subnet id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mygroup1/providers/Microsoft.Network/virtualNetworks/myvnet1/subnets/mysubnet1
-  # `slice` function's `startindex` is inclusive, while `endindex` is exclusive
-  virtual_network_id    = join("/", slice(split("/", each.value.subnet_id), 0, 9))
+  resource_group_name   = local.private_dns_zone_resource_group_name
+  virtual_network_id    = var.private_endpoint_subnets[each.value].vnet_id
   registration_enabled  = false
-  tags                  = each.value.dns_zone_virtual_network_link_tags
+  tags                  = var.private_endpoint_subnets[each.value].vnet_dns_zone_link_tags
 }

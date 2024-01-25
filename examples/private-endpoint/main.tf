@@ -44,7 +44,11 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
     subnet0 = {
-      address_prefixes  = ["10.52.0.0/16"]
+      address_prefixes  = ["10.52.0.0/24"]
+      service_endpoints = ["Microsoft.CognitiveServices"]
+    }
+    subnet1 = {
+      address_prefixes = ["10.52.1.0/24"]
       service_endpoints = ["Microsoft.CognitiveServices"]
     }
   }
@@ -82,6 +86,17 @@ module "test" {
     }
   }
 
+  private_endpoint_subnets = {
+    vnet = {
+      vnet_id = module.vnet.vnet_id
+      subnets = {
+        subnet0 = {
+          id = module.vnet.vnet_subnets_name_id["subnet0"]
+        }
+      }
+    }
+  }
+
   private_endpoint = {
     pe_endpoint = {
       name                            = "pe_endpoint"
@@ -89,7 +104,17 @@ module "test" {
       dns_zone_virtual_network_link   = "dns_zone_link"
       is_manual_connection            = false
       private_service_connection_name = "pe_endpoint_connection"
-      subnet_id                       = module.vnet.vnet_subnets_name_id["subnet0"]
+      vnet_key = "vnet"
+      subnet_key = "subnet0"
+    }
+    pe_endpoint2 = {
+      name                            = "pe_endpoint2"
+      private_dns_entry_enabled       = true
+      dns_zone_virtual_network_link   = "dns_zone_link2"
+      is_manual_connection            = false
+      private_service_connection_name = "pe_endpoint_connection2"
+      vnet_key = "vnet"
+      subnet_key = "subnet0"
     }
   }
   green_field_private_dns_zone = {

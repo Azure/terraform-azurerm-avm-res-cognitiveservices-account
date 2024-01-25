@@ -35,7 +35,7 @@ variable "brown_field_private_dns_zone" {
   })
   default     = null
   description = <<-DESCRIPTION
-  A map of object that represents the existing Private DNS Zone you'd like to use. Leave this variable as default while using private endpoint would create a new Private DNS Zone.
+  An object that represents the existing Private DNS Zone you'd like to use. Leave this variable as default while using private endpoint would create a new Private DNS Zone.
   type = object({
     name                = "(Required) The name of the Private DNS Zone."
     resource_group_name = "(Optional) The Name of the Resource Group where the Private DNS Zone exists. If the Name of the Resource Group is not provided, the first Private DNS Zone from the list of Private DNS Zones in your subscription that matches `name` will be returned."
@@ -281,6 +281,7 @@ variable "green_field_private_dns_zone" {
   })
   default     = null
   description = <<-DESCRIPTION
+ An object that represents the Private DNS Zone you'd like to create in this module.
  - `resource_group_name` - (Required) Specifies the resource group where the resource exists. Changing this forces a new resource to be created.
  - `tags` - (Optional) A mapping of tags to assign to the resource.
  ---
@@ -292,26 +293,30 @@ variable "green_field_private_dns_zone" {
 DESCRIPTION
 }
 
+variable "pe_subresource_names" {
+  type        = list(string)
+  default     = ["account"]
+  description = "A list of subresource names which the Private Endpoint is able to connect to. `subresource_names` corresponds to `group_id`. Possible values are detailed in the product [documentation](https://docs.microsoft.com/azure/private-link/private-endpoint-overview#private-link-resource) in the `Subresources` column. Changing this forces a new resource to be created."
+}
+
 variable "private_endpoint" {
   type = map(object({
-    name                               = string
-    subnet_id                          = string
-    resource_group_name                = optional(string)
-    dns_zone_virtual_network_link_name = optional(string, "dns_zone_link")
-    dns_zone_virtual_network_link_tags = optional(map(string), {})
-    private_dns_entry_enabled          = optional(bool, false)
-    private_service_connection_name    = optional(string, "privateserviceconnection")
-    is_manual_connection               = optional(bool, false)
-    tags                               = optional(map(string), {})
+    name                            = string
+    vnet_key                        = string
+    subnet_key                      = string
+    resource_group_name             = optional(string)
+    private_dns_entry_enabled       = optional(bool, false)
+    private_service_connection_name = optional(string, "privateserviceconnection")
+    is_manual_connection            = optional(bool, false)
+    tags                            = optional(map(string), {})
   }))
   default     = {}
   description = <<-DESCRIPTION
   A map of objects that represent the configuration for a private endpoint."
   type = map(object({
     name                               = (Required) Specifies the Name of the Private Endpoint. Changing this forces a new resource to be created.
-    vnet_rg_name                       = (Required) Specifies the name of the Resource Group where the Private Endpoint's Virtual Network Subnet exists. Changing this forces a new resource to be created.
-    vnet_name                          = (Required) Specifies the name of the Virtual Network where the Private Endpoint's Subnet exists. Changing this forces a new resource to be created.
-    subnet_id                          = (Required) The ID of the Subnet from which Private IP Addresses will be allocated for this Private Endpoint. Changing this forces a new resource to be created.
+    vnet_key                           = (Required) Map key of the virtual network in `var.private_endpoint_subnets` where the Private Endpoint's exists. Changing this forces a new resource to be created.
+    subnet_key                         = (Required) Map key of the `subnets` in `var.private_endpoint_subnets` where the subnet that this Private IP Addresses will be created in. Changing this forces a new resource to be created.
     resource_group_name                = (Optional) Specifies the Name of the Resource Group within which the Private Endpoint should exist. Omit this field would use cognitive account's resource group name. Changing this forces a new resource to be created.
     dns_zone_virtual_network_link_name = (Optional) The name of the Private DNS Zone Virtual Network Link. Changing this forces a new resource to be created. Default to `dns_zone_link`.
     private_dns_entry_enabled          = (Optional) Whether or not to create a `private_dns_zone_group` block for the Private Endpoint. Default to `false`.
@@ -323,8 +328,31 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "pe_subresource_names" {
-  type        = list(string)
-  default     = ["account"]
-  description = "A list of subresource names which the Private Endpoint is able to connect to. `subresource_names` corresponds to `group_id`. Possible values are detailed in the product [documentation](https://docs.microsoft.com/azure/private-link/private-endpoint-overview#private-link-resource) in the `Subresources` column. Changing this forces a new resource to be created."
+variable "private_endpoint_subnets" {
+  type = map(object({
+    vnet_id                 = string
+    vnet_dns_zone_link_name = optional(string)
+    vnet_dns_zone_link_tags = optional(map(string), {})
+    subnets = map(object({
+      id = string
+    }))
+  }))
+  default     = {}
+  description = <<-DESCRIPTION
+  Please be advised! We won't try to create `azurerm_private_dns_zone_virtual_network_link` if `var.green_field_private_dns_zone`. If you're using brown field private dns zone, you need link the private dns zone with the virtual network yourself.
+  A map of objects that represent the virtual networks and subnets for private endpoints.
+  Map's key must be a static literal value.
+  type = map(object({
+    vnet_id = The Virtual Network's ID which private endpoint is created in. Changing this forces a new resource to be created.
+    vnet_dns_zone_link_name = The name of the Private DNS Zone Virtual Network Link. Defaults to "<Private Dns Zone Name>-<VNet Key>". Changing this forces a new resource to be created.
+    vnet_dns_zone_link_tags = (Optional) A mapping of tags to assign to the `azurerm_private_dns_zone_virtual_network_link` resource. Changing this forces a new resource to be created.
+    subnets = map(object({
+      id = The Subnet's ID which private endpoint is created in. Changing this forces a new resource to be created.
+    }))
+  }))
+DESCRIPTION
+  validation {
+    condition = alltrue([for k, v in var.private_endpoint_subnets : alltrue([for sk, subnet in v.subnets : startswith(subnet.id, v.vnet_id)])])
+    error_message = "`id` in `subnets` must belongs to the virtual network that `vnet_id` represents."
+  }
 }
