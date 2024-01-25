@@ -5,9 +5,17 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.7.0, < 4.0.0"
     }
+    local = {
+      source  = "hashicorp/local"
+      version = "2.4.1"
+    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "4.0.5"
     }
   }
 }
@@ -25,8 +33,8 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
   location = "West Europe"
+  name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
 module "vnet" {
@@ -34,7 +42,7 @@ module "vnet" {
   version = "1.0.0"
 
   resource_group_name = azurerm_resource_group.this.name
-  subnets             = {
+  subnets = {
     subnet0 = {
       address_prefixes  = ["10.52.0.0/16"]
       service_endpoints = ["Microsoft.CognitiveServices"]
@@ -62,7 +70,7 @@ module "test" {
 
   cognitive_deployments = {
     "gpt-35-turbo" = {
-      name  = "gpt-35-turbo"
+      name = "gpt-35-turbo"
       model = {
         format  = "OpenAI"
         name    = "gpt-35-turbo"
