@@ -47,7 +47,7 @@ resource "azurerm_private_dns_zone" "dns_zone" {
 }
 
 locals {
-  private_dns_zone_resource_group_name = try(azurerm_private_dns_zone.dns_zone[0].resource_group_name, var.brown_field_private_dns_zone.resource_group_name)
+  private_dns_zone_resource_group_name = try(azurerm_private_dns_zone.dns_zone[0].resource_group_name, var.brown_field_private_dns_zone.resource_group_name, null)
   private_endpoint_vnet_keys           = toset([for pe in var.private_endpoint : pe.vnet_key])
 }
 
