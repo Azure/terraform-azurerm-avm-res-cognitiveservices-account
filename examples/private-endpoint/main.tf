@@ -48,7 +48,7 @@ module "vnet" {
       service_endpoints = ["Microsoft.CognitiveServices"]
     }
     subnet1 = {
-      address_prefixes = ["10.52.1.0/24"]
+      address_prefixes  = ["10.52.1.0/24"]
       service_endpoints = ["Microsoft.CognitiveServices"]
     }
   }
@@ -104,8 +104,8 @@ module "test" {
       dns_zone_virtual_network_link   = "dns_zone_link"
       is_manual_connection            = false
       private_service_connection_name = "pe_endpoint_connection"
-      vnet_key = "vnet"
-      subnet_key = "subnet0"
+      vnet_key                        = "vnet"
+      subnet_key                      = "subnet0"
     }
     pe_endpoint2 = {
       name                            = "pe_endpoint2"
@@ -113,8 +113,8 @@ module "test" {
       dns_zone_virtual_network_link   = "dns_zone_link2"
       is_manual_connection            = false
       private_service_connection_name = "pe_endpoint_connection2"
-      vnet_key = "vnet"
-      subnet_key = "subnet0"
+      vnet_key                        = "vnet"
+      subnet_key                      = "subnet0"
     }
   }
   green_field_private_dns_zone = {

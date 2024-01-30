@@ -48,8 +48,8 @@ module "test" {
     "gpt-35-turbo" = {
       name = "gpt-35-turbo"
       model = {
-        format = "OpenAI"
-        name = "gpt-35-turbo"
+        format  = "OpenAI"
+        name    = "gpt-35-turbo"
         version = "0301"
       }
       scale = {
