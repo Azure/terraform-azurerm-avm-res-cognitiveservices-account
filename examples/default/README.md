@@ -31,7 +31,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "West Europe"
+  location = "East US"
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
@@ -51,12 +51,12 @@ module "test" {
   cognitive_account_sku_name            = "S0"
 
   cognitive_deployments = {
-    "gpt-35-turbo" = {
-      name = "gpt-35-turbo"
+    "gpt-4-32k" = {
+      name = "gpt-4-32k"
       model = {
         format  = "OpenAI"
-        name    = "gpt-35-turbo"
-        version = "0301"
+        name    = "gpt-4-32k"
+        version = "0613"
       }
       scale = {
         type = "Standard"

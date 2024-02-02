@@ -71,12 +71,12 @@ module "test" {
   cognitive_account_sku_name            = "S0"
 
   cognitive_deployments = {
-    "gpt-35-turbo" = {
-      name = "gpt-35-turbo"
+    "gpt-4-32k" = {
+      name = "gpt-4-32k"
       model = {
         format  = "OpenAI"
-        name    = "gpt-35-turbo"
-        version = "0301"
+        name    = "gpt-4-32k"
+        version = "0613"
       }
       scale = {
         type = "Standard"
