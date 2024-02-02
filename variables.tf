@@ -351,6 +351,7 @@ variable "private_endpoint_subnets" {
     }))
   }))
 DESCRIPTION
+
   validation {
     condition     = alltrue([for k, v in var.private_endpoint_subnets : alltrue([for sk, subnet in v.subnets : startswith(subnet.id, v.vnet_id)])])
     error_message = "`id` in `subnets` must belongs to the virtual network that `vnet_id` represents."
