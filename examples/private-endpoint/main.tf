@@ -25,7 +25,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "West Europe"
+  location = "East US"
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
