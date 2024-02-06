@@ -1,35 +1,64 @@
 locals {
-  private_dns_zone_id   = length(var.private_endpoint) > 0 ? try(azurerm_private_dns_zone.dns_zone[0].id, data.azurerm_private_dns_zone.dns_zone[0].id) : null
-  private_dns_zone_name = length(var.private_endpoint) > 0 ? try(azurerm_private_dns_zone.dns_zone[0].name, data.azurerm_private_dns_zone.dns_zone[0].name) : null
+  private_dns_zone_id   = length(var.private_endpoints) > 0 ? try(azurerm_private_dns_zone.dns_zone[0].id, data.azurerm_private_dns_zone.dns_zone[0].id) : null
+  private_dns_zone_name = length(var.private_endpoints) > 0 ? try(azurerm_private_dns_zone.dns_zone[0].name, data.azurerm_private_dns_zone.dns_zone[0].name) : null
 }
 
 resource "azurerm_private_endpoint" "this" {
-  for_each = var.private_endpoint
+  for_each = var.private_endpoints
 
   location            = azurerm_cognitive_account.this.location
-  name                = each.value.name
+  name                = coalesce(each.value.name, "pep-${var.name}")
   resource_group_name = coalesce(each.value.resource_group_name, azurerm_cognitive_account.this.resource_group_name)
-  subnet_id           = var.private_endpoint_subnets[each.value.vnet_key].subnets[each.value.subnet_key].id
+  subnet_id           = each.value.subnet_resource_id
   tags                = each.value.tags
 
   private_service_connection {
-    is_manual_connection           = each.value.is_manual_connection
-    name                           = each.value.private_service_connection_name
+    name                           = coalesce(each.value.private_service_connection_name, "pse-${var.name}")
     private_connection_resource_id = azurerm_cognitive_account.this.id
-    subresource_names              = var.pe_subresource_names
+    is_manual_connection           = false
+    subresource_names              = ["account"]
   }
+
   dynamic "private_dns_zone_group" {
-    for_each = each.value.private_dns_entry_enabled ? ["private_dns_zone_group"] : []
+    for_each = length(each.value.private_dns_zone_resource_ids) > 0 ? ["this"] : []
 
     content {
-      name                 = local.private_dns_zone_name
-      private_dns_zone_ids = [local.private_dns_zone_id]
+      name                 = each.value.private_dns_zone_group_name
+      private_dns_zone_ids = each.value.private_dns_zone_resource_ids
+    }
+  }
+  dynamic "ip_configuration" {
+    for_each = each.value.ip_configurations
+
+    content {
+      name               = ip_configuration.value.name
+      subresource_name   = "account"
+      member_name        = "account"
+      private_ip_address = ip_configuration.value.private_ip_address
     }
   }
 }
 
+locals {
+  private_endpoint_application_security_group_associations = { for assoc in flatten([
+    for pe_k, pe_v in var.private_endpoints : [
+      for asg_k, asg_v in pe_v.application_security_group_associations : {
+        asg_key         = asg_k
+        pe_key          = pe_k
+        asg_resource_id = asg_v
+      }
+    ]
+  ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
+}
+
+resource "azurerm_private_endpoint_application_security_group_association" "this" {
+  for_each                      = local.private_endpoint_application_security_group_associations
+  private_endpoint_id           = azurerm_private_endpoint.this[each.value.pe_key].id
+  application_security_group_id = each.value.asg_resource_id
+}
+
 resource "azurerm_private_dns_zone" "dns_zone" {
-  count = length(var.private_endpoint) > 0 && var.green_field_private_dns_zone != null ? 1 : 0
+  count = length(var.private_endpoints) > 0 && var.green_field_private_dns_zone != null ? 1 : 0
 
   name                = "privatelink.openai.azure.com"
   resource_group_name = var.green_field_private_dns_zone.resource_group_name
@@ -48,7 +77,7 @@ resource "azurerm_private_dns_zone" "dns_zone" {
 
 locals {
   private_dns_zone_resource_group_name = try(azurerm_private_dns_zone.dns_zone[0].resource_group_name, var.brown_field_private_dns_zone.resource_group_name, null)
-  private_endpoint_vnet_keys           = toset([for pe in var.private_endpoint : pe.vnet_key])
+  private_endpoint_vnet_keys           = toset([for pe in var.private_endpoints : pe.vnet_key])
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_zone_link" {

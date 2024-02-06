@@ -1,28 +1,28 @@
-variable "cognitive_account_kind" {
+variable "kind" {
   type        = string
   description = "(Required) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "cognitive_account_location" {
+variable "location" {
   type        = string
   description = "(Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "cognitive_account_name" {
+variable "name" {
   type        = string
   description = "(Required) Specifies the name of the Cognitive Service Account. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "cognitive_account_resource_group_name" {
+variable "resource_group_name" {
   type        = string
   description = "(Required) The name of the resource group in which the Cognitive Service Account is created. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "cognitive_account_sku_name" {
+variable "sku_name" {
   type        = string
   description = "(Required) Specifies the SKU Name for this Cognitive Service Account. Possible values are `F0`, `F1`, `S0`, `S`, `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `P0`, `P1`, `P2`, `E0` and `DC0`."
   nullable    = false
@@ -43,26 +43,26 @@ variable "brown_field_private_dns_zone" {
 DESCRIPTION
 }
 
-variable "cognitive_account_custom_question_answering_search_service_id" {
+variable "custom_question_answering_search_service_id" {
   type        = string
   default     = null
   description = "(Optional) If `kind` is `TextAnalytics` this specifies the ID of the Search service."
 }
 
-variable "cognitive_account_custom_question_answering_search_service_key" {
+variable "custom_question_answering_search_service_key" {
   type        = string
   default     = null
   description = "(Optional) If `kind` is `TextAnalytics` this specifies the key of the Search service."
   sensitive   = true
 }
 
-variable "cognitive_account_custom_subdomain_name" {
+variable "custom_subdomain_name" {
   type        = string
   default     = null
   description = "(Optional) The subdomain name used for token-based authentication. This property is required when `network_acls` is specified. Changing this forces a new resource to be created."
 }
 
-variable "cognitive_account_customer_managed_key" {
+variable "customer_managed_key" {
   type = object({
     identity_client_id = optional(string)
     key_vault_key_id   = string
@@ -87,19 +87,19 @@ variable "cognitive_account_customer_managed_key" {
 DESCRIPTION
 }
 
-variable "cognitive_account_dynamic_throttling_enabled" {
+variable "dynamic_throttling_enabled" {
   type        = bool
   default     = null
   description = "(Optional) Whether to enable the dynamic throttling for this Cognitive Service Account."
 }
 
-variable "cognitive_account_fqdns" {
+variable "fqdns" {
   type        = list(string)
   default     = null
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
 }
 
-variable "cognitive_account_identity" {
+variable "identity" {
   type = object({
     identity_ids = optional(set(string))
     type         = string
@@ -111,37 +111,37 @@ variable "cognitive_account_identity" {
 DESCRIPTION
 }
 
-variable "cognitive_account_local_auth_enabled" {
+variable "local_auth_enabled" {
   type        = bool
   default     = null
   description = "(Optional) Whether local authentication methods is enabled for the Cognitive Account. Defaults to `true`."
 }
 
-variable "cognitive_account_metrics_advisor_aad_client_id" {
+variable "metrics_advisor_aad_client_id" {
   type        = string
   default     = null
   description = "(Optional) The Azure AD Client ID (Application ID). This attribute is only set when kind is `MetricsAdvisor`. Changing this forces a new resource to be created."
 }
 
-variable "cognitive_account_metrics_advisor_aad_tenant_id" {
+variable "metrics_advisor_aad_tenant_id" {
   type        = string
   default     = null
   description = "(Optional) The Azure AD Tenant ID. This attribute is only set when kind is `MetricsAdvisor`. Changing this forces a new resource to be created."
 }
 
-variable "cognitive_account_metrics_advisor_super_user_name" {
+variable "metrics_advisor_super_user_name" {
   type        = string
   default     = null
   description = "(Optional) The super user of Metrics Advisor. This attribute is only set when kind is `MetricsAdvisor`. Changing this forces a new resource to be created."
 }
 
-variable "cognitive_account_metrics_advisor_website_name" {
+variable "metrics_advisor_website_name" {
   type        = string
   default     = null
   description = "(Optional) The website name of Metrics Advisor. This attribute is only set when kind is `MetricsAdvisor`. Changing this forces a new resource to be created."
 }
 
-variable "cognitive_account_network_acls" {
+variable "network_acls" {
   type = object({
     default_action = string
     ip_rules       = optional(set(string))
@@ -162,25 +162,25 @@ variable "cognitive_account_network_acls" {
 DESCRIPTION
 }
 
-variable "cognitive_account_outbound_network_access_restricted" {
+variable "outbound_network_access_restricted" {
   type        = bool
   default     = null
   description = "(Optional) Whether outbound network access is restricted for the Cognitive Account. Defaults to `false`."
 }
 
-variable "cognitive_account_public_network_access_enabled" {
+variable "public_network_access_enabled" {
   type        = bool
   default     = null
   description = "(Optional) Whether public network access is allowed for the Cognitive Account. Defaults to `true`."
 }
 
-variable "cognitive_account_qna_runtime_endpoint" {
+variable "qna_runtime_endpoint" {
   type        = string
   default     = null
   description = "(Optional) A URL to link a QnAMaker cognitive account to a QnA runtime."
 }
 
-variable "cognitive_account_storage" {
+variable "storage" {
   type = list(object({
     identity_client_id = optional(string)
     storage_account_id = string
@@ -192,13 +192,13 @@ variable "cognitive_account_storage" {
 DESCRIPTION
 }
 
-variable "cognitive_account_tags" {
+variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) A mapping of tags to assign to the resource."
 }
 
-variable "cognitive_account_timeouts" {
+variable "timeouts" {
   type = object({
     create = optional(string)
     delete = optional(string)
@@ -293,67 +293,45 @@ variable "green_field_private_dns_zone" {
 DESCRIPTION
 }
 
-variable "pe_subresource_names" {
-  type        = list(string)
-  default     = ["account"]
-  description = "A list of subresource names which the Private Endpoint is able to connect to. `subresource_names` corresponds to `group_id`. Possible values are detailed in the product [documentation](https://docs.microsoft.com/azure/private-link/private-endpoint-overview#private-link-resource) in the `Subresources` column. Changing this forces a new resource to be created."
-}
-
-variable "private_endpoint" {
+variable "private_endpoints" {
   type = map(object({
-    name                            = string
-    vnet_key                        = string
-    subnet_key                      = string
+    name               = optional(string, null)
+    role_assignments   = optional(map(object({})), {}) # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#role-assignments
+    lock               = optional(object({}), {})      # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#resource-locks
+    tags               = optional(map(any), null)      # see https://azure.github.io/Azure-Verified-Modules/Azure-Verified-Modules/specs/shared/interfaces/#tags
+    subnet_resource_id = string
+
     resource_group_name             = optional(string)
-    private_dns_entry_enabled       = optional(bool, false)
-    private_service_connection_name = optional(string, "privateserviceconnection")
-    is_manual_connection            = optional(bool, false)
-    tags                            = optional(map(string), {})
+    private_dns_zone_resource_ids           = optional(set(string), [])
+    application_security_group_associations = optional(map(string), {})
+    private_service_connection_name         = optional(string, null)
+    network_interface_name                  = optional(string, null)
+    location                                = optional(string, null)
+    resource_group_name                     = optional(string, null)
+    ip_configurations = optional(map(object({
+      name               = string
+      private_ip_address = string
+    })), {})
   }))
   default     = {}
   description = <<-DESCRIPTION
-  A map of objects that represent the configuration for a private endpoint."
-  type = map(object({
-    name                               = (Required) Specifies the Name of the Private Endpoint. Changing this forces a new resource to be created.
-    vnet_key                           = (Required) Map key of the virtual network in `var.private_endpoint_subnets` where the Private Endpoint's exists. Changing this forces a new resource to be created.
-    subnet_key                         = (Required) Map key of the `subnets` in `var.private_endpoint_subnets` where the subnet that this Private IP Addresses will be created in. Changing this forces a new resource to be created.
-    resource_group_name                = (Optional) Specifies the Name of the Resource Group within which the Private Endpoint should exist. Omit this field would use cognitive account's resource group name. Changing this forces a new resource to be created.
-    dns_zone_virtual_network_link_name = (Optional) The name of the Private DNS Zone Virtual Network Link. Changing this forces a new resource to be created. Default to `dns_zone_link`.
-    private_dns_entry_enabled          = (Optional) Whether or not to create a `private_dns_zone_group` block for the Private Endpoint. Default to `false`.
-    private_service_connection_name    = (Optional) Specifies the Name of the Private Service Connection. Changing this forces a new resource to be created. Default to `privateserviceconnection`.
-    is_manual_connection               = (Optional) Does the Private Endpoint require Manual Approval from the remote resource owner? Changing this forces a new resource to be created. Default to `false`.
-    tags                               = (Optional) A mapping of tags to assign to the resource.
-  }))
-DESCRIPTION
+  A map of private endpoints to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+  - `name` - (Optional) The name of the private endpoint. One will be generated if not set.
+  - `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
+  - `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+  - `tags` - (Optional) A mapping of tags to assign to the private endpoint.
+  - `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
+  - `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
+  - `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
+  - `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  - `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
+  - `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
+  - `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
+  - `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the Key Vault.
+  - `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+    - `name` - The name of the IP configuration.
+    - `private_ip_address` - The private IP address of the IP configuration.
+  DESCRIPTION
   nullable    = false
-}
-
-variable "private_endpoint_subnets" {
-  type = map(object({
-    vnet_id                 = string
-    vnet_dns_zone_link_name = optional(string)
-    vnet_dns_zone_link_tags = optional(map(string), {})
-    subnets = map(object({
-      id = string
-    }))
-  }))
-  default     = {}
-  description = <<-DESCRIPTION
-  Please be advised! We won't try to create `azurerm_private_dns_zone_virtual_network_link` if `var.green_field_private_dns_zone`. If you're using brown field private dns zone, you need link the private dns zone with the virtual network yourself.
-  A map of objects that represent the virtual networks and subnets for private endpoints.
-  Map's key must be a static literal value.
-  type = map(object({
-    vnet_id = The Virtual Network's ID which private endpoint is created in. Changing this forces a new resource to be created.
-    vnet_dns_zone_link_name = The name of the Private DNS Zone Virtual Network Link. Defaults to "<Private Dns Zone Name>-<VNet Key>". Changing this forces a new resource to be created.
-    vnet_dns_zone_link_tags = (Optional) A mapping of tags to assign to the `azurerm_private_dns_zone_virtual_network_link` resource. Changing this forces a new resource to be created.
-    subnets = map(object({
-      id = The Subnet's ID which private endpoint is created in. Changing this forces a new resource to be created.
-    }))
-  }))
-DESCRIPTION
-
-  validation {
-    condition     = alltrue([for k, v in var.private_endpoint_subnets : alltrue([for sk, subnet in v.subnets : startswith(subnet.id, v.vnet_id)])])
-    error_message = "`id` in `subnets` must belongs to the virtual network that `vnet_id` represents."
-  }
 }
