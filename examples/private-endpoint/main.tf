@@ -73,68 +73,10 @@ resource "random_pet" "pet" {}
 
 data "azurerm_client_config" "this" {}
 
-resource "azurerm_key_vault" "this" {
-  name                       = "zjhecogkv${replace(random_pet.pet.id, "-", "")}"
-  location                   = azurerm_resource_group.this.location
-  resource_group_name        = azurerm_resource_group.this.name
-  tenant_id                  = data.azurerm_client_config.this.tenant_id
-  sku_name                   = "premium"
-  soft_delete_retention_days = 7
-
-  access_policy {
-    tenant_id = data.azurerm_client_config.this.tenant_id
-    object_id = data.azurerm_client_config.this.object_id
-
-    key_permissions = [
-      "Create",
-      "Delete",
-      "Get",
-      "Purge",
-      "Recover",
-      "Update",
-      "GetRotationPolicy",
-      "SetRotationPolicy"
-    ]
-  }
-  access_policy {
-    tenant_id = data.azurerm_client_config.this.tenant_id
-    object_id = azurerm_user_assigned_identity.this.principal_id
-
-    key_permissions = [
-      "Get",
-    ]
-  }
-}
-
 resource "azurerm_user_assigned_identity" "this" {
   location            = azurerm_resource_group.this.location
   name                = "uai-zjhe-cog"
   resource_group_name = azurerm_resource_group.this.name
-}
-
-resource "azurerm_key_vault_key" "key" {
-  name         = "generated-certificate"
-  key_vault_id = azurerm_key_vault.this.id
-  key_type     = "RSA"
-  key_size     = 2048
-
-  key_opts = [
-    "decrypt",
-    "encrypt",
-    "sign",
-    "unwrapKey",
-    "verify",
-    "wrapKey",
-  ]
-
-  rotation_policy {
-    automatic {
-      time_before_expiry = "P30D"
-    }
-
-    expire_after         = "P90D"
-    notify_before_expiry = "P29D"
-  }
 }
 
 # This is the module call
@@ -177,9 +119,17 @@ module "test" {
       subnet_resource_id              = module.vnet.vnet_subnets_name_id["subnet0"]
     }
   }
-  customer_managed_key = {
-    key_vault_resource_id = azurerm_key_vault.this.id
-    key_name = azurerm_key_vault_key.key.name
-    user_assigned_identity_resource_id = azurerm_user_assigned_identity.this.id
+  managed_identities = {
+    user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
+  }
+  role_assignments = {
+    uai = {
+      role_definition_id_or_name = "Cognitive Services User"
+      principal_id               = azurerm_user_assigned_identity.this.principal_id
+    }
+    myself = {
+      role_definition_id_or_name = "Cognitive Services Contributor"
+      principal_id               = data.azurerm_client_config.this.object_id
+    }
   }
 }

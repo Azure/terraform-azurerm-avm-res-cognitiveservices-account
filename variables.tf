@@ -103,10 +103,12 @@ variable "custom_subdomain_name" {
 
 variable "customer_managed_key" {
   type = object({
-    key_vault_resource_id              = string
-    key_name                           = string
-    key_version                        = optional(string, null)
-    user_assigned_identity_resource_id = optional(string, null)
+    key_vault_resource_id  = string
+    key_name               = string
+    key_version            = optional(string, null)
+    user_assigned_identity = optional(object({
+      resource_id = string
+    }), null)
     timeouts = optional(object({
       create = optional(string)
       delete = optional(string)
@@ -172,18 +174,6 @@ variable "fqdns" {
   type        = list(string)
   default     = null
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
-}
-
-variable "identity" {
-  type = object({
-    identity_ids = optional(set(string))
-    type         = string
-  })
-  default     = null
-  description = <<-DESCRIPTION
- - `identity_ids` - (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Cognitive Account.
- - `type` - (Required) Specifies the type of Managed Service Identity that should be configured on this Cognitive Account. Possible values are `SystemAssigned`, `UserAssigned`, `SystemAssigned, UserAssigned` (to enable both).
-DESCRIPTION
 }
 
 variable "local_auth_enabled" {

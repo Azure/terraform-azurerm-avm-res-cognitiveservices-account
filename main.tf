@@ -73,11 +73,11 @@ data azurerm_key_vault_key this {
 }
 
 data azurerm_user_assigned_identity this {
-  count = var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity_resource_id != null ? 1 : 0)
+  count = var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)
 
   #/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}
-  name                = reverse(split(var.customer_managed_key.user_assigned_identity_resource_id, "/"))[0]
-  resource_group_name = split(var.customer_managed_key.user_assigned_identity_resource_id, "/")[4]
+  name                = reverse(split("/", var.customer_managed_key.user_assigned_identity.resource_id))[0]
+  resource_group_name = split("/", var.customer_managed_key.user_assigned_identity.resource_id)[4]
 }
 
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
@@ -85,7 +85,7 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
 
   cognitive_account_id = azurerm_cognitive_account.this.id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
-  identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, null)
+  identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this.identity[0].principal_id, null)
 
   dynamic "timeouts" {
     for_each = var.customer_managed_key.timeouts == null ? [] : [
