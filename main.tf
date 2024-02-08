@@ -26,10 +26,10 @@ resource "azurerm_cognitive_account" "this" {
   tags                                         = var.tags
 
   dynamic "identity" {
-    for_each = var.identity == null ? [] : [var.identity]
+    for_each = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? { this = var.managed_identities } : {}
     content {
-      type         = identity.value.type
-      identity_ids = identity.value.identity_ids
+      type         = identity.value.system_assigned && length(identity.value.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(identity.value.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
+      identity_ids = identity.value.user_assigned_resource_ids
     }
   }
   dynamic "network_acls" {
@@ -65,12 +65,27 @@ resource "azurerm_cognitive_account" "this" {
   }
 }
 
+data azurerm_key_vault_key this {
+  count = var.customer_managed_key == null ? 0 : 1
+
+  key_vault_id = var.customer_managed_key.key_vault_resource_id
+  name         = var.customer_managed_key.key_name
+}
+
+data azurerm_user_assigned_identity this {
+  count = var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity_resource_id != null ? 1 : 0)
+
+  #/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}
+  name                = reverse(split(var.customer_managed_key.user_assigned_identity_resource_id, "/"))[0]
+  resource_group_name = split(var.customer_managed_key.user_assigned_identity_resource_id, "/")[4]
+}
+
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
   count = var.customer_managed_key == null ? 0 : 1
 
   cognitive_account_id = azurerm_cognitive_account.this.id
-  key_vault_key_id     = var.customer_managed_key.key_vault_key_id
-  identity_client_id   = var.customer_managed_key.identity_client_id
+  key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
+  identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, null)
 
   dynamic "timeouts" {
     for_each = var.customer_managed_key.timeouts == null ? [] : [
