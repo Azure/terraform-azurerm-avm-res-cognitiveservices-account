@@ -23,6 +23,10 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
   }
 }
 
@@ -39,76 +43,104 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-module "vnet" {
-  source  = "Azure/subnets/azurerm"
-  version = "1.0.0"
-
-  resource_group_name = azurerm_resource_group.this.name
-  subnets = {
-    subnet0 = {
-      address_prefixes  = ["10.52.0.0/24"]
-      service_endpoints = ["Microsoft.CognitiveServices"]
-    }
-    subnet1 = {
-      address_prefixes  = ["10.52.1.0/24"]
-      service_endpoints = ["Microsoft.CognitiveServices"]
-    }
-  }
-  virtual_network_address_space = ["10.52.0.0/16"]
-  virtual_network_location      = azurerm_resource_group.this.location
-  virtual_network_name          = "vnet"
-}
-
-resource "azurerm_private_dns_zone" "zone" {
-  name                = "privatelink.openai.azure.com"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "link" {
-  name                  = "openai-private-dns-zone"
-  private_dns_zone_name = azurerm_private_dns_zone.zone.name
-  resource_group_name   = azurerm_resource_group.this.name
-  virtual_network_id    = module.vnet.vnet_id
-}
-
 resource "random_pet" "pet" {}
 
 data "azurerm_client_config" "this" {}
 
+resource "azurerm_key_vault" "this" {
+  location                   = azurerm_resource_group.this.location
+  name                       = "zjhecogkv${replace(random_pet.pet.id, "-", "")}"
+  resource_group_name        = azurerm_resource_group.this.name
+  sku_name                   = "premium"
+  tenant_id                  = data.azurerm_client_config.this.tenant_id
+  purge_protection_enabled   = true
+  soft_delete_retention_days = 7
+
+  access_policy {
+    key_permissions = [
+      "Create",
+      "Delete",
+      "Get",
+      "Purge",
+      "Recover",
+      "Update",
+      "GetRotationPolicy",
+      "SetRotationPolicy"
+    ]
+    object_id = data.azurerm_client_config.this.object_id
+    tenant_id = data.azurerm_client_config.this.tenant_id
+  }
+  access_policy {
+    key_permissions = [
+      "Get",
+      "Create",
+      "List",
+      "Restore",
+      "Recover",
+      "UnwrapKey",
+      "WrapKey",
+      "Purge",
+      "Encrypt",
+      "Decrypt",
+      "Sign",
+      "Verify",
+    ]
+    object_id = azurerm_user_assigned_identity.this.principal_id
+    secret_permissions = [
+      "Get",
+    ]
+    tenant_id = data.azurerm_client_config.this.tenant_id
+  }
+}
+
+resource "azurerm_user_assigned_identity" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "uai-zjhe-cog"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_key_vault_key" "key" {
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+  key_type     = "RSA"
+  key_vault_id = azurerm_key_vault.this.id
+  name         = "generated-certificate"
+  key_size     = 2048
+
+  rotation_policy {
+    expire_after         = "P90D"
+    notify_before_expiry = "P29D"
+
+    automatic {
+      time_before_expiry = "P30D"
+    }
+  }
+}
+
 module "test" {
   source = "../../"
 
-  kind                = "OpenAI"
+  kind                = "Face"
   location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${random_pet.pet.id}"
+  name                = "Face-${random_pet.pet.id}"
   resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  sku_name            = "E0"
 
-  cognitive_deployments = {
-    "gpt-4-32k" = {
-      name = "gpt-4-32k"
-      model = {
-        format  = "OpenAI"
-        name    = "gpt-4-32k"
-        version = "0613"
-      }
-      scale = {
-        type = "Standard"
-      }
-    }
+  managed_identities = {
+    system_assigned            = true
+    user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
-  private_endpoints = {
-    pe_endpoint = {
-      name                            = "pe_endpoint"
-      private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
-      private_service_connection_name = "pe_endpoint_connection"
-      subnet_resource_id              = module.vnet.vnet_subnets_name_id["subnet0"]
-    }
-    pe_endpoint2 = {
-      name                            = "pe_endpoint2"
-      private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
-      private_service_connection_name = "pe_endpoint_connection2"
-      subnet_resource_id              = module.vnet.vnet_subnets_name_id["subnet0"]
+  customer_managed_key = {
+    key_vault_resource_id = azurerm_key_vault.this.id
+    key_name              = azurerm_key_vault_key.key.name
+    user_assigned_identity = {
+      resource_id = azurerm_user_assigned_identity.this.id
     }
   }
 }
@@ -137,9 +169,10 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
-- [azurerm_private_dns_zone_virtual_network_link.link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
+- [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
+- [azurerm_key_vault_key.key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_pet.pet](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) (resource)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
@@ -171,12 +204,6 @@ Version: >= 0.3.0
 Source: ../../
 
 Version:
-
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
-
-Source: Azure/subnets/azurerm
-
-Version: 1.0.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

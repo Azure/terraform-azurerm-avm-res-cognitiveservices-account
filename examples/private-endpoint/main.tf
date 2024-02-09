@@ -17,10 +17,6 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
-    key_vault {
-      purge_soft_delete_on_destroy    = true
-      recover_soft_deleted_key_vaults = true
-    }
   }
 }
 
@@ -42,7 +38,7 @@ module "vnet" {
   version = "1.0.0"
 
   resource_group_name = azurerm_resource_group.this.name
-  subnets             = {
+  subnets = {
     subnet0 = {
       address_prefixes  = ["10.52.0.0/24"]
       service_endpoints = ["Microsoft.CognitiveServices"]
@@ -73,16 +69,6 @@ resource "random_pet" "pet" {}
 
 data "azurerm_client_config" "this" {}
 
-resource "azurerm_user_assigned_identity" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "uai-zjhe-cog"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
 module "test" {
   source = "../../"
 
@@ -94,7 +80,7 @@ module "test" {
 
   cognitive_deployments = {
     "gpt-4-32k" = {
-      name  = "gpt-4-32k"
+      name = "gpt-4-32k"
       model = {
         format  = "OpenAI"
         name    = "gpt-4-32k"
@@ -117,19 +103,6 @@ module "test" {
       private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
       private_service_connection_name = "pe_endpoint_connection2"
       subnet_resource_id              = module.vnet.vnet_subnets_name_id["subnet0"]
-    }
-  }
-  managed_identities = {
-    user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
-  }
-  role_assignments = {
-    uai = {
-      role_definition_id_or_name = "Cognitive Services User"
-      principal_id               = azurerm_user_assigned_identity.this.principal_id
-    }
-    myself = {
-      role_definition_id_or_name = "Cognitive Services Contributor"
-      principal_id               = data.azurerm_client_config.this.object_id
     }
   }
 }

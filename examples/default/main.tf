@@ -31,10 +31,6 @@ resource "azurerm_resource_group" "this" {
 
 resource "random_pet" "pet" {}
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
 module "test" {
   source = "../../"
 

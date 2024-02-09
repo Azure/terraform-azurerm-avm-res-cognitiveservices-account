@@ -37,18 +37,14 @@ resource "azurerm_resource_group" "this" {
 
 resource "random_pet" "pet" {}
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
 module "test" {
   source = "../../"
 
-  cognitive_account_kind                = "OpenAI"
-  cognitive_account_location            = azurerm_resource_group.this.location
-  cognitive_account_name                = "OpenAI-${random_pet.pet.id}"
-  cognitive_account_resource_group_name = azurerm_resource_group.this.name
-  cognitive_account_sku_name            = "S0"
+  kind                = "OpenAI"
+  location            = azurerm_resource_group.this.location
+  name                = "OpenAI-${random_pet.pet.id}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "S0"
 
   cognitive_deployments = {
     "gpt-4-32k" = {
