@@ -35,12 +35,6 @@ resource "azurerm_resource_group" "this" {
 
 resource "random_pet" "pet" {}
 
-resource "azurerm_user_assigned_identity" "uai" {
-  location            = azurerm_resource_group.this.location
-  name                = "uai"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
 module "test" {
   source = "../../"
 
@@ -49,10 +43,6 @@ module "test" {
   name                = "OpenAI-${random_pet.pet.id}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-  managed_identities = {
-    system_assigned = false
-#    user_assigned_resource_ids = [azurerm_user_assigned_identity.uai.id]
-  }
 
   cognitive_deployments = {
     "gpt-4-32k" = {
@@ -67,8 +57,4 @@ module "test" {
       }
     }
   }
-}
-
-output "principal_id" {
-  value = module.test.system_assigned_mi_principal_id
 }

@@ -116,7 +116,16 @@ variable "customer_managed_key" {
       update = optional(string)
     }))
   })
-  default = null
+  default     = null
+  description = <<DESCRIPTION
+  Controls the Customer managed key configuration on this resource. The following properties can be specified:
+
+  - `key_vault_resource_id` - (Required) Resource ID of the Key Vault that the customer managed key belongs to.
+  - `key_name` - (Required) Specifies the name of the Customer Managed Key Vault Key.
+  - `key_version` - (Optional) The version of the Customer Managed Key Vault Key.
+  - `user_assigned_identity` - (Optional) The User Assigned Identity that has access to the key.
+    - `resource_id` - (Required) The resource ID of the User Assigned Identity that has access to the key.
+  DESCRIPTION
 }
 
 variable "diagnostic_settings" {

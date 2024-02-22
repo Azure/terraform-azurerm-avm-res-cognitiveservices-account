@@ -73,8 +73,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "link" {
 
 resource "random_pet" "pet" {}
 
-data "azurerm_client_config" "this" {}
-
 module "test" {
   source = "../../"
 
@@ -141,7 +139,6 @@ The following resources are used by this module:
 - [azurerm_private_dns_zone_virtual_network_link.link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_pet.pet](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) (resource)
-- [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

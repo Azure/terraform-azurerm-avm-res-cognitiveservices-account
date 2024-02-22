@@ -1,7 +1,20 @@
 <!-- BEGIN_TF_DOCS -->
-# terraform-azurerm-avm-res-cognitiveservices-account
+# terraform-azurerm-avm-template
 
-This Terraform module is designed to manage Azure Cognitive Services. It provides a comprehensive set of variables and resources to configure and deploy Cognitive Services in Azure.
+This is a template repo for Terraform Azure Verified Modules.
+
+Things to do:
+
+1. Set up a GitHub repo environment called `test`.
+1. Configure environment protection rule to ensure that approval is required before deploying to this environment.
+1. Create a user-assigned managed identity in your test subscription.
+1. Create a role assignment for the managed identity on your test subscription, use the minimum required role.
+1. Configure federated identity credentials on the user assigned managed identity. Use the GitHub environment.
+1. Create the following environment secrets on the `test` environment:
+   1. AZURE\_CLIENT\_ID
+   1. AZURE\_TENANT\_ID
+   1. AZURE\_SUBSCRIPTION\_ID
+1. Search and update TODOs within the code and remove the TODO comments once complete.
 
 > [!IMPORTANT]
 > As the overall AVM framework is not GA (generally available) yet - the CI framework and test automation is not fully functional and implemented across all supported languages yet - breaking changes are expected, and additional customer feedback is yet to be gathered and incorporated. Hence, modules **MUST NOT** be published at version `1.0.0` or higher at this time.
@@ -40,7 +53,9 @@ The following resources are used by this module:
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
+- [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [random_id.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [random_string.default_custom_subdomain_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azurerm_key_vault_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_key) (data source)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) (data source)
@@ -167,7 +182,13 @@ Default: `null`
 
 ### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
-Description: n/a
+Description:   Controls the Customer managed key configuration on this resource. The following properties can be specified:
+
+  - `key_vault_resource_id` - (Required) Resource ID of the Key Vault that the customer managed key belongs to.
+  - `key_name` - (Required) Specifies the name of the Customer Managed Key Vault Key.
+  - `key_version` - (Optional) The version of the Customer Managed Key Vault Key.
+  - `user_assigned_identity` - (Optional) The User Assigned Identity that has access to the key.
+    - `resource_id` - (Required) The resource ID of the User Assigned Identity that has access to the key.
 
 Type:
 
@@ -231,6 +252,16 @@ Description: (Optional) Whether to enable the dynamic throttling for this Cognit
 Type: `bool`
 
 Default: `null`
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see https://aka.ms/avm/telemetryinfo.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
 
 ### <a name="input_fqdns"></a> [fqdns](#input\_fqdns)
 
@@ -487,17 +518,29 @@ Default: `null`
 
 The following outputs are exported:
 
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The name of cognitive account created.
+
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
 Description:   A map of the private endpoints created.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: n/a
+Description: The cognitive account resource created.
 
 ### <a name="output_resource_cognitive_deployment"></a> [resource\_cognitive\_deployment](#output\_resource\_cognitive\_deployment)
 
-Description: n/a
+Description: The map of cognitive deployments created.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource ID of cognitive account created.
+
+### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
+
+Description: The principal ID of system assigned managed identity on the cognitive account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`.
 
 ## Modules
 
