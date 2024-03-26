@@ -39,11 +39,11 @@ module "vnet" {
 
   resource_group_name = azurerm_resource_group.this.name
   subnets = {
-    subnet0 = {
+    openai = {
       address_prefixes  = ["10.52.0.0/24"]
       service_endpoints = ["Microsoft.CognitiveServices"]
     }
-    subnet1 = {
+    app = {
       address_prefixes  = ["10.52.1.0/24"]
       service_endpoints = ["Microsoft.CognitiveServices"]
     }
@@ -89,18 +89,18 @@ module "test" {
       }
     }
   }
+  network_acls = {
+    default_action = "Deny"
+    virtual_network_rules = toset([{
+      subnet_id = module.vnet.vnet_subnets_name_id["openai"]
+    }])
+  }
   private_endpoints = {
     pe_endpoint = {
       name                            = "pe_endpoint"
       private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
       private_service_connection_name = "pe_endpoint_connection"
-      subnet_resource_id              = module.vnet.vnet_subnets_name_id["subnet0"]
-    }
-    pe_endpoint2 = {
-      name                            = "pe_endpoint2"
-      private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
-      private_service_connection_name = "pe_endpoint_connection2"
-      subnet_resource_id              = module.vnet.vnet_subnets_name_id["subnet0"]
+      subnet_resource_id              = module.vnet.vnet_subnets_name_id["openai"]
     }
   }
 }
