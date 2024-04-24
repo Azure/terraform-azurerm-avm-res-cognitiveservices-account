@@ -1,7 +1,7 @@
 resource "azurerm_private_endpoint" "this" {
   for_each = var.private_endpoints
 
-  location            = azurerm_cognitive_account.this.location
+  location            = coalesce(each.value.location, azurerm_cognitive_account.this.location)
   name                = coalesce(each.value.name, "pep-${var.name}")
   resource_group_name = coalesce(each.value.resource_group_name, azurerm_cognitive_account.this.resource_group_name)
   subnet_id           = each.value.subnet_resource_id
