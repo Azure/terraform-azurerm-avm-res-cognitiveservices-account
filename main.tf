@@ -88,9 +88,7 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
   identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this.identity[0].principal_id, null)
 
   dynamic "timeouts" {
-    for_each = var.customer_managed_key.timeouts == null ? [] : [
-      var.customer_managed_key.timeouts
-    ]
+    for_each = var.timeouts == null ? [] : [var.timeouts]
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
