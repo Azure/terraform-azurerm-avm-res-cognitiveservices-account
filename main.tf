@@ -63,6 +63,12 @@ resource "azurerm_cognitive_account" "this" {
       update = timeouts.value.update
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      customer_managed_key,
+    ]
+  }
 }
 
 data "azurerm_key_vault_key" "this" {
