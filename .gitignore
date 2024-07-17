@@ -42,3 +42,7 @@ avm.tflint.merged.hcl
 avm.tflint_example.merged.hcl
 *.md.tmp
 .DS_Store
+*_override.tf
+*_override.tf.json
+avm.tflint_module.hcl
+avm.tflint_module.merged.hcl
