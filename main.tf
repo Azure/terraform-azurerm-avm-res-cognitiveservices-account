@@ -27,6 +27,7 @@ resource "azurerm_cognitive_account" "this" {
 
   dynamic "identity" {
     for_each = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? { this = var.managed_identities } : {}
+
     content {
       type         = identity.value.system_assigned && length(identity.value.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(identity.value.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
       identity_ids = identity.value.user_assigned_resource_ids
@@ -34,12 +35,14 @@ resource "azurerm_cognitive_account" "this" {
   }
   dynamic "network_acls" {
     for_each = var.network_acls == null ? [] : [var.network_acls]
+
     content {
       default_action = network_acls.value.default_action
       ip_rules       = network_acls.value.ip_rules
 
       dynamic "virtual_network_rules" {
         for_each = network_acls.value.virtual_network_rules == null ? [] : network_acls.value.virtual_network_rules
+
         content {
           subnet_id                            = virtual_network_rules.value.subnet_id
           ignore_missing_vnet_service_endpoint = virtual_network_rules.value.ignore_missing_vnet_service_endpoint
@@ -49,6 +52,7 @@ resource "azurerm_cognitive_account" "this" {
   }
   dynamic "storage" {
     for_each = var.storage == null ? [] : var.storage
+
     content {
       storage_account_id = storage.value.storage_account_id
       identity_client_id = storage.value.identity_client_id
@@ -56,6 +60,7 @@ resource "azurerm_cognitive_account" "this" {
   }
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
+
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
@@ -95,6 +100,7 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
+
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
@@ -114,6 +120,7 @@ resource "azurerm_cognitive_deployment" "this" {
 
   dynamic "model" {
     for_each = [each.value.model]
+
     content {
       format  = model.value.format
       name    = model.value.name
@@ -122,6 +129,7 @@ resource "azurerm_cognitive_deployment" "this" {
   }
   dynamic "scale" {
     for_each = [each.value.scale]
+
     content {
       type     = scale.value.type
       capacity = scale.value.capacity
@@ -132,6 +140,7 @@ resource "azurerm_cognitive_deployment" "this" {
   }
   dynamic "timeouts" {
     for_each = each.value.timeouts == null ? [] : [each.value.timeouts]
+
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
