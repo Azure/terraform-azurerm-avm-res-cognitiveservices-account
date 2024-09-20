@@ -37,13 +37,18 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-resource "random_pet" "pet" {}
+resource "random_string" "suffix" {
+  length  = 5
+  numeric = false
+  special = false
+  upper   = false
+}
 
 data "azurerm_client_config" "this" {}
 
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
-  name                       = "zjhecogkv${replace(random_pet.pet.id, "-", "")}"
+  name                       = "zjhecogkv${replace(random_string.suffix.result, "-", "")}"
   resource_group_name        = azurerm_resource_group.this.name
   sku_name                   = "premium"
   tenant_id                  = data.azurerm_client_config.this.tenant_id
@@ -122,7 +127,7 @@ module "test" {
 
   kind                = "Face"
   location            = azurerm_resource_group.this.location
-  name                = "Face-${random_pet.pet.id}"
+  name                = "Face-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "E0"
 

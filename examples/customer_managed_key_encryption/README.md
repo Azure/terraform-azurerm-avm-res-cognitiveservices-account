@@ -43,13 +43,18 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-resource "random_pet" "pet" {}
+resource "random_string" "suffix" {
+  length  = 5
+  numeric = false
+  special = false
+  upper   = false
+}
 
 data "azurerm_client_config" "this" {}
 
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
-  name                       = "zjhecogkv${replace(random_pet.pet.id, "-", "")}"
+  name                       = "zjhecogkv${replace(random_string.suffix.result, "-", "")}"
   resource_group_name        = azurerm_resource_group.this.name
   sku_name                   = "premium"
   tenant_id                  = data.azurerm_client_config.this.tenant_id
@@ -128,7 +133,7 @@ module "test" {
 
   kind                = "Face"
   location            = azurerm_resource_group.this.location
-  name                = "Face-${random_pet.pet.id}"
+  name                = "Face-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "E0"
 
@@ -173,7 +178,7 @@ The following resources are used by this module:
 - [azurerm_key_vault_key.key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
-- [random_pet.pet](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) (resource)
+- [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
