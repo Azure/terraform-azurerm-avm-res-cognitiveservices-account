@@ -10,6 +10,10 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 >
 > However, it is important to note that this **DOES NOT** mean that the modules cannot be consumed and utilized. They **CAN** be leveraged in all types of environments (dev, test, prod etc.). Consumers can treat them just like any other IaC module and raise issues or feature requests against them as they learn from the usage of the module. Consumers should also read the release notes for each version, if considering updating to a more recent version of a module to see if there are any considerations or breaking changes etc.
 
+## AzureRM 4.0 Roadmap
+
+This module will migrate to AzureRM 4.0 in January 2025. We'll keep the module using AzureRM 3.x versions until then, but you can try 4.0 by setting module source to `Azure/avm-res-cognitiveservices-account/azurerm//v4`
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
