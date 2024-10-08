@@ -523,9 +523,17 @@ Default: `null`
 
 The following outputs are exported:
 
+### <a name="output_endpoint"></a> [endpoint](#output\_endpoint)
+
+Description: The endpoint used to connect to the Cognitive Service Account.
+
 ### <a name="output_name"></a> [name](#output\_name)
 
 Description: The name of cognitive account created.
+
+### <a name="output_primary_access_key"></a> [primary\_access\_key](#output\_primary\_access\_key)
+
+Description: A primary access key which can be used to connect to the Cognitive Service Account.
 
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
@@ -542,6 +550,10 @@ Description: The map of cognitive deployments created.
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: The resource ID of cognitive account created.
+
+### <a name="output_secondary_access_key"></a> [secondary\_access\_key](#output\_secondary\_access\_key)
+
+Description: The endpoint used to connect to the Cognitive Service Account.
 
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
