@@ -553,7 +553,7 @@ Description: The resource ID of cognitive account created.
 
 ### <a name="output_secondary_access_key"></a> [secondary\_access\_key](#output\_secondary\_access\_key)
 
-Description: The endpoint used to connect to the Cognitive Service Account.
+Description: A secondary access key which can be used to connect to the Cognitive Service Account.
 
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
