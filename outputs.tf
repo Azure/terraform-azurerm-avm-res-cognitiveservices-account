@@ -37,7 +37,7 @@ output "resource_id" {
 }
 
 output "secondary_access_key" {
-  description = "The endpoint used to connect to the Cognitive Service Account."
+  description = "A secondary access key which can be used to connect to the Cognitive Service Account."
   sensitive   = true
   value       = azurerm_cognitive_account.this.secondary_access_key
 }
