@@ -1,1 +1,0 @@
-../customer_managed_key_encryption/variables.tf
