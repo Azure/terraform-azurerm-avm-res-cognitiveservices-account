@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Azure AI Document Intelligence example
 
-This deploys the module in its simplest form.
+This deploys an Azure AI Document Intelligence service
 
 ```hcl
 terraform {
@@ -10,10 +10,6 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = ">= 3.7.0, < 4.0.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
     }
   }
 }
@@ -39,30 +35,14 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-resource "random_pet" "pet" {}
-
 module "test" {
   source = "../../"
 
-  kind                = "OpenAI"
+  kind                = "FormRecognizer"
   location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${random_pet.pet.id}"
+  name                = "AI-Document-Intelligence-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-
-  cognitive_deployments = {
-    "gpt-4-32k" = {
-      name = "gpt-4-32k"
-      model = {
-        format  = "OpenAI"
-        name    = "gpt-4-32k"
-        version = "0613"
-      }
-      scale = {
-        type = "Standard"
-      }
-    }
-  }
 }
 ```
 
@@ -75,14 +55,11 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
-
 ## Resources
 
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [random_pet.pet](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

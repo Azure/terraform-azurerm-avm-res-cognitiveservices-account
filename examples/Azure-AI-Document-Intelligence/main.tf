@@ -5,10 +5,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.7.0, < 4.0.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
-    }
   }
 }
 
@@ -33,28 +29,12 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-resource "random_pet" "pet" {}
-
 module "test" {
   source = "../../"
 
-  kind                = "OpenAI"
+  kind                = "FormRecognizer"
   location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${random_pet.pet.id}"
+  name                = "AI-Document-Intelligence-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-
-  cognitive_deployments = {
-    "gpt-4-32k" = {
-      name = "gpt-4-32k"
-      model = {
-        format  = "OpenAI"
-        name    = "gpt-4-32k"
-        version = "0613"
-      }
-      scale = {
-        type = "Standard"
-      }
-    }
-  }
 }
