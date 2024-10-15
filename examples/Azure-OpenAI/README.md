@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Default example
 
-This deploys the module in its simplest form.
+This deploys an Azure OpenAI service.
 
 ```hcl
 terraform {
@@ -10,10 +10,6 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = ">= 3.7.0, < 4.0.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
     }
   }
 }
@@ -39,46 +35,12 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-module "vnet" {
-  source  = "Azure/subnets/azurerm"
-  version = "1.0.0"
-
-  resource_group_name = azurerm_resource_group.this.name
-  subnets = {
-    openai = {
-      address_prefixes  = ["10.52.0.0/24"]
-      service_endpoints = ["Microsoft.CognitiveServices"]
-    }
-    app = {
-      address_prefixes  = ["10.52.1.0/24"]
-      service_endpoints = ["Microsoft.CognitiveServices"]
-    }
-  }
-  virtual_network_address_space = ["10.52.0.0/16"]
-  virtual_network_location      = azurerm_resource_group.this.location
-  virtual_network_name          = "vnet"
-}
-
-resource "azurerm_private_dns_zone" "zone" {
-  name                = "privatelink.openai.azure.com"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "link" {
-  name                  = "openai-private-dns-zone"
-  private_dns_zone_name = azurerm_private_dns_zone.zone.name
-  resource_group_name   = azurerm_resource_group.this.name
-  virtual_network_id    = module.vnet.vnet_id
-}
-
-resource "random_pet" "pet" {}
-
 module "test" {
   source = "../../"
 
   kind                = "OpenAI"
   location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${random_pet.pet.id}"
+  name                = "OpenAI-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
 
@@ -95,20 +57,6 @@ module "test" {
       }
     }
   }
-  network_acls = {
-    default_action = "Deny"
-    virtual_network_rules = toset([{
-      subnet_id = module.vnet.vnet_subnets_name_id["openai"]
-    }])
-  }
-  private_endpoints = {
-    pe_endpoint = {
-      name                            = "pe_endpoint"
-      private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
-      private_service_connection_name = "pe_endpoint_connection"
-      subnet_resource_id              = module.vnet.vnet_subnets_name_id["openai"]
-    }
-  }
 }
 ```
 
@@ -121,16 +69,11 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
-
 ## Resources
 
 The following resources are used by this module:
 
-- [azurerm_private_dns_zone.zone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
-- [azurerm_private_dns_zone_virtual_network_link.link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [random_pet.pet](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -160,12 +103,6 @@ Version: >= 0.3.0
 Source: ../../
 
 Version:
-
-### <a name="module_vnet"></a> [vnet](#module\_vnet)
-
-Source: Azure/subnets/azurerm
-
-Version: 1.0.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
