@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Default example
 
-This deploys the module in its simplest form.
+This deploys an Azure OpenAI service with a customer managed key.
 
 ```hcl
 terraform {
@@ -133,7 +133,7 @@ module "test" {
 
   kind                = "Face"
   location            = azurerm_resource_group.this.location
-  name                = "Face-${random_string.suffix.result}"
+  name                = "Face-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "E0"
 
