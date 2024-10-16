@@ -1,0 +1,1 @@
+../Azure-OpenAI-with-customer_managed_key_encryption/main.tf
