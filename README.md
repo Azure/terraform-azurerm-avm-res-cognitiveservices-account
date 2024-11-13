@@ -124,7 +124,7 @@ map(object({
     model = object({
       format  = string
       name    = string
-      version = string
+      version = optional(string)
     })
     scale = object({
       capacity = optional(number)
