@@ -490,14 +490,6 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_rai_policy_api_version"></a> [rai\_policy\_api\_version](#input\_rai\_policy\_api\_version)
-
-Description: API version for Microsoft.CognitiveServices/accounts/raiPolicies API
-
-Type: `string`
-
-Default: `"2024-10-01"`
-
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
