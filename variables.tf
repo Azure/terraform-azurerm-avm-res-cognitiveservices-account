@@ -394,13 +394,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "rai_policy_api_version" {
-  type        = string
-  default     = "2024-10-01"
-  description = "API version for Microsoft.CognitiveServices/accounts/raiPolicies API"
-  nullable    = false
-}
-
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
