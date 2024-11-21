@@ -21,6 +21,11 @@ output "private_endpoints" {
   value       = azurerm_private_endpoint.this
 }
 
+output "rai_policy_id" {
+  description = "The ID of the RAI policy created."
+  value       = { for k, v in azapi_resource.rai_policy : k => v.id }
+}
+
 output "resource" {
   description = "The cognitive account resource created."
   value       = azurerm_cognitive_account.this
@@ -45,9 +50,4 @@ output "secondary_access_key" {
 output "system_assigned_mi_principal_id" {
   description = "The principal ID of system assigned managed identity on the cognitive account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`."
   value       = try(var.managed_identities.system_assigned, false) ? azurerm_cognitive_account.this.identity[0].principal_id : null
-}
-
-output "rai_policy_id" {
-  description = "The ID of the RAI policy created."
-  value       = { for k, v in azapi_resource.rai_policy : k => v.id }
 }

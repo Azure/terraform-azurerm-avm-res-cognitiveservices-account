@@ -82,54 +82,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "rai_policies" {
-  type = map(object({
-    name             = string
-    base_policy_name = string
-    mode             = string
-    content_filters = optional(list(object({
-      blocking           = bool
-      enabled            = bool
-      name               = string
-      severity_threshold = string
-      source             = string
-    })))
-    custom_block_lists = optional(list(object({
-      source          = string
-      block_list_name = string
-      blocking        = bool
-    })))
-  }))
-  default     = {}
-  nullable    = false
-  description = <<-DESCRIPTION
- - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.
- - `base_policy_name` - (Required) The name of the base policy. Changing this forces a new resource to be created.
- - `mode` - Rai policy mode. The enum value mapping is as below: `Default`, `Deferred`, `Blocking`, `Asynchronous_filter`. Please use 'Asynchronous_filter' after 2024-10-01. It is the same as 'Deferred' in previous version.
-
- ---
- `content_filters` block supports the following:
- - `name` - (Required) Name of ContentFilter.
- - `enabled` - (Required) If the ContentFilter is enabled.
- - `severity_threshold` - (Required) Level at which content is filtered. Possible values are `Low`, `Medium`, `High`.
- - `blocking` - (Required) If blocking would occur.
- - `source` - (Required) Content source to apply the Content Filters. Possible values are `Prompt`, `Completion`.
-
- ---
- `custom_block_lists` block supports the following:
- - `source` - (Required) Content source to apply the Custom Block Lists. Possible values are `Prompt`, `Completion`.
- - `block_list_name` - (Required) Name of ContentFilter.
- - `blocking` - (Required) If blocking would occur.
-DESCRIPTION
-}
-
-variable "rai_policy_api_version" {
-  default = "2024-10-01"
-  nullable = false
-  type = string
-  description = "API version for Microsoft.CognitiveServices/accounts/raiPolicies API"
-}
-
 variable "custom_question_answering_search_service_id" {
   type        = string
   default     = null
@@ -399,6 +351,54 @@ variable "qna_runtime_endpoint" {
   type        = string
   default     = null
   description = "(Optional) A URL to link a QnAMaker cognitive account to a QnA runtime."
+}
+
+variable "rai_policies" {
+  type = map(object({
+    name             = string
+    base_policy_name = string
+    mode             = string
+    content_filters = optional(list(object({
+      blocking           = bool
+      enabled            = bool
+      name               = string
+      severity_threshold = string
+      source             = string
+    })))
+    custom_block_lists = optional(list(object({
+      source          = string
+      block_list_name = string
+      blocking        = bool
+    })))
+  }))
+  default     = {}
+  description = <<-DESCRIPTION
+ - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.
+ - `base_policy_name` - (Required) The name of the base policy. Changing this forces a new resource to be created.
+ - `mode` - Rai policy mode. The enum value mapping is as below: `Default`, `Deferred`, `Blocking`, `Asynchronous_filter`. Please use 'Asynchronous_filter' after 2024-10-01. It is the same as 'Deferred' in previous version.
+
+ ---
+ `content_filters` block supports the following:
+ - `name` - (Required) Name of ContentFilter.
+ - `enabled` - (Required) If the ContentFilter is enabled.
+ - `severity_threshold` - (Required) Level at which content is filtered. Possible values are `Low`, `Medium`, `High`.
+ - `blocking` - (Required) If blocking would occur.
+ - `source` - (Required) Content source to apply the Content Filters. Possible values are `Prompt`, `Completion`.
+
+ ---
+ `custom_block_lists` block supports the following:
+ - `source` - (Required) Content source to apply the Custom Block Lists. Possible values are `Prompt`, `Completion`.
+ - `block_list_name` - (Required) Name of ContentFilter.
+ - `blocking` - (Required) If blocking would occur.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "rai_policy_api_version" {
+  type        = string
+  default     = "2024-10-01"
+  description = "API version for Microsoft.CognitiveServices/accounts/raiPolicies API"
+  nullable    = false
 }
 
 variable "role_assignments" {

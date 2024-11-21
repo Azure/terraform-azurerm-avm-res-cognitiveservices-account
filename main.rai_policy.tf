@@ -1,8 +1,7 @@
 resource "azapi_resource" "rai_policy" {
-  for_each  = var.rai_policies
-  type      = "Microsoft.CognitiveServices/accounts/raiPolicies@${var.rai_policy_api_version}"
-  parent_id = azurerm_cognitive_account.this.id
-  name      = each.value.name
+  for_each = var.rai_policies
+
+  type = "Microsoft.CognitiveServices/accounts/raiPolicies@${var.rai_policy_api_version}"
   body = {
     properties = {
       basePolicyName = each.value.base_policy_name
@@ -21,4 +20,6 @@ resource "azapi_resource" "rai_policy" {
       }], null)
     }
   }
+  name      = each.value.name
+  parent_id = azurerm_cognitive_account.this.id
 }
