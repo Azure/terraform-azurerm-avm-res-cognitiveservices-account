@@ -21,6 +21,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.3.0)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71.0, < 4.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3.2, < 1.0)
@@ -31,6 +33,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_cognitive_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
 - [azurerm_cognitive_deployment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment) (resource)
@@ -443,6 +446,58 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_rai_policies"></a> [rai\_policies](#input\_rai\_policies)
+
+Description: - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.
+- `base_policy_name` - (Required) The name of the base policy. Changing this forces a new resource to be created.
+- `mode` - Rai policy mode. The enum value mapping is as below: `Default`, `Deferred`, `Blocking`, `Asynchronous_filter`. Please use 'Asynchronous\_filter' after 2024-10-01. It is the same as 'Deferred' in previous version.
+
+---
+`content_filters` block supports the following:
+- `name` - (Required) Name of ContentFilter.
+- `enabled` - (Required) If the ContentFilter is enabled.
+- `severity_threshold` - (Required) Level at which content is filtered. Possible values are `Low`, `Medium`, `High`.
+- `blocking` - (Required) If blocking would occur.
+- `source` - (Required) Content source to apply the Content Filters. Possible values are `Prompt`, `Completion`.
+
+---
+`custom_block_lists` block supports the following:
+- `source` - (Required) Content source to apply the Custom Block Lists. Possible values are `Prompt`, `Completion`.
+- `block_list_name` - (Required) Name of ContentFilter.
+- `blocking` - (Required) If blocking would occur.
+
+Type:
+
+```hcl
+map(object({
+    name             = string
+    base_policy_name = string
+    mode             = string
+    content_filters = optional(list(object({
+      blocking           = bool
+      enabled            = bool
+      name               = string
+      severity_threshold = string
+      source             = string
+    })))
+    custom_block_lists = optional(list(object({
+      source          = string
+      block_list_name = string
+      blocking        = bool
+    })))
+  }))
+```
+
+Default: `{}`
+
+### <a name="input_rai_policy_api_version"></a> [rai\_policy\_api\_version](#input\_rai\_policy\_api\_version)
+
+Description: API version for Microsoft.CognitiveServices/accounts/raiPolicies API
+
+Type: `string`
+
+Default: `"2024-10-01"`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -538,6 +593,10 @@ Description: A primary access key which can be used to connect to the Cognitive 
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
 Description:   A map of the private endpoints created.
+
+### <a name="output_rai_policy_id"></a> [rai\_policy\_id](#output\_rai\_policy\_id)
+
+Description: The ID of the RAI policy created.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 

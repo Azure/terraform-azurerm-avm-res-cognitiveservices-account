@@ -36,7 +36,7 @@ module "naming" {
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
   location = "East US"
-  name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
+  name     = "avm-res-cognitiveservices-account-rai-${module.naming.resource_group.name_unique}"
 }
 
 resource "random_pet" "pet" {}
@@ -61,6 +61,20 @@ module "test" {
       scale = {
         type = "Standard"
       }
+    }
+  }
+  rai_policies = {
+    policy1 = {
+      name             = "policy0"
+      base_policy_name = "Microsoft.Default"
+      mode             = "Asynchronous_filter"
+      content_filters = [{
+        name               = "Hate"
+        blocking           = true
+        enabled            = true
+        severity_threshold = "High"
+        source             = "Prompt"
+      }]
     }
   }
 }

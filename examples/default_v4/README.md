@@ -57,6 +57,20 @@ module "test" {
       }
     }
   }
+  rai_policies = {
+    policy1 = {
+      name             = "policy2"
+      base_policy_name = "Microsoft.Default"
+      mode             = "Asynchronous_filter"
+      content_filters = [{
+        name               = "Hate"
+        blocking           = true
+        enabled            = true
+        severity_threshold = "High"
+        source             = "Prompt"
+      }]
+    }
+  }
 }
 ```
 
