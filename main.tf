@@ -1,10 +1,14 @@
 resource "random_string" "default_custom_subdomain_name_suffix" {
+  count   = var.kind != "AIServices" ? 1 : 0
   length  = 5
   special = false
   upper   = false
 }
 
+//moved block
+
 resource "azurerm_cognitive_account" "this" {
+  count                                        = var.kind != "AIServices" ? 1 : 0
   kind                                         = var.kind
   location                                     = var.location
   name                                         = var.name
@@ -12,7 +16,7 @@ resource "azurerm_cognitive_account" "this" {
   sku_name                                     = var.sku_name
   custom_question_answering_search_service_id  = var.custom_question_answering_search_service_id
   custom_question_answering_search_service_key = var.custom_question_answering_search_service_key
-  custom_subdomain_name                        = coalesce(var.custom_subdomain_name, "azure-cognitive-${random_string.default_custom_subdomain_name_suffix.result}")
+  custom_subdomain_name                        = coalesce(var.custom_subdomain_name, "az-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
   dynamic_throttling_enabled                   = var.dynamic_throttling_enabled
   fqdns                                        = var.fqdns
   local_auth_enabled                           = var.local_auth_enabled
@@ -77,26 +81,28 @@ resource "azurerm_cognitive_account" "this" {
 }
 
 data "azurerm_key_vault_key" "this" {
-  count = var.customer_managed_key == null ? 0 : 1
-
+  # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : 1) : 0      //modify condition to check regex for hsm
+  count        = var.customer_managed_key == null ? 0 : 1
   key_vault_id = var.customer_managed_key.key_vault_resource_id
   name         = var.customer_managed_key.key_name
 }
 
-data "azurerm_user_assigned_identity" "this" {
-  count = var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)
+//data hsm key
 
+data "azurerm_user_assigned_identity" "this" {
+  # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)) : 0
   #/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}
+  count               = var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)
   name                = reverse(split("/", var.customer_managed_key.user_assigned_identity.resource_id))[0]
   resource_group_name = split("/", var.customer_managed_key.user_assigned_identity.resource_id)[4]
 }
 
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
-  count = var.customer_managed_key == null ? 0 : 1
-
-  cognitive_account_id = azurerm_cognitive_account.this.id
+  # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : 1) : 0  //hsm key or not?
+  //(length(regexall("^https:\/\/[a-zA-Z0-9\-]+\.managedhsm\.azure\.net\/keys\/[a-zA-Z0-9\-]+$", var.key_id)) > 0) ? 1 : 0
+  cognitive_account_id = var.kind != "AIServices" ? azurerm_cognitive_account.this[0].id : azurerm_ai_services.this[0].id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
-  identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this.identity[0].principal_id, null)
+  identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -108,12 +114,13 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
       update = timeouts.value.update
     }
   }
+  //lifecycle block ---> pre-condition block
 }
 
 resource "azurerm_cognitive_deployment" "this" {
   for_each = var.cognitive_deployments
 
-  cognitive_account_id   = azurerm_cognitive_account.this.id
+  cognitive_account_id   = azurerm_cognitive_account.this[0].id
   name                   = each.value.name
   rai_policy_name        = each.value.rai_policy_name
   version_upgrade_option = each.value.version_upgrade_option
