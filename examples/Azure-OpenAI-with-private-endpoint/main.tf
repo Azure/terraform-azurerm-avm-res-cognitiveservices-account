@@ -45,20 +45,6 @@ module "vnet" {
     app    = ["Microsoft.CognitiveServices"]
   }
   vnet_name = "vnet"
-
-  # subnets = {
-  #   openai = {
-  #     address_prefixes  = ["10.52.0.0/24"]
-  #     service_endpoints = ["Microsoft.CognitiveServices"]
-  #   }
-  #   app = {
-  #     address_prefixes  = ["10.52.1.0/24"]
-  #     service_endpoints = ["Microsoft.CognitiveServices"]
-  #   }
-  # }
-  # virtual_network_address_space = ["10.52.0.0/16"]
-  # virtual_network_location      = azurerm_resource_group.this.location
-  # virtual_network_name          = "vnet"
 }
 
 resource "azurerm_private_dns_zone" "zone" {
