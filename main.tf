@@ -127,6 +127,18 @@ resource "azurerm_cognitive_deployment" "this" {
       version = model.value.version
     }
   }
+  dynamic "sku" {
+    for_each = [each.value.scale]
+    iterator = scale
+
+    content {
+      capacity = scale.value.capacity
+      family   = scale.value.family
+      name     = scale.value.type
+      size     = scale.value.size
+      tier     = scale.value.tier
+    }
+  }
   dynamic "timeouts" {
     for_each = each.value.timeouts == null ? [] : [each.value.timeouts]
 

@@ -1,1 +1,0 @@
-../Azure-AI-Document-Intelligence/main.tf
