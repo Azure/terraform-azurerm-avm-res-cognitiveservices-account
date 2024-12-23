@@ -36,23 +36,35 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "vnet" {
-  source  = "Azure/subnets/azurerm"
-  version = "1.0.0"
+  source  = "Azure/vnet/azurerm"
+  version = "5.0.1"
 
   resource_group_name = azurerm_resource_group.this.name
-  subnets = {
-    openai = {
-      address_prefixes  = ["10.52.0.0/24"]
-      service_endpoints = ["Microsoft.CognitiveServices"]
-    }
-    app = {
-      address_prefixes  = ["10.52.1.0/24"]
-      service_endpoints = ["Microsoft.CognitiveServices"]
-    }
+  use_for_each        = true
+  vnet_location       = azurerm_resource_group.this.location
+  enable_telemetry    = false
+  address_space       = ["10.52.0.0/16"]
+  subnet_prefixes     = ["10.52.0.0/24", "10.52.1.0/24"]
+  subnet_names        = ["openai", "app"]
+  subnet_service_endpoints = {
+    openai = ["Microsoft.CognitiveServices"]
+    app    = ["Microsoft.CognitiveServices"]
   }
-  virtual_network_address_space = ["10.52.0.0/16"]
-  virtual_network_location      = azurerm_resource_group.this.location
-  virtual_network_name          = "vnet"
+  vnet_name = "vnet"
+
+  # subnets = {
+  #   openai = {
+  #     address_prefixes  = ["10.52.0.0/24"]
+  #     service_endpoints = ["Microsoft.CognitiveServices"]
+  #   }
+  #   app = {
+  #     address_prefixes  = ["10.52.1.0/24"]
+  #     service_endpoints = ["Microsoft.CognitiveServices"]
+  #   }
+  # }
+  # virtual_network_address_space = ["10.52.0.0/16"]
+  # virtual_network_location      = azurerm_resource_group.this.location
+  # virtual_network_name          = "vnet"
 }
 
 resource "azurerm_private_dns_zone" "zone" {
@@ -154,9 +166,9 @@ Version:
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 
-Source: Azure/subnets/azurerm
+Source: Azure/vnet/azurerm
 
-Version: 1.0.0
+Version: 5.0.1
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
