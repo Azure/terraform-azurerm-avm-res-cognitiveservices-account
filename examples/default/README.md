@@ -90,7 +90,7 @@ Description: n/a
 
 Type: `string`
 
-Default: `"japan east"`
+Default: `"East US"`
 
 ## Outputs
 
