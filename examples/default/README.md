@@ -31,7 +31,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "East US"
+  location = var.location
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
@@ -82,7 +82,15 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: n/a
+
+Type: `string`
+
+Default: `"westeurope"`
 
 ## Outputs
 
