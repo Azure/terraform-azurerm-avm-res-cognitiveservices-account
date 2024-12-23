@@ -39,12 +39,12 @@ module "test" {
   sku_name            = "S0"
 
   cognitive_deployments = {
-    "gpt-4-32k" = {
-      name = "gpt-4-32k"
+    "gpt-4o-mini" = {
+      name = "gpt-4o-mini"
       model = {
         format  = "OpenAI"
-        name    = "gpt-4-32k"
-        version = "0613"
+        name    = "gpt-4o-mini"
+        version = "2024-07-18"
       }
       scale = {
         type = "Standard"
