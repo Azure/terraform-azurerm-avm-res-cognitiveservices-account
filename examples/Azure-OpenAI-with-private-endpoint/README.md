@@ -128,7 +128,15 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: n/a
+
+Type: `string`
+
+Default: `"eastus2"`
 
 ## Outputs
 
