@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -13,6 +13,7 @@ terraform {
 }
 
 provider "azurerm" {
+  subscription_id = "ef569087-2c0a-4b48-b649-a76367a5f60d"
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -23,7 +24,6 @@ provider "azurerm" {
     }
   }
 }
-
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
@@ -46,15 +46,71 @@ resource "random_string" "suffix" {
 
 data "azurerm_client_config" "this" {}
 
+# resource "azurerm_key_vault" "this" {
+#   location                   = azurerm_resource_group.this.location
+#   name                       = "suchiai${replace(random_string.suffix.result, "-", "")}"
+#   resource_group_name        = azurerm_resource_group.this.name
+#   sku_name                   = "premium"
+#   tenant_id                  = data.azurerm_client_config.this.tenant_id
+#   purge_protection_enabled   = true
+#   soft_delete_retention_days = 7
+
+#   access_policy {
+#     key_permissions = [
+#       "Create",
+#       "Delete",
+#       "Get",
+#       "Purge",
+#       "Recover",
+#       "Update",
+#       "GetRotationPolicy",
+#       "SetRotationPolicy"
+#     ]
+#     object_id = data.azurerm_client_config.this.object_id
+#     tenant_id = data.azurerm_client_config.this.tenant_id
+#   }
+#   access_policy {
+#     key_permissions = [
+#       "Get",
+#       "Create",
+#       "List",
+#       "Restore",
+#       "Recover",
+#       "UnwrapKey",
+#       "WrapKey",
+#       "Purge",
+#       "Encrypt",
+#       "Decrypt",
+#       "Sign",
+#       "Verify",
+#     ]
+#     object_id = azurerm_user_assigned_identity.this.principal_id
+#     secret_permissions = [
+#       "Get",
+#     ]
+#     tenant_id = data.azurerm_client_config.this.tenant_id
+#   }
+# }
+
+# resource "azurerm_key_vault_managed_hardware_security_module" "this" {
+#   name                       = "blableh${replace(random_string.suffix.result, "-", "")}"
+#   resource_group_name        = azurerm_resource_group.this.name
+#   location                   = azurerm_resource_group.this.location
+#   sku_name                   = "Standard_B1"
+#   purge_protection_enabled   = false
+#   soft_delete_retention_days = 90
+#   tenant_id                  = data.azurerm_client_config.this.tenant_id
+#   admin_object_ids           = [data.azurerm_client_config.this.object_id]
+# }
+
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
-  name                       = "suchiai${replace(random_string.suffix.result, "-", "")}"
+  name                       = "aisuchi${replace(random_string.suffix.result, "-", "")}"
   resource_group_name        = azurerm_resource_group.this.name
   sku_name                   = "premium"
   tenant_id                  = data.azurerm_client_config.this.tenant_id
   purge_protection_enabled   = true
   soft_delete_retention_days = 7
-
   access_policy {
     key_permissions = [
       "Create",
@@ -65,6 +121,19 @@ resource "azurerm_key_vault" "this" {
       "Update",
       "GetRotationPolicy",
       "SetRotationPolicy"
+    ]
+    certificate_permissions = [
+      "Create",
+      "Delete",
+      "DeleteIssuers",
+      "Get",
+      "Purge",
+      "Update"
+    ]
+    secret_permissions = [
+      "Delete",
+      "Get",
+      "Set",
     ]
     object_id = data.azurerm_client_config.this.object_id
     tenant_id = data.azurerm_client_config.this.tenant_id
@@ -86,25 +155,70 @@ resource "azurerm_key_vault" "this" {
     ]
     object_id = azurerm_user_assigned_identity.this.principal_id
     secret_permissions = [
+      "Delete",
       "Get",
+      "Set",
     ]
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
 }
 
+resource "azurerm_key_vault_certificate" "cert" {
+  count        = 3
+  name         = "acchsmcert${count.index}"
+  key_vault_id = azurerm_key_vault.this.id
+  certificate_policy {
+    issuer_parameters {
+      name = "Self"
+    }
+    key_properties {
+      exportable = true
+      key_size   = 2048
+      key_type   = "RSA"
+      reuse_key  = true
+    }
+    lifetime_action {
+      action {
+        action_type = "AutoRenew"
+      }
+      trigger {
+        days_before_expiry = 30
+      }
+    }
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
+    x509_certificate_properties {
+      extended_key_usage = []
+      key_usage = [
+        "cRLSign",
+        "dataEncipherment",
+        "digitalSignature",
+        "keyAgreement",
+        "keyCertSign",
+        "keyEncipherment",
+      ]
+      subject            = "CN=hello-world"
+      validity_in_months = 12
+    }
+  }
+}
+
 resource "azurerm_key_vault_managed_hardware_security_module" "this" {
-  name                       = "blableh${replace(random_string.suffix.result, "-", "")}"
-  resource_group_name        = azurerm_resource_group.this.name
-  location                   = azurerm_resource_group.this.location
-  sku_name                   = "Standard_B1"
-  purge_protection_enabled   = false
-  soft_delete_retention_days = 90
-  tenant_id                  = data.azurerm_client_config.this.tenant_id
-  admin_object_ids           = [data.azurerm_client_config.this.object_id]
+  name                                      = "sdjhkremi${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name                       = azurerm_resource_group.this.name
+  location                                  = azurerm_resource_group.this.location
+  sku_name                                  = "Standard_B1"
+  purge_protection_enabled                  = false
+  soft_delete_retention_days                = 90
+  tenant_id                                 = data.azurerm_client_config.this.tenant_id
+  admin_object_ids                          = [data.azurerm_client_config.this.object_id]
+  security_domain_key_vault_certificate_ids = [for cert in azurerm_key_vault_certificate.cert : cert.id]
+  security_domain_quorum                    = 2
 }
 
 resource "time_sleep" "this" {
-  create_duration = "60s"
+  create_duration = "100s"
   depends_on      = [azurerm_key_vault_managed_hardware_security_module.this]
 }
 
@@ -147,29 +261,29 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-resource "azurerm_key_vault_key" "this" {
-  key_opts = [
-    "decrypt",
-    "encrypt",
-    "sign",
-    "unwrapKey",
-    "verify",
-    "wrapKey",
-  ]
-  key_type     = "RSA-HSM"
-  key_vault_id = azurerm_key_vault.this.id
-  name         = "suchi-ai-certificate"
-  key_size     = 2048
+# resource "azurerm_key_vault_key" "this" {
+#   key_opts = [
+#     "decrypt",
+#     "encrypt",
+#     "sign",
+#     "unwrapKey",
+#     "verify",
+#     "wrapKey",
+#   ]
+#   key_type     = "RSA-HSM"
+#   key_vault_id = azurerm_key_vault.this.id
+#   name         = "suchi-ai-certificate"
+#   key_size     = 2048
 
-  rotation_policy {
-    expire_after         = "P90D"
-    notify_before_expiry = "P29D"
+#   rotation_policy {
+#     expire_after         = "P90D"
+#     notify_before_expiry = "P29D"
 
-    automatic {
-      time_before_expiry = "P30D"
-    }
-  }
-}
+#     automatic {
+#       time_before_expiry = "P30D"
+#     }
+#   }
+# }
 
 module "test" {
   source              = "../../"

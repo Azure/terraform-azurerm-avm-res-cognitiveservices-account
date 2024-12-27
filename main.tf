@@ -80,14 +80,17 @@ resource "azurerm_cognitive_account" "this" {
   }
 }
 
-data "azurerm_key_vault_key" "this" {
-  # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : 1) : 0      //modify condition to check regex for hsm
-  count        = var.customer_managed_key == null ? 0 : 1
+data "azurerm_key_vault_key" "this" { //does this work?
+  count        = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0) ? 0 : 1
   key_vault_id = var.customer_managed_key.key_vault_resource_id
   name         = var.customer_managed_key.key_name
 }
 
-//data hsm key
+data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
+  count          = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0) ? 1 : 0
+  managed_hsm_id = var.customer_managed_key.key_vault_resource_id
+  name           = var.customer_managed_key.key_name
+}
 
 data "azurerm_user_assigned_identity" "this" {
   # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)) : 0
@@ -99,9 +102,8 @@ data "azurerm_user_assigned_identity" "this" {
 
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
   # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : 1) : 0  //hsm key or not?
-  //(length(regexall("^https:\/\/[a-zA-Z0-9\-]+\.managedhsm\.azure\.net\/keys\/[a-zA-Z0-9\-]+$", var.key_id)) > 0) ? 1 : 0
   cognitive_account_id = var.kind != "AIServices" ? azurerm_cognitive_account.this[0].id : azurerm_ai_services.this[0].id
-  key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
+  key_vault_key_id     = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0) ? data.azurerm_key_vault_managed_hardware_security_module_key.this[0].id : data.azurerm_key_vault_key.this[0].id
   identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
 
   dynamic "timeouts" {
