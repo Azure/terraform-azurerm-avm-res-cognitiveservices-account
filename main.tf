@@ -1,5 +1,6 @@
 resource "random_string" "default_custom_subdomain_name_suffix" {
-  count   = var.kind != "AIServices" ? 1 : 0
+  count = var.kind != "AIServices" ? 1 : 0
+
   length  = 5
   special = false
   upper   = false
@@ -8,7 +9,8 @@ resource "random_string" "default_custom_subdomain_name_suffix" {
 //moved block
 
 resource "azurerm_cognitive_account" "this" {
-  count                                        = var.kind != "AIServices" ? 1 : 0
+  count = var.kind != "AIServices" ? 1 : 0
+
   kind                                         = var.kind
   location                                     = var.location
   name                                         = var.name
@@ -80,31 +82,37 @@ resource "azurerm_cognitive_account" "this" {
   }
 }
 
-data "azurerm_key_vault_key" "this" { //does this work?
-  count        = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0) ? 0 : 1
+locals {
+  is_hardware_security_module    = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0)
+  managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
+}
+
+data "azurerm_key_vault_key" "this" {
+  count = local.is_hardware_security_module ? 0 : 1
+
   key_vault_id = var.customer_managed_key.key_vault_resource_id
   name         = var.customer_managed_key.key_name
 }
 
 data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  count          = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0) ? 1 : 0
+  count          = local.is_hardware_security_module ? 1 : 0
   managed_hsm_id = var.customer_managed_key.key_vault_resource_id
   name           = var.customer_managed_key.key_name
 }
 
 data "azurerm_user_assigned_identity" "this" {
-  # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)) : 0
-  #/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}
-  count               = var.customer_managed_key == null ? 0 : (var.customer_managed_key.user_assigned_identity != null ? 1 : 0)
+  count = try(var.customer_managed_key.user_assigned_identity != null, false) ? 1 : 0
+
   name                = reverse(split("/", var.customer_managed_key.user_assigned_identity.resource_id))[0]
   resource_group_name = split("/", var.customer_managed_key.user_assigned_identity.resource_id)[4]
 }
 
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
-  # count = var.kind != "AIServices" ? (var.customer_managed_key == null ? 0 : 1) : 0  //hsm key or not?
+  count = local.is_hardware_security_module ? 0 : 1
+
   cognitive_account_id = var.kind != "AIServices" ? azurerm_cognitive_account.this[0].id : azurerm_ai_services.this[0].id
-  key_vault_key_id     = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0) ? data.azurerm_key_vault_managed_hardware_security_module_key.this[0].id : data.azurerm_key_vault_key.this[0].id
-  identity_client_id   = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
+  key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
+  identity_client_id   = local.managed_key_identity_client_id
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -116,7 +124,13 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
       update = timeouts.value.update
     }
   }
-  //lifecycle block ---> pre-condition block
+
+  lifecycle {
+    precondition {
+      condition     = !(var.kind != "AIServices" && local.is_hardware_security_module)
+      error_message = "HSM key could only be used when `var.kind == \"AIServices\""
+    }
+  }
 }
 
 resource "azurerm_cognitive_deployment" "this" {
