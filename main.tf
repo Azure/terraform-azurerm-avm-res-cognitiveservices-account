@@ -6,7 +6,7 @@ resource "random_string" "default_custom_subdomain_name_suffix" {
   upper   = false
 }
 
-//moved block
+# moved block
 
 resource "azurerm_cognitive_account" "this" {
   count = var.kind != "AIServices" ? 1 : 0
@@ -83,7 +83,7 @@ resource "azurerm_cognitive_account" "this" {
 }
 
 locals {
-  is_hardware_security_module    = (length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0)
+  is_hardware_security_module    = try((length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0), false)
   managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
 }
 
