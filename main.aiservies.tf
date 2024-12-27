@@ -1,5 +1,6 @@
 resource "azurerm_ai_services" "this" {
-  count                              = var.kind == "AIServices" ? 1 : 0
+  count = var.kind == "AIServices" ? 1 : 0
+
   location                           = var.location
   name                               = var.name
   resource_group_name                = var.resource_group_name
@@ -11,15 +12,15 @@ resource "azurerm_ai_services" "this" {
   public_network_access              = var.public_network_access_enabled ? "Enabled" : "Disabled"
   tags                               = var.tags
 
-  # dynamic "customer_managed_key" {
-  #   for_each = var.customer_managed_key == null ? [] : [var.customer_managed_key]
+  dynamic "customer_managed_key" {
+    for_each = local.is_hardware_security_module && var.customer_managed_key != null ? [var.customer_managed_key] : []
 
-  #   content {
-  #     identity_client_id = customer_managed_key.value.identity_client_id == null ? null : customer_managed_key.value.identity_client_id.client_id
-  #     key_vault_key_id   = customer_managed_key.value.key_vault_key_id  //try
-  #     managed_hsm_key_id = customer_managed_key.value.managed_hsm_key_id   //try
-  #   }
-  # }
+    content {
+      identity_client_id = local.managed_key_identity_client_id
+      # we'll leave the regular key to `azurerm_cognitive_account_customer_managed_key` resource
+      managed_hsm_key_id = try(data.azurerm_key_vault_managed_hardware_security_module_key.this[0].id, null)
+    }
+  }
   dynamic "identity" {
     for_each = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? { this = var.managed_identities } : {}
 

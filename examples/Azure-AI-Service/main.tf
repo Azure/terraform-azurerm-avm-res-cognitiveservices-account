@@ -111,7 +111,16 @@ resource "azurerm_key_vault" "this" {
   tenant_id                  = data.azurerm_client_config.this.tenant_id
   purge_protection_enabled   = true
   soft_delete_retention_days = 7
+
   access_policy {
+    certificate_permissions = [
+      "Create",
+      "Delete",
+      "DeleteIssuers",
+      "Get",
+      "Purge",
+      "Update"
+    ]
     key_permissions = [
       "Create",
       "Delete",
@@ -122,20 +131,12 @@ resource "azurerm_key_vault" "this" {
       "GetRotationPolicy",
       "SetRotationPolicy"
     ]
-    certificate_permissions = [
-      "Create",
-      "Delete",
-      "DeleteIssuers",
-      "Get",
-      "Purge",
-      "Update"
-    ]
+    object_id = data.azurerm_client_config.this.object_id
     secret_permissions = [
       "Delete",
       "Get",
       "Set",
     ]
-    object_id = data.azurerm_client_config.this.object_id
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
   access_policy {
@@ -164,18 +165,23 @@ resource "azurerm_key_vault" "this" {
 }
 
 resource "azurerm_key_vault_certificate" "cert" {
-  count        = 3
-  name         = "acchsmcert${count.index}"
+  count = 3
+
   key_vault_id = azurerm_key_vault.this.id
+  name         = "acchsmcert${count.index}"
+
   certificate_policy {
     issuer_parameters {
       name = "Self"
     }
     key_properties {
       exportable = true
-      key_size   = 2048
       key_type   = "RSA"
       reuse_key  = true
+      key_size   = 2048
+    }
+    secret_properties {
+      content_type = "application/x-pkcs12"
     }
     lifetime_action {
       action {
@@ -185,11 +191,7 @@ resource "azurerm_key_vault_certificate" "cert" {
         days_before_expiry = 30
       }
     }
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
     x509_certificate_properties {
-      extended_key_usage = []
       key_usage = [
         "cRLSign",
         "dataEncipherment",
@@ -200,54 +202,58 @@ resource "azurerm_key_vault_certificate" "cert" {
       ]
       subject            = "CN=hello-world"
       validity_in_months = 12
+      extended_key_usage = []
     }
   }
 }
 
 resource "azurerm_key_vault_managed_hardware_security_module" "this" {
+  admin_object_ids                          = [data.azurerm_client_config.this.object_id]
+  location                                  = azurerm_resource_group.this.location
   name                                      = "sdjhkremi${replace(random_string.suffix.result, "-", "")}"
   resource_group_name                       = azurerm_resource_group.this.name
-  location                                  = azurerm_resource_group.this.location
   sku_name                                  = "Standard_B1"
-  purge_protection_enabled                  = false
-  soft_delete_retention_days                = 90
   tenant_id                                 = data.azurerm_client_config.this.tenant_id
-  admin_object_ids                          = [data.azurerm_client_config.this.object_id]
+  purge_protection_enabled                  = false
   security_domain_key_vault_certificate_ids = [for cert in azurerm_key_vault_certificate.cert : cert.id]
   security_domain_quorum                    = 2
+  soft_delete_retention_days                = 90
 }
 
 resource "time_sleep" "this" {
   create_duration = "100s"
-  depends_on      = [azurerm_key_vault_managed_hardware_security_module.this]
+
+  depends_on = [azurerm_key_vault_managed_hardware_security_module.this]
 }
 
 // this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm-crypto-user" {
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
   name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad22"
-  scope              = "/keys"
-  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   principal_id       = data.azurerm_client_config.this.object_id
-  depends_on         = [time_sleep.this]
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
+  scope              = "/keys"
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+
+  depends_on = [time_sleep.this]
 }
 
 // this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm-crypto-officer" {
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
   name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad23"
-  scope              = "/keys"
-  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
   principal_id       = data.azurerm_client_config.this.object_id
-  depends_on         = [time_sleep.this]
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
+  scope              = "/keys"
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+
+  depends_on = [time_sleep.this]
 }
 
 resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  name           = "hsmkeysuchi"
-  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
-  key_type       = "EC-HSM"
-  curve          = "P-521"
   key_opts       = ["sign"]
+  key_type       = "EC-HSM"
+  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
+  name           = "hsmkeysuchi"
+  curve          = "P-521"
 
   depends_on = [
     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm-crypto-user,
