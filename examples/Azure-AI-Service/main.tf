@@ -162,9 +162,13 @@ resource "azurerm_key_vault_managed_hardware_security_module" "this" {
   soft_delete_retention_days                = 90
 }
 
+resource "random_uuid" "role_assignments_names" {
+  count = 2
+}
+
 # this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_user" {
-  name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad22"
+  name               = random_uuid.role_assignments_names[0].result
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
@@ -173,7 +177,7 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
 
 # this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_officer" {
-  name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad23"
+  name               = random_uuid.role_assignments_names[1].result
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
   scope              = "/keys"
@@ -199,30 +203,6 @@ resource "azurerm_user_assigned_identity" "this" {
   resource_group_name = azurerm_resource_group.this.name
 }
 
-# resource "azurerm_key_vault_key" "this" {
-#   key_opts = [
-#     "decrypt",
-#     "encrypt",
-#     "sign",
-#     "unwrapKey",
-#     "verify",
-#     "wrapKey",
-#   ]
-#   key_type     = "RSA-HSM"
-#   key_vault_id = azurerm_key_vault.this.id
-#   name         = "suchi-ai-certificate"
-#   key_size     = 2048
-
-#   rotation_policy {
-#     expire_after         = "P90D"
-#     notify_before_expiry = "P29D"
-
-#     automatic {
-#       time_before_expiry = "P30D"
-#     }
-#   }
-# }
-
 module "test" {
   source              = "../../"
   kind                = "AIServices"
@@ -235,13 +215,10 @@ module "test" {
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
   customer_managed_key = {
-    # key_vault_resource_id = azurerm_key_vault.this.id
     key_vault_resource_id = azurerm_key_vault_managed_hardware_security_module.this.id
-    # key_name = azurerm_key_vault_key.this.name
-    key_name = azurerm_key_vault_managed_hardware_security_module_key.this.name
+    key_name              = azurerm_key_vault_managed_hardware_security_module_key.this.name
     user_assigned_identity = {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  depends_on = [azurerm_key_vault_managed_hardware_security_module.this, azurerm_key_vault_managed_hardware_security_module_key.this, azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer, azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user]
 }
