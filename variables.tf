@@ -22,12 +22,6 @@ variable "sku_name" {
   nullable    = false
 }
 
-variable "kind" {
-  type        = string
-  description = "(Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created."
-  default     = null
-}
-
 variable "cognitive_deployments" {
   type = map(object({
     name                   = string
@@ -189,6 +183,12 @@ variable "fqdns" {
   type        = list(string)
   default     = null
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
+}
+
+variable "kind" {
+  type        = string
+  default     = null
+  description = "(Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created."
 }
 
 variable "local_auth_enabled" {
@@ -435,20 +435,6 @@ variable "storage" {
  - `identity_client_id` - (Optional) The client ID of the managed identity associated with the storage resource.
  - `storage_account_id` - (Required) Full resource id of a Microsoft.Storage resource.
 DESCRIPTION
-}
-
-variable "ai_services_customer_managed_key" {
-  type = object({
-    identity_client_id = optional(string)
-    key_vault_key_id   = optional(string)
-    managed_hsm_key_id = optional(string)
-  })
-  default     = null
-  description = <<-EOT
- - `identity_client_id` - (Optional) The Client ID of the User Assigned Identity that has access to the key. This property only needs to be specified when there are multiple identities attached to the Azure AI Service.
- - `key_vault_key_id` - (Optional) The ID of the Key Vault Key which should be used to encrypt the data in this AI Services Account. Exactly one of `key_vault_key_id`, `managed_hsm_key_id` must be specified.
- - `managed_hsm_key_id` - (Optional) The ID of the managed HSM Key which should be used to encrypt the data in this AI Services Account. Exactly one of `key_vault_key_id`, `managed_hsm_key_id` must be specified.
-EOT
 }
 
 variable "tags" {
