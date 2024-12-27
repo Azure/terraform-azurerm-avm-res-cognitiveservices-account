@@ -82,24 +82,6 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_ai_services_customer_managed_key"></a> [ai\_services\_customer\_managed\_key](#input\_ai\_services\_customer\_managed\_key)
-
-Description: - `identity_client_id` - (Optional) The Client ID of the User Assigned Identity that has access to the key. This property only needs to be specified when there are multiple identities attached to the Azure AI Service.
-- `key_vault_key_id` - (Optional) The ID of the Key Vault Key which should be used to encrypt the data in this AI Services Account. Exactly one of `key_vault_key_id`, `managed_hsm_key_id` must be specified.
-- `managed_hsm_key_id` - (Optional) The ID of the managed HSM Key which should be used to encrypt the data in this AI Services Account. Exactly one of `key_vault_key_id`, `managed_hsm_key_id` must be specified.
-
-Type:
-
-```hcl
-object({
-    identity_client_id = optional(string)
-    key_vault_key_id   = optional(string)
-    managed_hsm_key_id = optional(string)
-  })
-```
-
-Default: `null`
-
 ### <a name="input_cognitive_deployments"></a> [cognitive\_deployments](#input\_cognitive\_deployments)
 
 Description: - `name` - (Required) The name of the Cognitive Services Account Deployment. Changing this forces a new resource to be created.
