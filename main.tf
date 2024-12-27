@@ -6,7 +6,10 @@ resource "random_string" "default_custom_subdomain_name_suffix" {
   upper   = false
 }
 
-# moved block
+moved {
+  from = azurerm_cognitive_account.this
+  to   = azurerm_cognitive_account.this[0]
+}
 
 resource "azurerm_cognitive_account" "this" {
   count = var.kind != "AIServices" ? 1 : 0
