@@ -13,7 +13,6 @@ terraform {
 }
 
 provider "azurerm" {
-  subscription_id = "ef569087-2c0a-4b48-b649-a76367a5f60d"
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -45,63 +44,6 @@ resource "random_string" "suffix" {
 }
 
 data "azurerm_client_config" "this" {}
-
-# resource "azurerm_key_vault" "this" {
-#   location                   = azurerm_resource_group.this.location
-#   name                       = "suchiai${replace(random_string.suffix.result, "-", "")}"
-#   resource_group_name        = azurerm_resource_group.this.name
-#   sku_name                   = "premium"
-#   tenant_id                  = data.azurerm_client_config.this.tenant_id
-#   purge_protection_enabled   = true
-#   soft_delete_retention_days = 7
-
-#   access_policy {
-#     key_permissions = [
-#       "Create",
-#       "Delete",
-#       "Get",
-#       "Purge",
-#       "Recover",
-#       "Update",
-#       "GetRotationPolicy",
-#       "SetRotationPolicy"
-#     ]
-#     object_id = data.azurerm_client_config.this.object_id
-#     tenant_id = data.azurerm_client_config.this.tenant_id
-#   }
-#   access_policy {
-#     key_permissions = [
-#       "Get",
-#       "Create",
-#       "List",
-#       "Restore",
-#       "Recover",
-#       "UnwrapKey",
-#       "WrapKey",
-#       "Purge",
-#       "Encrypt",
-#       "Decrypt",
-#       "Sign",
-#       "Verify",
-#     ]
-#     object_id = azurerm_user_assigned_identity.this.principal_id
-#     secret_permissions = [
-#       "Get",
-#     ]
-#     tenant_id = data.azurerm_client_config.this.tenant_id
-#   }
-# }
-
-# resource "azurerm_key_vault_managed_hardware_security_module" "this" {
-#   name                       = "blableh${replace(random_string.suffix.result, "-", "")}"
-#   resource_group_name        = azurerm_resource_group.this.name
-#   location                   = azurerm_resource_group.this.location
-#   sku_name                   = "Standard_B1"
-#   purge_protection_enabled   = false
-#   soft_delete_retention_days = 90
-#   tenant_id                  = data.azurerm_client_config.this.tenant_id
-#   admin_object_ids           = [data.azurerm_client_config.this.object_id]
-# }
 
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
@@ -220,32 +162,22 @@ resource "azurerm_key_vault_managed_hardware_security_module" "this" {
   soft_delete_retention_days                = 90
 }
 
-resource "time_sleep" "this" {
-  create_duration = "100s"
-
-  depends_on = [azurerm_key_vault_managed_hardware_security_module.this]
-}
-
-// this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
-resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm-crypto-user" {
+# this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_user" {
   name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad22"
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-
-  depends_on = [time_sleep.this]
 }
 
-// this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
-resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm-crypto-officer" {
+# this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_officer" {
   name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad23"
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
   scope              = "/keys"
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-
-  depends_on = [time_sleep.this]
 }
 
 resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
@@ -256,8 +188,8 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
   curve          = "P-521"
 
   depends_on = [
-    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm-crypto-user,
-    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm-crypto-officer
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer
   ]
 }
 
@@ -311,5 +243,5 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  depends_on = [azurerm_key_vault_managed_hardware_security_module.this, azurerm_key_vault_managed_hardware_security_module_key.this, azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm-crypto-officer, azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm-crypto-user]
+  depends_on = [azurerm_key_vault_managed_hardware_security_module.this, azurerm_key_vault_managed_hardware_security_module_key.this, azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer, azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user]
 }
