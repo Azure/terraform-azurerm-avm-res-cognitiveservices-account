@@ -13,12 +13,12 @@ resource "azurerm_ai_services" "this" {
   tags                               = var.tags
 
   dynamic "customer_managed_key" {
-    for_each = local.is_hardware_security_module && var.customer_managed_key != null ? [var.customer_managed_key] : []
+    for_each = var.is_hardware_security_module && var.customer_managed_key != null ? [1] : []
 
     content {
       identity_client_id = local.managed_key_identity_client_id
       # we'll leave the regular key to `azurerm_cognitive_account_customer_managed_key` resource
-      managed_hsm_key_id = try(data.azurerm_key_vault_managed_hardware_security_module_key.this[0].id, null)
+      managed_hsm_key_id = try(data.azurerm_key_vault_managed_hardware_security_module_key.this[0].versioned_id, null)
     }
   }
   dynamic "identity" {
