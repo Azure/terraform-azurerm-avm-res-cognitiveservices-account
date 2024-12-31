@@ -185,6 +185,13 @@ variable "fqdns" {
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
 }
 
+variable "is_hardware_security_module" {
+  type        = bool
+  default     = false
+  description = "(Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`."
+  nullable    = false
+}
+
 variable "kind" {
   type        = string
   default     = null

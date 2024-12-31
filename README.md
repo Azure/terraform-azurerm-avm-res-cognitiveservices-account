@@ -250,6 +250,14 @@ Type: `list(string)`
 
 Default: `null`
 
+### <a name="input_is_hardware_security_module"></a> [is\_hardware\_security\_module](#input\_is\_hardware\_security\_module)
+
+Description: (Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_kind"></a> [kind](#input\_kind)
 
 Description: (Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created.

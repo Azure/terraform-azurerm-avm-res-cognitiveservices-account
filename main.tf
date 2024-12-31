@@ -86,19 +86,19 @@ resource "azurerm_cognitive_account" "this" {
 }
 
 locals {
-  is_hardware_security_module    = try((length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0), false)
+  # is_hardware_security_module    = try((length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0), false)
   managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
 }
 
 data "azurerm_key_vault_key" "this" {
-  count = local.is_hardware_security_module ? 0 : 1
+  count = var.is_hardware_security_module ? 0 : 1
 
   key_vault_id = var.customer_managed_key.key_vault_resource_id
   name         = var.customer_managed_key.key_name
 }
 
 data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  count          = local.is_hardware_security_module ? 1 : 0
+  count          = var.is_hardware_security_module ? 1 : 0
   managed_hsm_id = var.customer_managed_key.key_vault_resource_id
   name           = var.customer_managed_key.key_name
 }
@@ -111,7 +111,7 @@ data "azurerm_user_assigned_identity" "this" {
 }
 
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
-  count = local.is_hardware_security_module ? 0 : 1
+  count = var.is_hardware_security_module ? 0 : 1
 
   cognitive_account_id = var.kind != "AIServices" ? azurerm_cognitive_account.this[0].id : azurerm_ai_services.this[0].id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
@@ -130,8 +130,12 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
 
   lifecycle {
     precondition {
-      condition     = !(var.kind != "AIServices" && local.is_hardware_security_module)
+      condition     = !(var.kind != "AIServices" && var.is_hardware_security_module)
       error_message = "HSM key could only be used when `var.kind == \"AIServices\""
+    }
+    precondition {
+      condition     = var.is_hardware_security_module && try((length(regexall("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)) > 0), false)
+      error_message = "When `var.is_hardware_security_module == true`, then the provided key vault resource ID should be managed HSM"
     }
   }
 }
