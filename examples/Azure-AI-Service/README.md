@@ -51,6 +51,12 @@ resource "random_string" "suffix" {
 
 data "azurerm_client_config" "this" {}
 
+resource "azurerm_user_assigned_identity" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "uai-such-aiservice"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
   name                       = "aisuchi${replace(random_string.suffix.result, "-", "")}"
@@ -158,18 +164,18 @@ resource "azurerm_key_vault_certificate" "cert" {
 resource "azurerm_key_vault_managed_hardware_security_module" "this" {
   admin_object_ids                          = [data.azurerm_client_config.this.object_id]
   location                                  = azurerm_resource_group.this.location
-  name                                      = "sdjhkremi${replace(random_string.suffix.result, "-", "")}"
+  name                                      = "hsuiet${replace(random_string.suffix.result, "-", "")}"
   resource_group_name                       = azurerm_resource_group.this.name
   sku_name                                  = "Standard_B1"
   tenant_id                                 = data.azurerm_client_config.this.tenant_id
-  purge_protection_enabled                  = false
+  purge_protection_enabled                  = true
   security_domain_key_vault_certificate_ids = [for cert in azurerm_key_vault_certificate.cert : cert.id]
   security_domain_quorum                    = 2
-  soft_delete_retention_days                = 90
+  soft_delete_retention_days                = 7
 }
 
 resource "random_uuid" "role_assignments_names" {
-  count = 2
+  count = 3
 }
 
 # this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
@@ -190,32 +196,37 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
+# this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
+  name               = random_uuid.role_assignments_names[2].result
+  principal_id       = azurerm_user_assigned_identity.this.principal_id
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
+  scope              = "/keys"
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+}
+
 resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  key_opts       = ["sign"]
-  key_type       = "EC-HSM"
+  key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+  key_type       = "RSA-HSM"
   managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
   name           = "hsmkeysuchi"
-  curve          = "P-521"
+  key_size       = 2048
 
   depends_on = [
     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
-    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user
   ]
 }
 
-resource "azurerm_user_assigned_identity" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "uai-such-aiservice"
-  resource_group_name = azurerm_resource_group.this.name
-}
-
 module "test" {
-  source              = "../../"
-  kind                = "AIServices"
-  location            = azurerm_resource_group.this.location
-  name                = "AIService-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  source                      = "../../"
+  kind                        = "AIServices"
+  location                    = azurerm_resource_group.this.location
+  name                        = "AIService-${module.naming.cognitive_account.name_unique}"
+  resource_group_name         = azurerm_resource_group.this.name
+  sku_name                    = "S0"
+  is_hardware_security_module = true
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
@@ -251,6 +262,7 @@ The following resources are used by this module:
 - [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_key) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
+- [azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
