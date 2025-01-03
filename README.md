@@ -30,6 +30,7 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azurerm_ai_services.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/ai_services) (resource)
 - [azurerm_cognitive_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
 - [azurerm_cognitive_deployment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment) (resource)
@@ -44,6 +45,7 @@ The following resources are used by this module:
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_key_vault_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_key) (data source)
+- [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_managed_hardware_security_module_key) (data source)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/data-sources/module_source) (data source)
 
@@ -51,12 +53,6 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_kind"></a> [kind](#input\_kind)
-
-Description: (Required) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created.
-
-Type: `string`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -66,19 +62,19 @@ Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: (Required) Specifies the name of the Cognitive Service Account. Changing this forces a new resource to be created.
+Description: (Required) Specifies the name of the Cognitive Service or AI Service Account. Changing this forces a new resource to be created.
 
 Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: (Required) The name of the resource group in which the Cognitive Service Account is created. Changing this forces a new resource to be created.
+Description: (Required) The name of the resource group in which the Cognitive Service or AI Service Account is created. Changing this forces a new resource to be created.
 
 Type: `string`
 
 ### <a name="input_sku_name"></a> [sku\_name](#input\_sku\_name)
 
-Description: (Required) Specifies the SKU Name for this Cognitive Service Account. Possible values are `F0`, `F1`, `S0`, `S`, `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `P0`, `P1`, `P2`, `E0` and `DC0`.
+Description: (Required) Specifies the SKU Name for this Cognitive Service or AI Service Account. Possible values are `F0`, `F1`, `S0`, `S`, `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `P0`, `P1`, `P2`, `E0` and `DC0`.
 
 Type: `string`
 
@@ -174,6 +170,8 @@ Description:   Controls the Customer managed key configuration on this resource.
   - `key_vault_resource_id` - (Required) Resource ID of the Key Vault that the customer managed key belongs to.
   - `key_name` - (Required) Specifies the name of the Customer Managed Key Vault Key.
   - `key_version` - (Optional) The version of the Customer Managed Key Vault Key.
+  - `key_vault_key_id` - (Optional) The ID of the Key Vault Key which should be used to encrypt the data in this AI Services Account. Exactly one of key\_vault\_key\_id, managed\_hsm\_key\_id must be specified.
+  - `managed_hsm_key_id` - (Optional) The ID of the managed HSM Key which should be used to encrypt the data in this AI Services Account. Exactly one of key\_vault\_key\_id, managed\_hsm\_key\_id must be specified.
   - `user_assigned_identity` - (Optional) The User Assigned Identity that has access to the key.
     - `resource_id` - (Required) The resource ID of the User Assigned Identity that has access to the key.
 
@@ -249,6 +247,22 @@ Default: `true`
 Description: (Optional) List of FQDNs allowed for the Cognitive Account.
 
 Type: `list(string)`
+
+Default: `null`
+
+### <a name="input_is_hardware_security_module"></a> [is\_hardware\_security\_module](#input\_is\_hardware\_security\_module)
+
+Description: (Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_kind"></a> [kind](#input\_kind)
+
+Description: (Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created.
+
+Type: `string`
 
 Default: `null`
 
@@ -432,7 +446,7 @@ Description: (Optional) Whether public network access is allowed for the Cogniti
 
 Type: `bool`
 
-Default: `null`
+Default: `true`
 
 ### <a name="input_qna_runtime_endpoint"></a> [qna\_runtime\_endpoint](#input\_qna\_runtime\_endpoint)
 
@@ -544,10 +558,10 @@ Default: `null`
 
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
-Description: - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service Account.
-- `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service Account.
-- `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service Account.
-- `update` - (Defaults to 30 minutes) Used when updating the Cognitive Service Account.
+Description: - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service or AI Service Account.
+- `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service or AI Service Account.
+- `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service or AI Service Account.
+- `update` - (Defaults to 30 minutes) Used when updating the Cognitive Service or AI Service Account.
 
 Type:
 
@@ -604,7 +618,7 @@ Description: A secondary access key which can be used to connect to the Cognitiv
 
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
-Description: The principal ID of system assigned managed identity on the cognitive account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`.
+Description: The principal ID of system assigned managed identity on the Cognitive/AI Service account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`.
 
 ## Modules
 

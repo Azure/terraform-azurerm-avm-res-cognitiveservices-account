@@ -1,9 +1,3 @@
-variable "kind" {
-  type        = string
-  description = "(Required) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created."
-  nullable    = false
-}
-
 variable "location" {
   type        = string
   description = "(Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created."
@@ -12,19 +6,19 @@ variable "location" {
 
 variable "name" {
   type        = string
-  description = "(Required) Specifies the name of the Cognitive Service Account. Changing this forces a new resource to be created."
+  description = "(Required) Specifies the name of the Cognitive Service or AI Service Account. Changing this forces a new resource to be created."
   nullable    = false
 }
 
 variable "resource_group_name" {
   type        = string
-  description = "(Required) The name of the resource group in which the Cognitive Service Account is created. Changing this forces a new resource to be created."
+  description = "(Required) The name of the resource group in which the Cognitive Service or AI Service Account is created. Changing this forces a new resource to be created."
   nullable    = false
 }
 
 variable "sku_name" {
   type        = string
-  description = "(Required) Specifies the SKU Name for this Cognitive Service Account. Possible values are `F0`, `F1`, `S0`, `S`, `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `P0`, `P1`, `P2`, `E0` and `DC0`."
+  description = "(Required) Specifies the SKU Name for this Cognitive Service or AI Service Account. Possible values are `F0`, `F1`, `S0`, `S`, `S1`, `S2`, `S3`, `S4`, `S5`, `S6`, `P0`, `P1`, `P2`, `E0` and `DC0`."
   nullable    = false
 }
 
@@ -117,6 +111,8 @@ variable "customer_managed_key" {
   - `key_vault_resource_id` - (Required) Resource ID of the Key Vault that the customer managed key belongs to.
   - `key_name` - (Required) Specifies the name of the Customer Managed Key Vault Key.
   - `key_version` - (Optional) The version of the Customer Managed Key Vault Key.
+  - `key_vault_key_id` - (Optional) The ID of the Key Vault Key which should be used to encrypt the data in this AI Services Account. Exactly one of key_vault_key_id, managed_hsm_key_id must be specified.
+  - `managed_hsm_key_id` - (Optional) The ID of the managed HSM Key which should be used to encrypt the data in this AI Services Account. Exactly one of key_vault_key_id, managed_hsm_key_id must be specified.
   - `user_assigned_identity` - (Optional) The User Assigned Identity that has access to the key.
     - `resource_id` - (Required) The resource ID of the User Assigned Identity that has access to the key.
   DESCRIPTION
@@ -187,6 +183,19 @@ variable "fqdns" {
   type        = list(string)
   default     = null
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
+}
+
+variable "is_hardware_security_module" {
+  type        = bool
+  default     = false
+  description = "(Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`."
+  nullable    = false
+}
+
+variable "kind" {
+  type        = string
+  default     = null
+  description = "(Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created."
 }
 
 variable "local_auth_enabled" {
@@ -343,7 +352,7 @@ variable "private_endpoints_manage_dns_zone_group" {
 
 variable "public_network_access_enabled" {
   type        = bool
-  default     = null
+  default     = true
   description = "(Optional) Whether public network access is allowed for the Cognitive Account. Defaults to `true`."
 }
 
@@ -450,9 +459,9 @@ variable "timeouts" {
   })
   default     = null
   description = <<-DESCRIPTION
- - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service Account.
- - `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service Account.
- - `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service Account.
- - `update` - (Defaults to 30 minutes) Used when updating the Cognitive Service Account.
+ - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service or AI Service Account.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service or AI Service Account.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service or AI Service Account.
+ - `update` - (Defaults to 30 minutes) Used when updating the Cognitive Service or AI Service Account.
 DESCRIPTION
 }
