@@ -82,6 +82,11 @@ resource "azurerm_cognitive_account" "this" {
     ignore_changes = [
       customer_managed_key,
     ]
+
+    precondition {
+      condition     = var.kind == "AIServices" || !var.is_hsm_key
+      error_message = "HSM key could only be used when `var.kind == \"AIServices\"`"
+    }
   }
 }
 
@@ -124,13 +129,6 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
       delete = timeouts.value.delete
       read   = timeouts.value.read
       update = timeouts.value.update
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition     = var.kind == "AIServices" || !var.is_hsm_key
-      error_message = "HSM key could only be used when `var.kind == \"AIServices\"`"
     }
   }
 }
