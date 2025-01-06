@@ -175,7 +175,7 @@ resource "azurerm_key_vault_managed_hardware_security_module" "this" {
 }
 
 resource "random_uuid" "role_assignments_names" {
-  count = 3
+  count = 4
 }
 
 # this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
@@ -196,9 +196,17 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_contributor" {
+  name               = random_uuid.role_assignments_names[2].result
+  principal_id       = data.azurerm_client_config.this.object_id
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/18500a29-7fe2-46b2-a342-b16a415e101d"
+  scope              = "/keys"
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+}
+
 # this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
-  name               = random_uuid.role_assignments_names[2].result
+  name               = random_uuid.role_assignments_names[3].result
   principal_id       = azurerm_user_assigned_identity.this.principal_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
@@ -260,6 +268,7 @@ The following resources are used by this module:
 - [azurerm_key_vault_certificate.cert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
 - [azurerm_key_vault_managed_hardware_security_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_key) (resource)
+- [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
