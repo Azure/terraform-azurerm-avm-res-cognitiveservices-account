@@ -54,6 +54,12 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_kind"></a> [kind](#input\_kind)
+
+Description: (Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created.
+
+Type: `string`
+
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: (Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
@@ -170,8 +176,6 @@ Description:   Controls the Customer managed key configuration on this resource.
   - `key_vault_resource_id` - (Required) Resource ID of the Key Vault that the customer managed key belongs to.
   - `key_name` - (Required) Specifies the name of the Customer Managed Key Vault Key.
   - `key_version` - (Optional) The version of the Customer Managed Key Vault Key.
-  - `key_vault_key_id` - (Optional) The ID of the Key Vault Key which should be used to encrypt the data in this AI Services Account. Exactly one of key\_vault\_key\_id, managed\_hsm\_key\_id must be specified.
-  - `managed_hsm_key_id` - (Optional) The ID of the managed HSM Key which should be used to encrypt the data in this AI Services Account. Exactly one of key\_vault\_key\_id, managed\_hsm\_key\_id must be specified.
   - `user_assigned_identity` - (Optional) The User Assigned Identity that has access to the key.
     - `resource_id` - (Required) The resource ID of the User Assigned Identity that has access to the key.
 
@@ -250,21 +254,13 @@ Type: `list(string)`
 
 Default: `null`
 
-### <a name="input_is_hardware_security_module"></a> [is\_hardware\_security\_module](#input\_is\_hardware\_security\_module)
+### <a name="input_is_hsm_key"></a> [is\_hsm\_key](#input\_is\_hsm\_key)
 
 Description: (Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`.
 
 Type: `bool`
 
 Default: `false`
-
-### <a name="input_kind"></a> [kind](#input\_kind)
-
-Description: (Optional) Specifies the type of Cognitive Service Account that should be created. Possible values are `Academic`, `AIServices`,  `AnomalyDetector`, `Bing.Autosuggest`, `Bing.Autosuggest.v7`, `Bing.CustomSearch`, `Bing.Search`, `Bing.Search.v7`, `Bing.Speech`, `Bing.SpellCheck`, `Bing.SpellCheck.v7`, `CognitiveServices`, `ComputerVision`, `ContentModerator`, `ContentSafety`, `CustomSpeech`, `CustomVision.Prediction`, `CustomVision.Training`, `Emotion`, `Face`, `FormRecognizer`, `ImmersiveReader`, `LUIS`, `LUIS.Authoring`, `MetricsAdvisor`, `OpenAI`, `Personalizer`, `QnAMaker`, `Recommendations`, `SpeakerRecognition`, `Speech`, `SpeechServices`, `SpeechTranslation`, `TextAnalytics`, `TextTranslation` and `WebLM`. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_local_auth_enabled"></a> [local\_auth\_enabled](#input\_local\_auth\_enabled)
 
@@ -446,7 +442,7 @@ Description: (Optional) Whether public network access is allowed for the Cogniti
 
 Type: `bool`
 
-Default: `true`
+Default: `null`
 
 ### <a name="input_qna_runtime_endpoint"></a> [qna\_runtime\_endpoint](#input\_qna\_runtime\_endpoint)
 

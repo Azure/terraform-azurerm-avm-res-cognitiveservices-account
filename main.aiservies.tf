@@ -13,7 +13,7 @@ resource "azurerm_ai_services" "this" {
   tags                               = var.tags
 
   dynamic "customer_managed_key" {
-    for_each = var.is_hardware_security_module && var.customer_managed_key != null ? [1] : []
+    for_each = var.is_hsm_key && var.customer_managed_key != null ? [1] : []
 
     content {
       identity_client_id = local.managed_key_identity_client_id
@@ -67,7 +67,7 @@ resource "azurerm_ai_services" "this" {
 
   lifecycle {
     precondition {
-      condition     = try(!var.is_hardware_security_module || can(regex("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)), true)
+      condition     = try(!var.is_hsm_key || can(regex("^\\/subscriptions\\/([a-fA-F0-9\\-]{36})\\/resourceGroups\\/([a-zA-Z0-9\\-]+)\\/providers\\/Microsoft\\.KeyVault\\/managedHSMs\\/([a-zA-Z0-9\\-]+)$", var.customer_managed_key.key_vault_resource_id)), true)
       error_message = "When `var.is_hardware_security_module == true`, then the provided key vault resource ID must be managed HSM"
     }
   }
