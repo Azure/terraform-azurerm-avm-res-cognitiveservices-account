@@ -350,8 +350,9 @@ variable "private_endpoints_manage_dns_zone_group" {
 
 variable "public_network_access_enabled" {
   type        = bool
-  default     = null
+  default     = true
   description = "(Optional) Whether public network access is allowed for the Cognitive Account. Defaults to `true`."
+  nullable    = false
 }
 
 variable "qna_runtime_endpoint" {
