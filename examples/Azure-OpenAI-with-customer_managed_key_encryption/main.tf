@@ -104,7 +104,7 @@ resource "azurerm_key_vault_certificate" "cert" {
   count = 3
 
   key_vault_id = azurerm_key_vault.this.id
-  name         = "cognitiveservices{count.index}"
+  name         = "cognitiveservices${count.index}"
 
   certificate_policy {
     issuer_parameters {
@@ -146,7 +146,7 @@ resource "azurerm_key_vault_certificate" "cert" {
 resource "azurerm_key_vault_managed_hardware_security_module" "this" {
   admin_object_ids                          = [data.azurerm_client_config.this.object_id]
   location                                  = azurerm_resource_group.this.location
-  name                                      = "kvHsm%[3]d"
+  name                                      = "hsm${random_string.suffix.result}"
   resource_group_name                       = azurerm_resource_group.this.name
   sku_name                                  = "Standard_B1"
   tenant_id                                 = data.azurerm_client_config.this.tenant_id
