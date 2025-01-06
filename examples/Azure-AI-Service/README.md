@@ -220,13 +220,13 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
 }
 
 module "test" {
-  source                      = "../../"
-  kind                        = "AIServices"
-  location                    = azurerm_resource_group.this.location
-  name                        = "AIService-${module.naming.cognitive_account.name_unique}"
-  resource_group_name         = azurerm_resource_group.this.name
-  sku_name                    = "S0"
-  is_hardware_security_module = true
+  source              = "../../"
+  kind                = "AIServices"
+  location            = azurerm_resource_group.this.location
+  name                = "AIService-${module.naming.cognitive_account.name_unique}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "S0"
+  is_hsm_key          = true
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])

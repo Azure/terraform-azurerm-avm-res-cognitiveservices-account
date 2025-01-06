@@ -90,14 +90,14 @@ locals {
 }
 
 data "azurerm_key_vault_key" "this" {
-  count = var.customer_managed_key != null && !var.is_hardware_security_module ? 1 : 0
+  count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
   key_vault_id = var.customer_managed_key.key_vault_resource_id
   name         = var.customer_managed_key.key_name
 }
 
 data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  count          = var.customer_managed_key != null && var.is_hardware_security_module ? 1 : 0
+  count          = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
   managed_hsm_id = var.customer_managed_key.key_vault_resource_id
   name           = var.customer_managed_key.key_name
 }
@@ -110,7 +110,7 @@ data "azurerm_user_assigned_identity" "this" {
 }
 
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
-  count = var.customer_managed_key != null && !var.is_hardware_security_module ? 1 : 0
+  count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
   cognitive_account_id = var.kind != "AIServices" ? azurerm_cognitive_account.this[0].id : azurerm_ai_services.this[0].id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
@@ -129,7 +129,7 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
 
   lifecycle {
     precondition {
-      condition     = var.kind == "AIServices" || !var.is_hardware_security_module
+      condition     = var.kind == "AIServices" || !var.is_hsm_key
       error_message = "HSM key could only be used when `var.kind == \"AIServices\"`"
     }
   }
