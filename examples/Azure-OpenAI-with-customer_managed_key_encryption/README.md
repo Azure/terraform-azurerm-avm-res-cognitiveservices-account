@@ -76,14 +76,6 @@ resource "azurerm_key_vault" "this" {
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
   access_policy {
-    certificate_permissions = [
-      "Create",
-      "Delete",
-      "DeleteIssuers",
-      "Get",
-      "Purge",
-      "Update"
-    ]
     key_permissions = [
       "Get",
       "Create",
@@ -104,90 +96,6 @@ resource "azurerm_key_vault" "this" {
     ]
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
-}
-
-resource "azurerm_key_vault_certificate" "cert" {
-  count = 3
-
-  key_vault_id = azurerm_key_vault.this.id
-  name         = "cognitiveservices{count.index}"
-
-  certificate_policy {
-    issuer_parameters {
-      name = "Self"
-    }
-    key_properties {
-      exportable = true
-      key_type   = "RSA"
-      reuse_key  = true
-      key_size   = 2048
-    }
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
-    lifetime_action {
-      action {
-        action_type = "AutoRenew"
-      }
-      trigger {
-        days_before_expiry = 30
-      }
-    }
-    x509_certificate_properties {
-      key_usage = [
-        "cRLSign",
-        "dataEncipherment",
-        "digitalSignature",
-        "keyAgreement",
-        "keyCertSign",
-        "keyEncipherment",
-      ]
-      subject            = "CN=hello-world"
-      validity_in_months = 12
-      extended_key_usage = []
-    }
-  }
-}
-
-resource "azurerm_key_vault_managed_hardware_security_module" "this" {
-  admin_object_ids                          = [data.azurerm_client_config.this.object_id]
-  location                                  = azurerm_resource_group.this.location
-  name                                      = "kvHsm%[3]d"
-  resource_group_name                       = azurerm_resource_group.this.name
-  sku_name                                  = "Standard_B1"
-  tenant_id                                 = data.azurerm_client_config.this.tenant_id
-  purge_protection_enabled                  = false
-  security_domain_key_vault_certificate_ids = [for cert in azurerm_key_vault_certificate.cert : cert.id]
-  security_domain_quorum                    = 3
-}
-
-resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "this" {
-  name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad22"
-  principal_id       = data.azurerm_client_config.this.object_id
-  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
-  scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-}
-
-resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "this1" {
-  name               = "1e243909-064c-6ac3-84e9-1c8bf8d6ad23"
-  principal_id       = data.azurerm_client_config.this.object_id
-  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
-  scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-}
-
-resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  key_opts       = ["sign"]
-  key_type       = "EC-HSM"
-  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
-  name           = "hsmkey"
-  curve          = "P-521"
-
-  depends_on = [
-    azurerm_key_vault_managed_hardware_security_module_role_assignment.this,
-    azurerm_key_vault_managed_hardware_security_module_role_assignment.this1,
-  ]
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -241,29 +149,6 @@ module "test" {
     }
   }
 }
-
-module "test_hsm_key" {
-  source = "../../"
-
-  kind                = "Face"
-  location            = azurerm_resource_group.this.location
-  name                = "Face-hsm-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "E0"
-
-  managed_identities = {
-    system_assigned            = true
-    user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
-  }
-  is_hsm_key = true
-  customer_managed_key = {
-    key_vault_resource_id = azurerm_key_vault_managed_hardware_security_module.this.id
-    key_name              = azurerm_key_vault_managed_hardware_security_module_key.this.name
-    user_assigned_identity = {
-      resource_id = azurerm_user_assigned_identity.this.id
-    }
-  }
-}
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -282,12 +167,7 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
-- [azurerm_key_vault_certificate.cert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
 - [azurerm_key_vault_key.key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key) (resource)
-- [azurerm_key_vault_managed_hardware_security_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module) (resource)
-- [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_key) (resource)
-- [azurerm_key_vault_managed_hardware_security_module_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
-- [azurerm_key_vault_managed_hardware_security_module_role_assignment.this1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
@@ -317,12 +197,6 @@ Source: Azure/naming/azurerm
 Version: >= 0.3.0
 
 ### <a name="module_test"></a> [test](#module\_test)
-
-Source: ../../
-
-Version:
-
-### <a name="module_test_hsm_key"></a> [test\_hsm\_key](#module\_test\_hsm\_key)
 
 Source: ../../
 
