@@ -37,7 +37,7 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "random_string" "suffix" {
-  length  = 10
+  length  = 15
   numeric = false
   special = false
   upper   = false
@@ -47,13 +47,13 @@ data "azurerm_client_config" "this" {}
 
 resource "azurerm_user_assigned_identity" "this" {
   location            = azurerm_resource_group.this.location
-  name                = "uai-such-aiservice"
+  name                = "uai-aiservice"
   resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
-  name                       = "avmcogacc${replace(random_string.suffix.result, "-", "")}"
+  name                       = "avmcog${replace(random_string.suffix.result, "-", "")}"
   resource_group_name        = azurerm_resource_group.this.name
   sku_name                   = "premium"
   tenant_id                  = data.azurerm_client_config.this.tenant_id
@@ -116,7 +116,7 @@ resource "azurerm_key_vault_certificate" "cert" {
   count = 3
 
   key_vault_id = azurerm_key_vault.this.id
-  name         = "acchsmcert${count.index}"
+  name         = "hsmcert${count.index}"
 
   certificate_policy {
     issuer_parameters {
@@ -158,7 +158,7 @@ resource "azurerm_key_vault_certificate" "cert" {
 resource "azurerm_key_vault_managed_hardware_security_module" "this" {
   admin_object_ids                          = [data.azurerm_client_config.this.object_id]
   location                                  = azurerm_resource_group.this.location
-  name                                      = "avmcogacchsm${replace(random_string.suffix.result, "-", "")}"
+  name                                      = "avmcoghsm${replace(random_string.suffix.result, "-", "")}"
   resource_group_name                       = azurerm_resource_group.this.name
   sku_name                                  = "Standard_B1"
   tenant_id                                 = data.azurerm_client_config.this.tenant_id
@@ -186,14 +186,6 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
   name               = random_uuid.role_assignments_names[1].result
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
-  scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-}
-
-resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_contributor" {
-  name               = random_uuid.role_assignments_names[2].result
-  principal_id       = data.azurerm_client_config.this.object_id
-  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/18500a29-7fe2-46b2-a342-b16a415e101d"
   scope              = "/keys"
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
@@ -240,4 +232,8 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
+}
+
+output "principal_id" {
+  value = data.azurerm_client_config.this.object_id
 }
