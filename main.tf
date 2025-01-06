@@ -21,7 +21,7 @@ resource "azurerm_cognitive_account" "this" {
   sku_name                                     = var.sku_name
   custom_question_answering_search_service_id  = var.custom_question_answering_search_service_id
   custom_question_answering_search_service_key = var.custom_question_answering_search_service_key
-  custom_subdomain_name                        = coalesce(var.custom_subdomain_name, "az-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
+  custom_subdomain_name                        = coalesce(var.custom_subdomain_name, "azure-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
   dynamic_throttling_enabled                   = var.dynamic_throttling_enabled
   fqdns                                        = var.fqdns
   local_auth_enabled                           = var.local_auth_enabled
@@ -84,6 +84,7 @@ resource "azurerm_cognitive_account" "this" {
     ]
 
     precondition {
+      # we cannot add this check on `azurerm_cognitive_account_customer_managed_key` resource, since when `var.is_hsm_key` is `false` the resource won't be created.
       condition     = var.kind == "AIServices" || !var.is_hsm_key
       error_message = "HSM key could only be used when `var.kind == \"AIServices\"`"
     }
@@ -102,7 +103,8 @@ data "azurerm_key_vault_key" "this" {
 }
 
 data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  count          = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
+  count = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
+
   managed_hsm_id = var.customer_managed_key.key_vault_resource_id
   name           = var.customer_managed_key.key_name
 }
@@ -178,3 +180,6 @@ resource "azurerm_cognitive_deployment" "this" {
   ]
 }
 
+locals {
+  resource_block = try(azurerm_cognitive_account.this[0], azurerm_ai_services.this[0])
+}
