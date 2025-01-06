@@ -442,7 +442,7 @@ Description: (Optional) Whether public network access is allowed for the Cogniti
 
 Type: `bool`
 
-Default: `null`
+Default: `true`
 
 ### <a name="input_qna_runtime_endpoint"></a> [qna\_runtime\_endpoint](#input\_qna\_runtime\_endpoint)
 
