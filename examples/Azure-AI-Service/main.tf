@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
     }
+    time = {
+      source = "hashicorp/time"
+      version = "0.12.1"
+    }
   }
 }
 
@@ -199,17 +203,25 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "u
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
-resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
-  key_type       = "RSA-HSM"
-  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
-  name           = "hsmkeysuchi"
-  key_size       = 2048
+resource "time_sleep" "role_assignment" {
+  create_duration = "30s"
 
   depends_on = [
     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
     azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user
+  ]
+}
+
+resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
+  key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+  key_type       = "RSA-HSM"
+  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
+  name           = "cognitiveaccountkey"
+  key_size       = 2048
+
+  depends_on = [
+    time_sleep.role_assignment
   ]
 }
 
