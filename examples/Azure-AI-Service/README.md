@@ -181,7 +181,7 @@ resource "azurerm_key_vault_managed_hardware_security_module" "this" {
 }
 
 resource "random_uuid" "role_assignments_names" {
-  count = 4
+  count = 3
 }
 
 # this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
@@ -204,7 +204,7 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
 
 # this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
-  name               = random_uuid.role_assignments_names[3].result
+  name               = random_uuid.role_assignments_names[2].result
   principal_id       = azurerm_user_assigned_identity.this.principal_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
