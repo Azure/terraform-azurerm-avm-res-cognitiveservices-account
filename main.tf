@@ -92,7 +92,7 @@ resource "azurerm_cognitive_account" "this" {
 }
 
 locals {
-  managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, local.resource_block.identity[0].principal_id, null)
+  managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, null)
 }
 
 data "azurerm_key_vault_key" "this" {
