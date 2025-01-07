@@ -15,6 +15,10 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.12.1"
+    }
   }
 }
 
@@ -24,8 +28,10 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
     key_vault {
-      purge_soft_delete_on_destroy    = true
-      recover_soft_deleted_key_vaults = true
+      purge_soft_delete_on_destroy                                = true
+      recover_soft_deleted_key_vaults                             = true
+      purge_soft_deleted_hardware_security_modules_on_destroy     = true
+      purge_soft_deleted_hardware_security_module_keys_on_destroy = true
     }
   }
 }
@@ -38,12 +44,12 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "East US"
+  location = "eastus2"
   name     = "avm-res-aiservice-${module.naming.resource_group.name_unique}"
 }
 
 resource "random_string" "suffix" {
-  length  = 10
+  length  = 15
   numeric = false
   special = false
   upper   = false
@@ -53,13 +59,13 @@ data "azurerm_client_config" "this" {}
 
 resource "azurerm_user_assigned_identity" "this" {
   location            = azurerm_resource_group.this.location
-  name                = "uai-such-aiservice"
+  name                = "uai-aiservice"
   resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_key_vault" "this" {
   location                   = azurerm_resource_group.this.location
-  name                       = "avmcogacc${replace(random_string.suffix.result, "-", "")}"
+  name                       = "avmcog${replace(random_string.suffix.result, "-", "")}"
   resource_group_name        = azurerm_resource_group.this.name
   sku_name                   = "premium"
   tenant_id                  = data.azurerm_client_config.this.tenant_id
@@ -122,7 +128,7 @@ resource "azurerm_key_vault_certificate" "cert" {
   count = 3
 
   key_vault_id = azurerm_key_vault.this.id
-  name         = "acchsmcert${count.index}"
+  name         = "hsmcert${count.index}"
 
   certificate_policy {
     issuer_parameters {
@@ -164,7 +170,7 @@ resource "azurerm_key_vault_certificate" "cert" {
 resource "azurerm_key_vault_managed_hardware_security_module" "this" {
   admin_object_ids                          = [data.azurerm_client_config.this.object_id]
   location                                  = azurerm_resource_group.this.location
-  name                                      = "avmcogacchsm${replace(random_string.suffix.result, "-", "")}"
+  name                                      = "avmcoghsm${replace(random_string.suffix.result, "-", "")}"
   resource_group_name                       = azurerm_resource_group.this.name
   sku_name                                  = "Standard_B1"
   tenant_id                                 = data.azurerm_client_config.this.tenant_id
@@ -196,14 +202,6 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
-resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_contributor" {
-  name               = random_uuid.role_assignments_names[2].result
-  principal_id       = data.azurerm_client_config.this.object_id
-  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/18500a29-7fe2-46b2-a342-b16a415e101d"
-  scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-}
-
 # this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
   name               = random_uuid.role_assignments_names[3].result
@@ -213,17 +211,25 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "u
   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
-resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
-  key_type       = "RSA-HSM"
-  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
-  name           = "hsmkeysuchi"
-  key_size       = 2048
+resource "time_sleep" "role_assignment" {
+  create_duration = "30s"
 
   depends_on = [
     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
     azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user
+  ]
+}
+
+resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
+  key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+  key_type       = "RSA-HSM"
+  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
+  name           = "cognitiveaccountkey"
+  key_size       = 2048
+
+  depends_on = [
+    time_sleep.role_assignment
   ]
 }
 
@@ -260,6 +266,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (0.12.1)
+
 ## Resources
 
 The following resources are used by this module:
@@ -268,7 +276,6 @@ The following resources are used by this module:
 - [azurerm_key_vault_certificate.cert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
 - [azurerm_key_vault_managed_hardware_security_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_key) (resource)
-- [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
@@ -276,6 +283,7 @@ The following resources are used by this module:
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.role_assignments_names](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [time_sleep.role_assignment](https://registry.terraform.io/providers/hashicorp/time/0.12.1/docs/resources/sleep) (resource)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
