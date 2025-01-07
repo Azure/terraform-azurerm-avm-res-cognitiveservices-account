@@ -10,7 +10,7 @@ terraform {
       version = ">= 3.5.0, < 4.0.0"
     }
     time = {
-      source = "hashicorp/time"
+      source  = "hashicorp/time"
       version = "0.12.1"
     }
   }
@@ -22,9 +22,9 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
     key_vault {
-      purge_soft_delete_on_destroy    = true
-      recover_soft_deleted_key_vaults = true
-      purge_soft_deleted_hardware_security_modules_on_destroy = true
+      purge_soft_delete_on_destroy                                = true
+      recover_soft_deleted_key_vaults                             = true
+      purge_soft_deleted_hardware_security_modules_on_destroy     = true
       purge_soft_deleted_hardware_security_module_keys_on_destroy = true
     }
   }
@@ -246,8 +246,4 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-}
-
-output "principal_id" {
-  value = data.azurerm_client_config.this.object_id
 }
