@@ -92,7 +92,7 @@ resource "azurerm_cognitive_account" "this" {
 }
 
 locals {
-  managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, azurerm_cognitive_account.this[0].identity[0].principal_id, null)
+  managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, local.resource_block.identity[0].principal_id, null)
 }
 
 data "azurerm_key_vault_key" "this" {
@@ -119,7 +119,7 @@ data "azurerm_user_assigned_identity" "this" {
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
   count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
-  cognitive_account_id = var.kind != "AIServices" ? azurerm_cognitive_account.this[0].id : azurerm_ai_services.this[0].id
+  cognitive_account_id = local.resource_block.id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
   identity_client_id   = local.managed_key_identity_client_id
 
@@ -138,7 +138,7 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
 resource "azurerm_cognitive_deployment" "this" {
   for_each = var.cognitive_deployments
 
-  cognitive_account_id   = azurerm_cognitive_account.this[0].id
+  cognitive_account_id   = local.resource_block.id
   name                   = each.value.name
   rai_policy_name        = each.value.rai_policy_name
   version_upgrade_option = each.value.version_upgrade_option

@@ -2,7 +2,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each = var.diagnostic_settings
 
   name                           = coalesce(each.value.name, "diag-${var.name}")
-  target_resource_id             = azurerm_cognitive_account.this[0].id
+  target_resource_id             = local.resource_block.id
   eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id
   eventhub_name                  = each.value.event_hub_name
   log_analytics_destination_type = each.value.log_analytics_destination_type
