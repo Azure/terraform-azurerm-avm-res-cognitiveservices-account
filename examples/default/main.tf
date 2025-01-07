@@ -29,12 +29,6 @@ resource "azurerm_resource_group" "this" {
   name     = "avm-res-cognitiveservices-account-${module.naming.resource_group.name_unique}"
 }
 
-data azurerm_client_config this {}
-
-output principal_id {
-    value = data.azurerm_client_config.this.object_id
-}
-
 module "test" {
   source = "../../"
 
