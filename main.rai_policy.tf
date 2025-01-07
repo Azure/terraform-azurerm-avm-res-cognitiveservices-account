@@ -21,5 +21,5 @@ resource "azapi_resource" "rai_policy" {
     }
   }
   name      = each.value.name
-  parent_id = azurerm_cognitive_account.this[0].id
+  parent_id = local.resource_block.id
 }
