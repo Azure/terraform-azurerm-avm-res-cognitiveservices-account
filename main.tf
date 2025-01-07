@@ -1,3 +1,8 @@
+moved {
+  from = random_string.default_custom_subdomain_name_suffix
+  to   = random_string.default_custom_subdomain_name_suffix[0]
+}
+
 resource "random_string" "default_custom_subdomain_name_suffix" {
   count = var.kind != "AIServices" ? 1 : 0
 
@@ -112,6 +117,7 @@ data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
 data "azurerm_user_assigned_identity" "this" {
   count = try(var.customer_managed_key.user_assigned_identity != null, false) ? 1 : 0
 
+  #/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}
   name                = reverse(split("/", var.customer_managed_key.user_assigned_identity.resource_id))[0]
   resource_group_name = split("/", var.customer_managed_key.user_assigned_identity.resource_id)[4]
 }
