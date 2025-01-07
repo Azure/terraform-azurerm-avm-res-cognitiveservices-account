@@ -24,6 +24,8 @@ provider "azurerm" {
     key_vault {
       purge_soft_delete_on_destroy    = true
       recover_soft_deleted_key_vaults = true
+      purge_soft_deleted_hardware_security_modules_on_destroy = true
+      purge_soft_deleted_hardware_security_module_keys_on_destroy = true
     }
   }
 }
@@ -36,7 +38,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = "East US"
+  location = "eastus2"
   name     = "avm-res-aiservice-${module.naming.resource_group.name_unique}"
 }
 
