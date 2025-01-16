@@ -29,6 +29,7 @@ output "rai_policy_id" {
 output "resource" {
   description = "The cognitive account resource created."
   value       = local.resource_block
+  sensitive   = true
 }
 
 output "resource_cognitive_deployment" {
