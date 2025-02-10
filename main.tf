@@ -144,10 +144,11 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
 resource "azurerm_cognitive_deployment" "this" {
   for_each = var.cognitive_deployments
 
-  cognitive_account_id   = local.resource_block.id
-  name                   = each.value.name
-  rai_policy_name        = each.value.rai_policy_name
-  version_upgrade_option = each.value.version_upgrade_option
+  cognitive_account_id       = local.resource_block.id
+  name                       = each.value.name
+  dynamic_throttling_enabled = each.value.dynamic_throttling_enabled
+  rai_policy_name            = each.value.rai_policy_name
+  version_upgrade_option     = each.value.version_upgrade_option
 
   dynamic "model" {
     for_each = [each.value.model]
@@ -163,9 +164,9 @@ resource "azurerm_cognitive_deployment" "this" {
     iterator = scale
 
     content {
+      name     = scale.value.type
       capacity = scale.value.capacity
       family   = scale.value.family
-      name     = scale.value.type
       size     = scale.value.size
       tier     = scale.value.tier
     }
