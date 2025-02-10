@@ -30,9 +30,10 @@ variable "sku_name" {
 
 variable "cognitive_deployments" {
   type = map(object({
-    name                   = string
-    rai_policy_name        = optional(string)
-    version_upgrade_option = optional(string)
+    name                       = string
+    rai_policy_name            = optional(string)
+    version_upgrade_option     = optional(string)
+    dynamic_throttling_enabled = optional(bool)
     model = object({
       format  = string
       name    = string
