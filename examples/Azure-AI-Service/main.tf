@@ -180,29 +180,29 @@ resource "random_uuid" "role_assignments_names" {
 
 # this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_user" {
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
   name               = random_uuid.role_assignments_names[0].result
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
 # this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_officer" {
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
   name               = random_uuid.role_assignments_names[1].result
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
   scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
 # this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
 resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
   name               = random_uuid.role_assignments_names[2].result
   principal_id       = azurerm_user_assigned_identity.this.principal_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
-  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
 }
 
 resource "time_sleep" "role_assignment" {

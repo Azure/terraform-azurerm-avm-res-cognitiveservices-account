@@ -163,9 +163,9 @@ resource "azurerm_cognitive_deployment" "this" {
     iterator = scale
 
     content {
+      name     = scale.value.type
       capacity = scale.value.capacity
       family   = scale.value.family
-      name     = scale.value.type
       size     = scale.value.size
       tier     = scale.value.tier
     }
