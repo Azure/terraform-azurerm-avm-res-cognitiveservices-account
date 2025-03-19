@@ -52,6 +52,7 @@ resource "azurerm_cognitive_account" "this" {
 
     content {
       default_action = network_acls.value.default_action
+      bypass         = network_acls.value.bypass
       ip_rules       = network_acls.value.ip_rules
 
       dynamic "virtual_network_rules" {

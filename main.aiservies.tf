@@ -33,6 +33,7 @@ resource "azurerm_ai_services" "this" {
     for_each = var.network_acls == null ? [] : [var.network_acls]
 
     content {
+      # `bypass` can only be set when `kind` is set to `OpenAI` so no `bypass` here
       default_action = network_acls.value.default_action
       ip_rules       = network_acls.value.ip_rules
 
