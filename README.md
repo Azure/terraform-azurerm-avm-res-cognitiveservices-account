@@ -19,11 +19,11 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.13.0, < 5.0)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3.2, < 1.0)
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0)
 
 ## Resources
 
@@ -93,6 +93,7 @@ The following input variables are optional (have default values):
 Description: - `name` - (Required) The name of the Cognitive Services Account Deployment. Changing this forces a new resource to be created.
 - `rai_policy_name` - (Optional) The name of RAI policy.
 - `version_upgrade_option` - (Optional) Deployment model version upgrade option. Possible values are `OnceNewDefaultVersionAvailable`, `OnceCurrentVersionExpired`, and `NoAutoUpgrade`. Defaults to `OnceNewDefaultVersionAvailable`. Changing this forces a new resource to be created.
+- `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled.
 
 ---
 `model` block supports the following:
