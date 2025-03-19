@@ -7,15 +7,15 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.13.0, < 5.0"
     }
     modtm = {
       source  = "Azure/modtm"
-      version = ">= 0.3.2, < 1.0"
+      version = "~> 0.3"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.5.0"
+      version = ">= 3.5.0, < 4.0"
     }
   }
 }
