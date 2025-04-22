@@ -612,6 +612,10 @@ Description: The map of cognitive deployments created.
 
 Description: The resource ID of cognitive account created.
 
+### <a name="output_resource_sensitive"></a> [resource\_sensitive](#output\_resource\_sensitive)
+
+Description: The cognitive account resource created, sensitive data only.
+
 ### <a name="output_secondary_access_key"></a> [secondary\_access\_key](#output\_secondary\_access\_key)
 
 Description: A secondary access key which can be used to connect to the Cognitive Service Account.
