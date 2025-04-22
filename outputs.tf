@@ -11,7 +11,7 @@ output "name" {
 output "primary_access_key" {
   description = "A primary access key which can be used to connect to the Cognitive Service Account."
   sensitive   = true
-  value       = local.resource_block.primary_access_key
+  value       = local.resource_block_sensitive.primary_access_key
 }
 
 output "private_endpoints" {
@@ -41,10 +41,16 @@ output "resource_id" {
   value       = local.resource_block.id
 }
 
+output "resource_sensitive" {
+  description = "The cognitive account resource created, sensitive data only."
+  sensitive   = true
+  value       = local.resource_block_sensitive
+}
+
 output "secondary_access_key" {
   description = "A secondary access key which can be used to connect to the Cognitive Service Account."
   sensitive   = true
-  value       = local.resource_block.secondary_access_key
+  value       = local.resource_block_sensitive.secondary_access_key
 }
 
 output "system_assigned_mi_principal_id" {

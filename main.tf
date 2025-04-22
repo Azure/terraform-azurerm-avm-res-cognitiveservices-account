@@ -189,5 +189,43 @@ resource "azurerm_cognitive_deployment" "this" {
 }
 
 locals {
-  resource_block = try(azurerm_cognitive_account.this[0], azurerm_ai_services.this[0])
+  common_resource = {
+    id                                 = try(azurerm_cognitive_account.this[0].id, azurerm_ai_services.this[0].id)
+    name                               = try(azurerm_cognitive_account.this[0].name, azurerm_ai_services.this[0].name)
+    location                           = try(azurerm_cognitive_account.this[0].location, azurerm_ai_services.this[0].location)
+    resource_group_name                = try(azurerm_cognitive_account.this[0].resource_group_name, azurerm_ai_services.this[0].resource_group_name)
+    sku_name                           = try(azurerm_cognitive_account.this[0].sku_name, azurerm_ai_services.this[0].sku_name)
+    custom_subdomain_name              = try(azurerm_cognitive_account.this[0].custom_subdomain_name, azurerm_ai_services.this[0].custom_subdomain_name)
+    customer_managed_key               = try(azurerm_cognitive_account.this[0].customer_managed_key, azurerm_ai_services.this[0].customer_managed_key)
+    fqdns                              = try(azurerm_cognitive_account.this[0].fqdns, azurerm_ai_services.this[0].fqdns)
+    identity                           = try(azurerm_cognitive_account.this[0].identity, azurerm_ai_services.this[0].identity)
+    network_acls                       = try(azurerm_cognitive_account.this[0].network_acls, azurerm_ai_services.this[0].network_acls)
+    outbound_network_access_restricted = try(azurerm_cognitive_account.this[0].outbound_network_access_restricted, azurerm_ai_services.this[0].outbound_network_access_restricted)
+    storage                            = try(azurerm_cognitive_account.this[0].storage, azurerm_ai_services.this[0].storage)
+    tags                               = try(azurerm_cognitive_account.this[0].tags, azurerm_ai_services.this[0].tags)
+    endpoint                           = try(azurerm_cognitive_account.this[0].endpoint, azurerm_ai_services.this[0].endpoint)
+  }
+  resource_block = merge(local.common_resource, var.kind != "AIServices" ? {
+    kind                                        = azurerm_cognitive_account.this[0].kind
+    dynamic_throttling_enabled                  = azurerm_cognitive_account.this[0].dynamic_throttling_enabled
+    local_auth_enabled                          = azurerm_cognitive_account.this[0].local_auth_enabled
+    metrics_advisor_aad_client_id               = azurerm_cognitive_account.this[0].metrics_advisor_aad_client_id
+    metrics_advisor_aad_tenant_id               = azurerm_cognitive_account.this[0].metrics_advisor_aad_tenant_id
+    metrics_advisor_super_user_name             = azurerm_cognitive_account.this[0].metrics_advisor_super_user_name
+    metrics_advisor_website_name                = azurerm_cognitive_account.this[0].metrics_advisor_website_name
+    public_network_access_enabled               = azurerm_cognitive_account.this[0].public_network_access_enabled
+    qna_runtime_endpoint                        = azurerm_cognitive_account.this[0].qna_runtime_endpoint
+    custom_question_answering_search_service_id = azurerm_cognitive_account.this[0].custom_question_answering_search_service_id
+    } : {
+    local_authentication_enabled = azurerm_ai_services.this[0].local_authentication_enabled
+    public_network_access        = azurerm_ai_services.this[0].public_network_access
+  })
+  resource_block_sensitive = var.kind != "AIServices" ? {
+    custom_question_answering_search_service_key = azurerm_cognitive_account.this[0].custom_question_answering_search_service_key
+    primary_access_key                           = azurerm_cognitive_account.this[0].primary_access_key
+    secondary_access_key                         = azurerm_cognitive_account.this[0].secondary_access_key
+    } : {
+    primary_access_key   = azurerm_ai_services.this[0].primary_access_key
+    secondary_access_key = azurerm_ai_services.this[0].secondary_access_key
+  }
 }
