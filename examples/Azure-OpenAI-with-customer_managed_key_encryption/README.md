@@ -136,17 +136,16 @@ module "test" {
   name                = "Face-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "E0"
-
-  managed_identities = {
-    system_assigned            = true
-    user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
-  }
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault.this.id
     key_name              = azurerm_key_vault_key.key.name
     user_assigned_identity = {
       resource_id = azurerm_user_assigned_identity.this.id
     }
+  }
+  managed_identities = {
+    system_assigned            = true
+    user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
 }
 ```

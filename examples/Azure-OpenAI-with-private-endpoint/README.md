@@ -40,17 +40,17 @@ module "vnet" {
   version = "5.0.1"
 
   resource_group_name = azurerm_resource_group.this.name
-  use_for_each        = true
   vnet_location       = azurerm_resource_group.this.location
-  enable_telemetry    = false
   address_space       = ["10.52.0.0/16"]
-  subnet_prefixes     = ["10.52.0.0/24", "10.52.1.0/24"]
+  enable_telemetry    = false
   subnet_names        = ["openai", "app"]
+  subnet_prefixes     = ["10.52.0.0/24", "10.52.1.0/24"]
   subnet_service_endpoints = {
     openai = ["Microsoft.CognitiveServices"]
     app    = ["Microsoft.CognitiveServices"]
   }
-  vnet_name = "vnet"
+  use_for_each = true
+  vnet_name    = "vnet"
 }
 
 resource "azurerm_private_dns_zone" "zone" {
@@ -73,7 +73,6 @@ module "test" {
   name                = "OpenAI-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-
   cognitive_deployments = {
     "gpt-4o-mini" = {
       name = "gpt-4o-mini"

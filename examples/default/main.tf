@@ -37,7 +37,6 @@ module "test" {
   name                = "OpenAI-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-
   cognitive_deployments = {
     "gpt-4o-mini" = {
       name = "gpt-4o-mini"
