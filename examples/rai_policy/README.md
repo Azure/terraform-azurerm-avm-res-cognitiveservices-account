@@ -49,10 +49,10 @@ module "test" {
   name                = "OpenAI-${random_pet.pet.id}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-
   cognitive_deployments = {
     "gpt-4o-mini" = {
-      name = "gpt-4o-mini"
+      name            = "gpt-4o-mini"
+      rai_policy_name = "policy0"
       model = {
         format  = "OpenAI"
         name    = "gpt-4o-mini"
