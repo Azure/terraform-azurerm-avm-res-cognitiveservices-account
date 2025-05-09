@@ -184,7 +184,8 @@ resource "azurerm_cognitive_deployment" "this" {
   }
 
   depends_on = [
-    azurerm_cognitive_account_customer_managed_key.this
+    azurerm_cognitive_account_customer_managed_key.this,
+    azapi_resource.rai_policy,
   ]
 }
 

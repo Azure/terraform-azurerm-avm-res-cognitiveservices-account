@@ -47,6 +47,7 @@ module "test" {
   cognitive_deployments = {
     "gpt-4o-mini" = {
       name = "gpt-4o-mini"
+      rai_policy_name = "policy0"
       model = {
         format  = "OpenAI"
         name    = "gpt-4o-mini"
