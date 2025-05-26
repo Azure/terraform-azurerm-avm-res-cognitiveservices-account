@@ -20,6 +20,10 @@ resource "azapi_resource" "rai_policy" {
       }], null)
     }
   }
-  name      = each.value.name
-  parent_id = local.resource_block.id
+  create_headers = { "User-Agent" : local.avm_azapi_header }
+  delete_headers = { "User-Agent" : local.avm_azapi_header }
+  name           = each.value.name
+  parent_id      = local.resource_block.id
+  read_headers   = { "User-Agent" : local.avm_azapi_header }
+  update_headers = { "User-Agent" : local.avm_azapi_header }
 }

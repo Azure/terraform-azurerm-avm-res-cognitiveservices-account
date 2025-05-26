@@ -17,7 +17,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.17.0, < 5.0)
 
@@ -238,12 +238,12 @@ Description: (Optional) Whether to enable the dynamic throttling for this Cognit
 
 Type: `bool`
 
-Default: `null`
+Default: `false`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see https://aka.ms/avm/telemetryinfo.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -256,7 +256,7 @@ Description: (Optional) List of FQDNs allowed for the Cognitive Account.
 
 Type: `list(string)`
 
-Default: `null`
+Default: `[]`
 
 ### <a name="input_is_hsm_key"></a> [is\_hsm\_key](#input\_is\_hsm\_key)
 

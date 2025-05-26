@@ -72,6 +72,12 @@ resource "azapi_resource" "this" {
       }], null)
     } : k => v if v != null }
   } : k => v if v != null }
+  create_headers = { "User-Agent" : local.avm_azapi_header }
+  delete_headers = { "User-Agent" : local.avm_azapi_header }
+  location       = var.location
+  name           = var.name
+  parent_id      = data.azurerm_resource_group.rg.id
+  read_headers   = { "User-Agent" : local.avm_azapi_header }
   sensitive_body = {
     properties = {
       apiProperties = {
@@ -79,17 +85,15 @@ resource "azapi_resource" "this" {
       }
     }
   }
-
-  location  = var.location
-  name      = var.name
-  parent_id = data.azurerm_resource_group.rg.id
-  tags      = var.tags
+  tags           = var.tags
+  update_headers = { "User-Agent" : local.avm_azapi_header }
 
   lifecycle {
     ignore_changes = [
       body.properties.allowProjectManagement,
       output,
     ]
+
     precondition {
       condition     = var.kind != "QnAMaker" || (var.qna_runtime_endpoint != null && var.qna_runtime_endpoint != "")
       error_message = "the QnAMaker runtime endpoint `qna_runtime_endpoint` is required when kind is set to `QnAMaker`"
