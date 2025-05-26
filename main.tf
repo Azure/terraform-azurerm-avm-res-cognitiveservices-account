@@ -29,30 +29,31 @@ resource "azapi_resource" "this" {
   count = var.kind != "AIServices" ? 1 : 0
 
   type = "Microsoft.CognitiveServices/accounts@2024-10-01"
-  body = {
+  body = { for k, v in {
     kind = var.kind
     identity = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       type                   = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
       userAssignedIdentities = var.managed_identities.user_assigned_resource_ids
     } : null
-    properties = {
+    sku = {
+      name = var.sku_name
+    }
+    properties = { for k, v in {
+      # allowProjectManagement = false
       allowedFqdnList               = var.fqdns
       customSubDomainName           = coalesce(var.custom_subdomain_name, "azure-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
       disableLocalAuth              = try(!var.local_auth_enabled, false)
       dynamicThrottlingEnabled      = var.dynamic_throttling_enabled
       publicNetworkAccess           = var.public_network_access_enabled ? "Enabled" : "Disabled"
       restrictOutboundNetworkAccess = var.outbound_network_access_restricted == true
-      sku = {
-        name = var.sku_name
-      }
-      apiProperties = {
-        qnaRuntimeEndpoint        = var.kind == "QnAMaker" && var.qna_runtime_endpoint != null && var.qna_runtime_endpoint != "" ? var.qna_runtime_endpoint : null
-        qnaAzureSearchEndpointId  = var.kind == "TextAnalytics" && var.custom_question_answering_search_service_id != null ? var.custom_question_answering_search_service_id : null
-        qnaAzureSearchEndpointKey = var.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.custom_question_answering_search_service_key : null
-        aadClientId               = var.metrics_advisor_aad_client_id != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_aad_client_id : null
-        aadTenantId               = var.metrics_advisor_aad_tenant_id != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_aad_tenant_id : null
-        superUser                 = var.metrics_advisor_super_user_name != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_super_user_name : null
-        websiteName               = var.metrics_advisor_website_name != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_website_name : null
+      apiProperties = { for k, v in {
+        qnaRuntimeEndpoint       = var.kind == "QnAMaker" && var.qna_runtime_endpoint != null && var.qna_runtime_endpoint != "" ? var.qna_runtime_endpoint : null
+        qnaAzureSearchEndpointId = var.kind == "TextAnalytics" && var.custom_question_answering_search_service_id != null ? var.custom_question_answering_search_service_id : null
+        aadClientId              = var.metrics_advisor_aad_client_id != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_aad_client_id : null
+        aadTenantId              = var.metrics_advisor_aad_tenant_id != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_aad_tenant_id : null
+        superUser                = var.metrics_advisor_super_user_name != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_super_user_name : null
+        websiteName              = var.metrics_advisor_website_name != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_website_name : null
+        } : k => v if v != null
       }
       networkAcls = try({
         defaultAction = var.network_acls.default_action
@@ -69,14 +70,26 @@ resource "azapi_resource" "this" {
         resourceId       = storage.storage_account_id
         identityClientId = storage.identity_client_id
       }], null)
+    } : k => v if v != null }
+  } : k => v if v != null }
+  sensitive_body = {
+    properties = {
+      apiProperties = {
+        qnaAzureSearchEndpointKey = var.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.custom_question_answering_search_service_key : null
+      }
     }
   }
+
   location  = var.location
   name      = var.name
   parent_id = data.azurerm_resource_group.rg.id
   tags      = var.tags
 
   lifecycle {
+    ignore_changes = [
+      body.properties.allowProjectManagement,
+      output,
+    ]
     precondition {
       condition     = var.kind != "QnAMaker" || (var.qna_runtime_endpoint != null && var.qna_runtime_endpoint != "")
       error_message = "the QnAMaker runtime endpoint `qna_runtime_endpoint` is required when kind is set to `QnAMaker`"
@@ -231,7 +244,7 @@ data "azurerm_user_assigned_identity" "this" {
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
   count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
-  cognitive_account_id = local.resource_block.id
+  cognitive_account_id = local.resource_id.id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
   identity_client_id   = local.managed_key_identity_client_id
 
@@ -296,23 +309,23 @@ resource "azurerm_cognitive_deployment" "this" {
 
 locals {
   common_resource = {
-    id                    = try(azapi_resource.this[0].id, azurerm_ai_services.this[0].id)
+    id                    = local.resource_id
     name                  = try(azapi_resource.this[0].name, azurerm_ai_services.this[0].name)
     location              = try(azapi_resource.this[0].location, azurerm_ai_services.this[0].location)
     resource_group_name   = var.resource_group_name
-    sku_name              = try(azapi_resource.this[0].body.properties.sku.name, azurerm_ai_services.this[0].sku_name)
-    custom_subdomain_name = try(azapi_resource.this[0].body.properties.customSubDomainName, azurerm_ai_services.this[0].custom_subdomain_name)
+    sku_name              = try(azapi_resource.this[0].body.sku.name, azurerm_ai_services.this[0].sku_name)
+    custom_subdomain_name = try(azapi_resource.this[0].body.properties.customSubDomainName, azurerm_ai_services.this[0].custom_subdomain_name, null)
     customer_managed_key = try({
       key_vault_key_id   = azurerm_cognitive_account_customer_managed_key.this[0].key_vault_key_id
       identity_client_id = azurerm_cognitive_account_customer_managed_key.this[0].identity_client_id
-    }, azurerm_ai_services.this[0].customer_managed_key)
+    }, azurerm_ai_services.this[0].customer_managed_key, null)
     fqdns = try(azapi_resource.this[0].body.properties.allowedFqdnList, azurerm_ai_services.this[0].fqdns)
     identity = try({
       type         = azapi_resource.this[0].body.properties.identity.type
       identity_ids = azapi_resource.this[0].body.properties.identity.userAssignedIdentities
       principal_id = azapi_resource.this[0].body.properties.identity.principalId
       tenant_id    = azapi_resource.this[0].body.properties.identity.tenantId
-    }, azurerm_ai_services.this[0].identity)
+    }, azurerm_ai_services.this[0].identity, null)
     network_acls = try({
       default_action = azapi_resource.this[0].body.properties.networkAcls.defaultAction
       ip_rules       = [for rule in azapi_resource.this[0].body.properties.networkAcls.ipRules : rule.value]
@@ -321,36 +334,37 @@ locals {
         ignore_missing_vnet_service_endpoint = rule.ignoreMissingVnetServiceEndpoint
       }]
       bypass = azapi_resource.this[0].body.properties.networkAcls.bypass
-    }, azurerm_ai_services.this[0].network_acls)
+    }, azurerm_ai_services.this[0].network_acls, null)
     outbound_network_access_restricted = try(azapi_resource.this[0].body.properties.restrictOutboundNetworkAccess, azurerm_ai_services.this[0].outbound_network_access_restricted)
     storage = try([for s in azapi_resource.this[0].body.properties.userOwnedStorage : {
       storage_account_id = s.resourceId
       identity_client_id = s.identityClientId
-    }], azurerm_ai_services.this[0].storage)
+    }], azurerm_ai_services.this[0].storage, null)
     tags     = try(azapi_resource.this[0].tags, azurerm_ai_services.this[0].tags)
-    endpoint = try(azapi_resource.this[0].body.properties.endpoint, azurerm_ai_services.this[0].endpoint)
+    endpoint = try(azapi_resource.this[0].body.properties.output.endpoint, azurerm_ai_services.this[0].endpoint, null)
   }
   resource_block = merge(local.common_resource, var.kind != "AIServices" ? {
     kind                                        = azapi_resource.this[0].body.kind
-    dynamic_throttling_enabled                  = azapi_resource.this[0].body.properties.dynamic_throttling_enabled
-    local_auth_enabled                          = !azapi_resource.this[0].body.properties.disableLocalAuth
-    metrics_advisor_aad_client_id               = azapi_resource.this[0].body.properties.apiProperties.aadClientId
-    metrics_advisor_aad_tenant_id               = azapi_resource.this[0].body.properties.apiProperties.aadTenantId
-    metrics_advisor_super_user_name             = azapi_resource.this[0].body.properties.apiProperties.superUser
-    metrics_advisor_website_name                = azapi_resource.this[0].body.properties.apiProperties.websiteName
-    public_network_access_enabled               = azapi_resource.this[0].body.properties.publicNetworkAccess == "Enabled" ? true : (azapi_resource.this[0].body.properties.publicNetworkAccess == "Disabled" ? false : null)
-    qna_runtime_endpoint                        = azapi_resource.this[0].body.properties.apiProperties.qnaRuntimeEndpoint
-    custom_question_answering_search_service_id = azapi_resource.this[0].body.properties.apiProperties.qnaAzureSearchEndpointId
+    dynamic_throttling_enabled                  = try(azapi_resource.this[0].body.properties.dynamicThrottlingEnabled, null)
+    local_auth_enabled                          = try(!azapi_resource.this[0].body.properties.disableLocalAuth, null)
+    metrics_advisor_aad_client_id               = try(azapi_resource.this[0].body.properties.apiProperties.aadClientId, null)
+    metrics_advisor_aad_tenant_id               = try(azapi_resource.this[0].body.properties.apiProperties.aadTenantId, null)
+    metrics_advisor_super_user_name             = try(azapi_resource.this[0].body.properties.apiProperties.superUser, null)
+    metrics_advisor_website_name                = try(azapi_resource.this[0].body.properties.apiProperties.websiteName, null)
+    public_network_access_enabled               = try(azapi_resource.this[0].body.properties.publicNetworkAccess == "Enabled" ? true : (azapi_resource.this[0].body.properties.publicNetworkAccess == "Disabled" ? false : null), null)
+    qna_runtime_endpoint                        = try(azapi_resource.this[0].body.properties.apiProperties.qnaRuntimeEndpoint, null)
+    custom_question_answering_search_service_id = try(azapi_resource.this[0].body.properties.apiProperties.qnaAzureSearchEndpointId, null)
     } : {
     local_authentication_enabled = azurerm_ai_services.this[0].local_authentication_enabled
     public_network_access        = azurerm_ai_services.this[0].public_network_access
   })
   resource_block_sensitive = var.kind != "AIServices" ? {
-    custom_question_answering_search_service_key = azapi_resource.this[0].body.properties.apiProperties.qnaAzureSearchEndpointKey
-    primary_access_key                           = try(data.azapi_resource_action.account_keys[0].sensitive_output.key1, null)
-    secondary_access_key                         = try(data.azapi_resource_action.account_keys[0].sensitive_output.key2, null)
+    custom_question_answering_search_service_key = sensitive(try(azapi_resource.this[0].body.properties.apiProperties.qnaAzureSearchEndpointKey, null))
+    primary_access_key                           = sensitive(try(data.azapi_resource_action.account_keys[0].sensitive_output.key1, null))
+    secondary_access_key                         = sensitive(try(data.azapi_resource_action.account_keys[0].sensitive_output.key2, null))
     } : {
     primary_access_key   = azurerm_ai_services.this[0].primary_access_key
     secondary_access_key = azurerm_ai_services.this[0].secondary_access_key
   }
+  resource_id = try(azapi_resource.this[0].id, azurerm_ai_services.this[0].id)
 }

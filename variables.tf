@@ -171,7 +171,7 @@ variable "diagnostic_settings" {
 
 variable "dynamic_throttling_enabled" {
   type        = bool
-  default     = null
+  default     = false
   description = "(Optional) Whether to enable the dynamic throttling for this Cognitive Service Account."
 }
 
@@ -187,7 +187,7 @@ DESCRIPTION
 
 variable "fqdns" {
   type        = list(string)
-  default     = null
+  default     = []
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
 }
 
