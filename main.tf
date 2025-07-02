@@ -283,8 +283,8 @@ locals {
     principal_id = azapi_resource.this[0].output.identity.principalId
     tenant_id    = azapi_resource.this[0].output.identity.tenantId
   }], [{
-    type         = azapi_resource.ai_service[0].output.identity[0].type
-    identity_ids = azapi_resource.ai_service[0].output.identity[0].identity_ids
+    type         = azapi_resource.ai_service[0].output.identity.type
+    identity_ids = azapi_resource.ai_service[0].output.identity.identity_ids
     principal_id = azapi_resource.ai_service[0].output.identity.principalId
     tenant_id    = azapi_resource.ai_service[0].output.identity.tenantId
   }], null)
