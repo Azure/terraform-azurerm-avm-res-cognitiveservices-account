@@ -57,8 +57,3 @@ output "system_assigned_mi_principal_id" {
   description = "The principal ID of system assigned managed identity on the Cognitive/AI Service account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`."
   value       = try(var.managed_identities.system_assigned, false) ? local.resource_block.identity[0].principal_id : null
 }
-
-output "temp" {
-  sensitive = true
-  value     = data.azapi_resource_action.account_keys
-}

@@ -25,21 +25,38 @@ data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
 
+locals {
+  # sensitive_bodies = [{
+  #   properties = {
+  #     apiProperties = {
+  #       qnaAzureSearchEndpointKey = var.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.custom_question_answering_search_service_key : null
+  #     }
+  #   }
+  #   },
+  #   null,
+  # ]
+  # sensitive_body         = local.sensitive_bodies[local.sensitive_body_index]
+  sensitive_body_index   = local.sensitive_body_present ? 0 : 1
+  sensitive_body_present = nonsensitive(anytrue([for item in local.sensitive_inputs : item != null]))
+  sensitive_inputs = [
+    var.custom_question_answering_search_service_key,
+  ]
+}
+
 resource "azapi_resource" "this" {
   count = var.kind != "AIServices" ? 1 : 0
 
-  type = "Microsoft.CognitiveServices/accounts@2024-10-01"
+  location  = var.location
+  name      = var.name
+  parent_id = data.azurerm_resource_group.rg.id
+  type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
   body = { for k, v in {
     kind = var.kind
-    identity = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
-      type                   = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
-      userAssignedIdentities = var.managed_identities.user_assigned_resource_ids
-    } : null
     sku = {
       name = var.sku_name
     }
     properties = { for k, v in {
-      # allowProjectManagement = false
+      allowProjectManagement        = false
       allowedFqdnList               = var.fqdns
       customSubDomainName           = coalesce(var.custom_subdomain_name, "azure-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
       disableLocalAuth              = try(!var.local_auth_enabled, false)
@@ -55,45 +72,49 @@ resource "azapi_resource" "this" {
         websiteName              = var.metrics_advisor_website_name != null && var.kind == "MetricsAdvisor" ? var.metrics_advisor_website_name : null
         } : k => v if v != null
       }
-      networkAcls = try({
+      networkAcls = try({ for k, v in try({
         defaultAction = var.network_acls.default_action
         ipRules = try([for ip_rule in var.network_acls.ip_rules : {
           value = ip_rule
         }], null)
         virtualNetworkRules = try([for rule in var.network_acls.virtual_network_rules : {
           id                               = rule.subnet_id
-          ignoreMissingVnetServiceEndpoint = var.network_acls.ignore_missing_vnet_service_endpoint == true
+          ignoreMissingVnetServiceEndpoint = rule.ignore_missing_vnet_service_endpoint == true
         }], null)
         bypass = var.kind == "OpenAI" ? var.network_acls.bypass : null
-      }, null)
+      }, null) : k => v if v != null }, null)
       userOwnedStorage = try([for storage in var.storage : {
         resourceId       = storage.storage_account_id
         identityClientId = storage.identity_client_id
       }], null)
     } : k => v if v != null }
   } : k => v if v != null }
-  create_headers = { "User-Agent" : local.avm_azapi_header }
-  delete_headers = { "User-Agent" : local.avm_azapi_header }
-  location       = var.location
-  name           = var.name
-  parent_id      = data.azurerm_resource_group.rg.id
-  read_headers   = { "User-Agent" : local.avm_azapi_header }
-  sensitive_body = {
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  # This weird workaround is needed to avoid configuration drift, the Terraform conditional expression `condition ? true_val : false_val` would execute implicitly type conversion, which would cause the `null` value to be converted to an `null` value with object type.
+  sensitive_body = [{
     properties = {
       apiProperties = {
         qnaAzureSearchEndpointKey = var.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.custom_question_answering_search_service_key : null
       }
     }
-  }
+    },
+    null,
+  ][local.sensitive_body_index]
   tags           = var.tags
-  update_headers = { "User-Agent" : local.avm_azapi_header }
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "identity" {
+    for_each = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? ["identity"] : []
+
+    content {
+      type         = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
+      identity_ids = var.managed_identities.user_assigned_resource_ids
+    }
+  }
 
   lifecycle {
-    ignore_changes = [
-      body.properties.allowProjectManagement,
-      output,
-    ]
-
     precondition {
       condition     = var.kind != "QnAMaker" || (var.qna_runtime_endpoint != null && var.qna_runtime_endpoint != "")
       error_message = "the QnAMaker runtime endpoint `qna_runtime_endpoint` is required when kind is set to `QnAMaker`"
@@ -132,92 +153,11 @@ resource "azapi_resource" "this" {
 data "azapi_resource_action" "account_keys" {
   count = var.kind != "AIServices" ? 1 : 0
 
-  type                             = azapi_resource.this[0].type
   action                           = "listKeys"
   resource_id                      = azapi_resource.this[0].id
+  type                             = azapi_resource.this[0].type
   sensitive_response_export_values = ["*"]
 }
-
-# resource "azurerm_cognitive_account" "this" {
-#   count = var.kind != "AIServices" ? 1 : 0
-#
-#   kind                                         = var.kind
-#   location                                     = var.location
-#   name                                         = var.name
-#   resource_group_name                          = var.resource_group_name
-#   sku_name                                     = var.sku_name
-#   custom_question_answering_search_service_id  = var.custom_question_answering_search_service_id
-#   custom_question_answering_search_service_key = var.custom_question_answering_search_service_key
-#   custom_subdomain_name                        = coalesce(var.custom_subdomain_name, "azure-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
-#   dynamic_throttling_enabled                   = var.dynamic_throttling_enabled
-#   fqdns                                        = var.fqdns
-#   local_auth_enabled                           = var.local_auth_enabled
-#   metrics_advisor_aad_client_id                = var.metrics_advisor_aad_client_id
-#   metrics_advisor_aad_tenant_id                = var.metrics_advisor_aad_tenant_id
-#   metrics_advisor_super_user_name              = var.metrics_advisor_super_user_name
-#   metrics_advisor_website_name                 = var.metrics_advisor_website_name
-#   outbound_network_access_restricted           = var.outbound_network_access_restricted
-#   public_network_access_enabled                = var.public_network_access_enabled
-#   qna_runtime_endpoint                         = var.qna_runtime_endpoint
-#   tags                                         = var.tags
-#
-#   dynamic "identity" {
-#     for_each = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? { this = var.managed_identities } : {}
-#
-#     content {
-#       type         = identity.value.system_assigned && length(identity.value.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(identity.value.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
-#       identity_ids = identity.value.user_assigned_resource_ids
-#     }
-#   }
-#   dynamic "network_acls" {
-#     for_each = var.network_acls == null ? [] : [var.network_acls]
-#
-#     content {
-#       default_action = network_acls.value.default_action
-#       bypass         = network_acls.value.bypass
-#       ip_rules       = network_acls.value.ip_rules
-#
-#       dynamic "virtual_network_rules" {
-#         for_each = network_acls.value.virtual_network_rules == null ? [] : network_acls.value.virtual_network_rules
-#
-#         content {
-#           subnet_id                            = virtual_network_rules.value.subnet_id
-#           ignore_missing_vnet_service_endpoint = virtual_network_rules.value.ignore_missing_vnet_service_endpoint
-#         }
-#       }
-#     }
-#   }
-#   dynamic "storage" {
-#     for_each = var.storage == null ? [] : var.storage
-#
-#     content {
-#       storage_account_id = storage.value.storage_account_id
-#       identity_client_id = storage.value.identity_client_id
-#     }
-#   }
-#   dynamic "timeouts" {
-#     for_each = var.timeouts == null ? [] : [var.timeouts]
-#
-#     content {
-#       create = timeouts.value.create
-#       delete = timeouts.value.delete
-#       read   = timeouts.value.read
-#       update = timeouts.value.update
-#     }
-#   }
-#
-#   lifecycle {
-#     ignore_changes = [
-#       customer_managed_key,
-#     ]
-#
-#     precondition {
-#       # we cannot add this check on `azurerm_cognitive_account_customer_managed_key` resource, since when `var.is_hsm_key` is `false` the resource won't be created.
-#       condition     = var.kind == "AIServices" || !var.is_hsm_key
-#       error_message = "HSM key could only be used when `var.kind == \"AIServices\"`"
-#     }
-#   }
-# }
 
 locals {
   managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, null)
@@ -248,7 +188,7 @@ data "azurerm_user_assigned_identity" "this" {
 resource "azurerm_cognitive_account_customer_managed_key" "this" {
   count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
-  cognitive_account_id = local.resource_id.id
+  cognitive_account_id = local.resource_id
   key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
   identity_client_id   = local.managed_key_identity_client_id
 
@@ -313,40 +253,41 @@ resource "azurerm_cognitive_deployment" "this" {
 
 locals {
   common_resource = {
-    id                    = local.resource_id
-    name                  = try(azapi_resource.this[0].name, azurerm_ai_services.this[0].name)
-    location              = try(azapi_resource.this[0].location, azurerm_ai_services.this[0].location)
-    resource_group_name   = var.resource_group_name
-    sku_name              = try(azapi_resource.this[0].body.sku.name, azurerm_ai_services.this[0].sku_name)
-    custom_subdomain_name = try(azapi_resource.this[0].body.properties.customSubDomainName, azurerm_ai_services.this[0].custom_subdomain_name, null)
-    customer_managed_key = try({
-      key_vault_key_id   = azurerm_cognitive_account_customer_managed_key.this[0].key_vault_key_id
-      identity_client_id = azurerm_cognitive_account_customer_managed_key.this[0].identity_client_id
-    }, azurerm_ai_services.this[0].customer_managed_key, null)
-    fqdns = try(azapi_resource.this[0].body.properties.allowedFqdnList, azurerm_ai_services.this[0].fqdns)
-    identity = try({
-      type         = azapi_resource.this[0].body.properties.identity.type
-      identity_ids = azapi_resource.this[0].body.properties.identity.userAssignedIdentities
-      principal_id = azapi_resource.this[0].body.properties.identity.principalId
-      tenant_id    = azapi_resource.this[0].body.properties.identity.tenantId
-    }, azurerm_ai_services.this[0].identity, null)
-    network_acls = try({
-      default_action = azapi_resource.this[0].body.properties.networkAcls.defaultAction
-      ip_rules       = [for rule in azapi_resource.this[0].body.properties.networkAcls.ipRules : rule.value]
-      virtual_network_rules = [for rule in azapi_resource.this[0].body.properties.networkAcls.virtualNetworkRules : {
-        subnet_id                            = rule.id
-        ignore_missing_vnet_service_endpoint = rule.ignoreMissingVnetServiceEndpoint
-      }]
-      bypass = azapi_resource.this[0].body.properties.networkAcls.bypass
-    }, azurerm_ai_services.this[0].network_acls, null)
+    id                                 = local.resource_id
+    name                               = try(azapi_resource.this[0].name, azurerm_ai_services.this[0].name)
+    location                           = try(azapi_resource.this[0].location, azurerm_ai_services.this[0].location)
+    resource_group_name                = var.resource_group_name
+    sku_name                           = try(azapi_resource.this[0].body.sku.name, azurerm_ai_services.this[0].sku_name)
+    custom_subdomain_name              = try(azapi_resource.this[0].body.properties.customSubDomainName, azurerm_ai_services.this[0].custom_subdomain_name, null)
+    customer_managed_key               = try(length(local.customer_managed_key) > 0 ? local.customer_managed_key : [], [])
+    fqdns                              = try(length(local.fqdns) > 0 ? local.fqdns : null, null)
+    identity                           = try(length(local.identity) > 0 ? local.identity : [], [])
+    network_acls                       = try(length(local.network_acls) > 0 ? local.network_acls : [], [])
     outbound_network_access_restricted = try(azapi_resource.this[0].body.properties.restrictOutboundNetworkAccess, azurerm_ai_services.this[0].outbound_network_access_restricted)
-    storage = try([for s in azapi_resource.this[0].body.properties.userOwnedStorage : {
-      storage_account_id = s.resourceId
-      identity_client_id = s.identityClientId
-    }], azurerm_ai_services.this[0].storage, null)
-    tags     = try(azapi_resource.this[0].tags, azurerm_ai_services.this[0].tags)
-    endpoint = try(azapi_resource.this[0].body.properties.output.endpoint, azurerm_ai_services.this[0].endpoint, null)
+    storage                            = try(length(local.storage) > 0 ? local.storage : [], [])
+    tags                               = try(azapi_resource.this[0].tags, azurerm_ai_services.this[0].tags)
+    endpoint                           = try(azapi_resource.this[0].output.properties.endpoint, azurerm_ai_services.this[0].endpoint, null)
   }
+  customer_managed_key = try({
+    key_vault_key_id   = azurerm_cognitive_account_customer_managed_key.this[0].key_vault_key_id
+    identity_client_id = azurerm_cognitive_account_customer_managed_key.this[0].identity_client_id
+  }, azurerm_ai_services.this[0].customer_managed_key, null)
+  fqdns = try(azapi_resource.this[0].body.properties.allowedFqdnList, azurerm_ai_services.this[0].fqdns, [])
+  identity = try([{
+    type         = azapi_resource.this[0].identity[0].type
+    identity_ids = azapi_resource.this[0].identity[0].identity_ids
+    principal_id = azapi_resource.this[0].output.identity.principalId
+    tenant_id    = azapi_resource.this[0].output.identity.tenantId
+  }], azurerm_ai_services.this[0].identity, null)
+  network_acls = try({
+    default_action = azapi_resource.this[0].body.properties.networkAcls.defaultAction
+    ip_rules       = [for rule in azapi_resource.this[0].body.properties.networkAcls.ipRules : rule.value]
+    virtual_network_rules = [for rule in azapi_resource.this[0].body.properties.networkAcls.virtualNetworkRules : {
+      subnet_id                            = rule.id
+      ignore_missing_vnet_service_endpoint = rule.ignoreMissingVnetServiceEndpoint
+    }]
+    bypass = azapi_resource.this[0].body.properties.networkAcls.bypass
+  }, azurerm_ai_services.this[0].network_acls, null)
   resource_block = merge(local.common_resource, var.kind != "AIServices" ? {
     kind                                        = azapi_resource.this[0].body.kind
     dynamic_throttling_enabled                  = try(azapi_resource.this[0].body.properties.dynamicThrottlingEnabled, null)
@@ -371,4 +312,8 @@ locals {
     secondary_access_key = azurerm_ai_services.this[0].secondary_access_key
   }
   resource_id = try(azapi_resource.this[0].id, azurerm_ai_services.this[0].id)
+  storage = try([for s in azapi_resource.this[0].body.properties.userOwnedStorage : {
+    storage_account_id = s.resourceId
+    identity_client_id = s.identityClientId
+  }], azurerm_ai_services.this[0].storage, null)
 }

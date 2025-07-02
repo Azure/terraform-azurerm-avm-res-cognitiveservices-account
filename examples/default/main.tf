@@ -1,6 +1,11 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.5"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -30,8 +35,6 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "test" {
-  # source  = "Azure/avm-res-cognitiveservices-account/azurerm"
-  # version = "v0.7.1"
   source = "../../"
 
   kind                = "OpenAI"
@@ -52,4 +55,5 @@ module "test" {
       }
     }
   }
+  enable_telemetry = false
 }

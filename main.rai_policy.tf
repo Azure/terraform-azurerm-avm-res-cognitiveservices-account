@@ -1,7 +1,9 @@
 resource "azapi_resource" "rai_policy" {
   for_each = var.rai_policies
 
-  type = "Microsoft.CognitiveServices/accounts/raiPolicies@2024-10-01"
+  name      = each.value.name
+  parent_id = local.resource_block.id
+  type      = "Microsoft.CognitiveServices/accounts/raiPolicies@2024-10-01"
   body = {
     properties = {
       basePolicyName = each.value.base_policy_name
@@ -20,10 +22,8 @@ resource "azapi_resource" "rai_policy" {
       }], null)
     }
   }
-  create_headers = { "User-Agent" : local.avm_azapi_header }
-  delete_headers = { "User-Agent" : local.avm_azapi_header }
-  name           = each.value.name
-  parent_id      = local.resource_block.id
-  read_headers   = { "User-Agent" : local.avm_azapi_header }
-  update_headers = { "User-Agent" : local.avm_azapi_header }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
