@@ -28,6 +28,13 @@ variable "sku_name" {
   nullable    = false
 }
 
+variable "allow_project_management" {
+  type        = bool
+  default     = false
+  description = "Specifies whether this resource support project management as child resources, used as containers for access management, data isolation and cost in AI Foundry."
+  nullable    = false
+}
+
 variable "cognitive_deployments" {
   type = map(object({
     name                       = string

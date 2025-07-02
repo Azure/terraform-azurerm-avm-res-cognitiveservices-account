@@ -26,16 +26,6 @@ data "azurerm_resource_group" "rg" {
 }
 
 locals {
-  # sensitive_bodies = [{
-  #   properties = {
-  #     apiProperties = {
-  #       qnaAzureSearchEndpointKey = var.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.custom_question_answering_search_service_key : null
-  #     }
-  #   }
-  #   },
-  #   null,
-  # ]
-  # sensitive_body         = local.sensitive_bodies[local.sensitive_body_index]
   sensitive_body_index   = local.sensitive_body_present ? 0 : 1
   sensitive_body_present = nonsensitive(anytrue([for item in local.sensitive_inputs : item != null]))
   sensitive_inputs = [
@@ -56,7 +46,7 @@ resource "azapi_resource" "this" {
       name = var.sku_name
     }
     properties = { for k, v in {
-      allowProjectManagement        = false
+      allowProjectManagement        = var.allow_project_management
       allowedFqdnList               = var.fqdns
       customSubDomainName           = coalesce(var.custom_subdomain_name, "azure-cognitive-${random_string.default_custom_subdomain_name_suffix[0].result}")
       disableLocalAuth              = try(!var.local_auth_enabled, false)
@@ -170,6 +160,17 @@ data "azurerm_key_vault_key" "this" {
   name         = var.customer_managed_key.key_name
 }
 
+locals {
+  hsm_id = var.customer_managed_key != null && var.is_hsm_key ? provider::azapi::parse_resource_id("Microsoft.KeyVault/managedHSMs", var.customer_managed_key.key_vault_resource_id) : null
+}
+
+data "azurerm_key_vault_managed_hardware_security_module" "this" {
+  count = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
+
+  name                = local.hsm_id.name
+  resource_group_name = local.hsm_id.resource_group_name
+}
+
 data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
   count = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
 
@@ -254,31 +255,39 @@ resource "azurerm_cognitive_deployment" "this" {
 locals {
   common_resource = {
     id                                 = local.resource_id
-    name                               = try(azapi_resource.this[0].name, azurerm_ai_services.this[0].name)
-    location                           = try(azapi_resource.this[0].location, azurerm_ai_services.this[0].location)
+    name                               = try(azapi_resource.this[0].name, azapi_resource.ai_service[0].name)
+    location                           = try(azapi_resource.this[0].location, azapi_resource.ai_service[0].location)
     resource_group_name                = var.resource_group_name
-    sku_name                           = try(azapi_resource.this[0].body.sku.name, azurerm_ai_services.this[0].sku_name)
-    custom_subdomain_name              = try(azapi_resource.this[0].body.properties.customSubDomainName, azurerm_ai_services.this[0].custom_subdomain_name, null)
+    sku_name                           = try(azapi_resource.this[0].body.sku.name, azapi_resource.ai_service[0].body.sku.name)
+    custom_subdomain_name              = try(azapi_resource.this[0].body.properties.customSubDomainName, azapi_resource.ai_service[0].body.properties.customSubDomainName, null)
     customer_managed_key               = try(length(local.customer_managed_key) > 0 ? local.customer_managed_key : [], [])
     fqdns                              = try(length(local.fqdns) > 0 ? local.fqdns : null, null)
     identity                           = try(length(local.identity) > 0 ? local.identity : [], [])
     network_acls                       = try(length(local.network_acls) > 0 ? local.network_acls : [], [])
-    outbound_network_access_restricted = try(azapi_resource.this[0].body.properties.restrictOutboundNetworkAccess, azurerm_ai_services.this[0].outbound_network_access_restricted)
+    outbound_network_access_restricted = try(azapi_resource.this[0].body.properties.restrictOutboundNetworkAccess, azapi_resource.ai_service[0].body.properties.restrictOutboundNetworkAccess)
     storage                            = try(length(local.storage) > 0 ? local.storage : [], [])
-    tags                               = try(azapi_resource.this[0].tags, azurerm_ai_services.this[0].tags)
-    endpoint                           = try(azapi_resource.this[0].output.properties.endpoint, azurerm_ai_services.this[0].endpoint, null)
+    tags                               = try(azapi_resource.this[0].tags, azapi_resource.ai_service[0].tags)
+    endpoint                           = try(azapi_resource.this[0].output.properties.endpoint, azapi_resource.ai_service[0].output.properties.endpoint, null)
   }
   customer_managed_key = try({
     key_vault_key_id   = azurerm_cognitive_account_customer_managed_key.this[0].key_vault_key_id
     identity_client_id = azurerm_cognitive_account_customer_managed_key.this[0].identity_client_id
-  }, azurerm_ai_services.this[0].customer_managed_key, null)
-  fqdns = try(azapi_resource.this[0].body.properties.allowedFqdnList, azurerm_ai_services.this[0].fqdns, [])
+  }, {
+    key_vault_key_id = data.azurerm_key_vault_managed_hardware_security_module_key.this[0].id
+    identity_client_id = local.managed_key_identity_client_id
+  }, null)
+  fqdns = try(azapi_resource.this[0].body.properties.allowedFqdnList, azapi_resource.ai_service[0].body.properties.allowedFqdnList, [])
   identity = try([{
     type         = azapi_resource.this[0].identity[0].type
     identity_ids = azapi_resource.this[0].identity[0].identity_ids
     principal_id = azapi_resource.this[0].output.identity.principalId
     tenant_id    = azapi_resource.this[0].output.identity.tenantId
-  }], azurerm_ai_services.this[0].identity, null)
+  }], [{
+    type         = azapi_resource.ai_service[0].output.identity[0].type
+    identity_ids = azapi_resource.ai_service[0].output.identity[0].identity_ids
+    principal_id = azapi_resource.ai_service[0].output.identity.principalId
+    tenant_id    = azapi_resource.ai_service[0].output.identity.tenantId
+  }], null)
   network_acls = try({
     default_action = azapi_resource.this[0].body.properties.networkAcls.defaultAction
     ip_rules       = [for rule in azapi_resource.this[0].body.properties.networkAcls.ipRules : rule.value]
@@ -287,7 +296,15 @@ locals {
       ignore_missing_vnet_service_endpoint = rule.ignoreMissingVnetServiceEndpoint
     }]
     bypass = azapi_resource.this[0].body.properties.networkAcls.bypass
-  }, azurerm_ai_services.this[0].network_acls, null)
+  }, {
+    default_action = azapi_resource.ai_service[0].body.properties.networkAcls.defaultAction
+    ip_rules       = [for rule in azapi_resource.ai_service[0].body.properties.networkAcls.ipRules : rule.value]
+    virtual_network_rules = [for rule in azapi_resource.ai_service[0].body.properties.networkAcls.virtualNetworkRules : {
+      subnet_id                            = rule.id
+      ignore_missing_vnet_service_endpoint = rule.ignoreMissingVnetServiceEndpoint
+    }]
+    bypass = azapi_resource.ai_service[0].body.properties.networkAcls.bypass
+  }, null)
   resource_block = merge(local.common_resource, var.kind != "AIServices" ? {
     kind                                        = azapi_resource.this[0].body.kind
     dynamic_throttling_enabled                  = try(azapi_resource.this[0].body.properties.dynamicThrottlingEnabled, null)
@@ -300,20 +317,23 @@ locals {
     qna_runtime_endpoint                        = try(azapi_resource.this[0].body.properties.apiProperties.qnaRuntimeEndpoint, null)
     custom_question_answering_search_service_id = try(azapi_resource.this[0].body.properties.apiProperties.qnaAzureSearchEndpointId, null)
     } : {
-    local_authentication_enabled = azurerm_ai_services.this[0].local_authentication_enabled
-    public_network_access        = azurerm_ai_services.this[0].public_network_access
+    local_authentication_enabled = try(!azapi_resource.ai_service[0].body.properties.disableLocalAuth, null)
+    public_network_access        = try(azapi_resource.ai_service[0].body.properties.publicNetworkAccess == "Enabled" ? true : (azapi_resource.ai_service[0].body.properties.publicNetworkAccess == "Disabled" ? false : null), null)
   })
   resource_block_sensitive = var.kind != "AIServices" ? {
     custom_question_answering_search_service_key = sensitive(try(azapi_resource.this[0].body.properties.apiProperties.qnaAzureSearchEndpointKey, null))
     primary_access_key                           = sensitive(try(data.azapi_resource_action.account_keys[0].sensitive_output.key1, null))
     secondary_access_key                         = sensitive(try(data.azapi_resource_action.account_keys[0].sensitive_output.key2, null))
     } : {
-    primary_access_key   = azurerm_ai_services.this[0].primary_access_key
-    secondary_access_key = azurerm_ai_services.this[0].secondary_access_key
+    primary_access_key                           = sensitive(try(data.azapi_resource_action.ai_service_account_keys[0].sensitive_output.key1, null))
+    secondary_access_key                         = sensitive(try(data.azapi_resource_action.ai_service_account_keys[0].sensitive_output.key2, null))
   }
-  resource_id = try(azapi_resource.this[0].id, azurerm_ai_services.this[0].id)
+  resource_id = try(azapi_resource.this[0].id, azapi_resource.ai_service[0].id)
   storage = try([for s in azapi_resource.this[0].body.properties.userOwnedStorage : {
     storage_account_id = s.resourceId
     identity_client_id = s.identityClientId
-  }], azurerm_ai_services.this[0].storage, null)
+  }], [for s in azapi_resource.ai_service[0].body.properties.userOwnedStorage : {
+    storage_account_id = s.resourceId
+    identity_client_id = s.identityClientId
+  }], null)
 }

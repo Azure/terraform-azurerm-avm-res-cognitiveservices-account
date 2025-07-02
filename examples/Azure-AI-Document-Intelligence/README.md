@@ -83,11 +83,7 @@ No optional inputs.
 
 ## Outputs
 
-The following outputs are exported:
-
-### <a name="output_resource"></a> [resource](#output\_resource)
-
-Description: n/a
+No outputs.
 
 ## Modules
 

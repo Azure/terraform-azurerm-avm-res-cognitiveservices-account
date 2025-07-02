@@ -35,8 +35,6 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "test" {
-  # source  = "Azure/avm-res-cognitiveservices-account/azurerm"
-  # version = "v0.7.1"
   source = "../../"
 
   kind                = "FormRecognizer"
