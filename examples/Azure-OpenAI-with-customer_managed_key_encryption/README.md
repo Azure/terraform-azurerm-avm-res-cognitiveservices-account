@@ -6,6 +6,7 @@ This deploys an Azure OpenAI service with a customer managed key.
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"

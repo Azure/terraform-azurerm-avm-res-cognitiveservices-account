@@ -1,7 +1,9 @@
 resource "azapi_resource" "rai_policy" {
   for_each = var.rai_policies
 
-  type = "Microsoft.CognitiveServices/accounts/raiPolicies@2024-10-01"
+  name      = each.value.name
+  parent_id = local.resource_block.id
+  type      = "Microsoft.CognitiveServices/accounts/raiPolicies@2024-10-01"
   body = {
     properties = {
       basePolicyName = each.value.base_policy_name
@@ -20,6 +22,4 @@ resource "azapi_resource" "rai_policy" {
       }], null)
     }
   }
-  name      = each.value.name
-  parent_id = local.resource_block.id
 }
