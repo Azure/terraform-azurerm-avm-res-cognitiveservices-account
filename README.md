@@ -32,8 +32,7 @@ The following resources are used by this module:
 - [azapi_resource.ai_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_update.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update) (resource)
-- [azurerm_ai_services.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/ai_services) (resource)
+- [azapi_update_resource.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
 - [azurerm_cognitive_deployment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
@@ -45,7 +44,9 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_string.default_custom_subdomain_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [terraform_data.ai_service_hsm_key_trigger](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azapi_resource_action.account_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_action.ai_service_account_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_key_vault_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_key) (data source)
 - [azurerm_key_vault_managed_hardware_security_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_managed_hardware_security_module) (data source)
@@ -97,7 +98,7 @@ The following input variables are optional (have default values):
 
 Description: Specifies whether this resource support project management as child resources, used as containers for access management, data isolation and cost in AI Foundry.
 
-Type: `string`
+Type: `bool`
 
 Default: `false`
 
@@ -593,6 +594,10 @@ Default: `null`
 
 The following outputs are exported:
 
+### <a name="output_azapi_resource"></a> [azapi\_resource](#output\_azapi\_resource)
+
+Description: The cognitive account resource created in AzAPI schema.
+
 ### <a name="output_endpoint"></a> [endpoint](#output\_endpoint)
 
 Description: The endpoint used to connect to the Cognitive Service Account.
@@ -615,7 +620,7 @@ Description: The ID of the RAI policy created.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The cognitive account resource created.
+Description: The cognitive account resource created in AzureRM schema.
 
 ### <a name="output_resource_cognitive_deployment"></a> [resource\_cognitive\_deployment](#output\_resource\_cognitive\_deployment)
 

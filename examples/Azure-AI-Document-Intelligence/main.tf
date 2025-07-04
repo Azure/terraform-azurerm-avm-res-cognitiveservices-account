@@ -44,4 +44,3 @@ module "test" {
   sku_name            = "S0"
   enable_telemetry    = false
 }
-

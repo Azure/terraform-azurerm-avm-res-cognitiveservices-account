@@ -1,3 +1,8 @@
+output "azapi_resource" {
+  description = "The cognitive account resource created in AzAPI schema."
+  value       = try(azapi_resource.this[0], azapi_resource.ai_service[0])
+}
+
 output "endpoint" {
   description = "The endpoint used to connect to the Cognitive Service Account."
   value       = local.resource_block.endpoint
@@ -27,7 +32,7 @@ output "rai_policy_id" {
 }
 
 output "resource" {
-  description = "The cognitive account resource created."
+  description = "The cognitive account resource created in AzureRM schema."
   value       = local.resource_block
 }
 

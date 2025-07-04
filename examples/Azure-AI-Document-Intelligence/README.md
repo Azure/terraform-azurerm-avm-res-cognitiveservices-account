@@ -41,8 +41,6 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "test" {
-  # source  = "Azure/avm-res-cognitiveservices-account/azurerm"
-  # version = "v0.7.1"
   source = "../../"
 
   kind                = "FormRecognizer"
@@ -52,7 +50,6 @@ module "test" {
   sku_name            = "S0"
   enable_telemetry    = false
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->

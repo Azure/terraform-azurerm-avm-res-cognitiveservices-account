@@ -233,8 +233,6 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
 }
 
 module "test" {
-  # source  = "Azure/avm-res-cognitiveservices-account/azurerm"
-  # version = "v0.7.1"
   source = "../../"
 
   kind                = "AIServices"
@@ -255,8 +253,4 @@ module "test" {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
-}
-
-output resource {
-  value = module.test.resource
 }
