@@ -128,6 +128,8 @@ resource "azurerm_key_vault_key" "key" {
 }
 
 module "test" {
+  # source  = "Azure/avm-res-cognitiveservices-account/azurerm"
+  # version = "v0.7.1"
   source = "../../"
 
   kind                = "Face"
@@ -148,3 +150,4 @@ module "test" {
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
 }
+

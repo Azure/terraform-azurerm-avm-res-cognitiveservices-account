@@ -30,11 +30,11 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.ai_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.cognitive_deployment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_update_resource.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
-- [azurerm_cognitive_deployment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
@@ -107,7 +107,7 @@ Default: `false`
 Description: - `name` - (Required) The name of the Cognitive Services Account Deployment. Changing this forces a new resource to be created.
 - `rai_policy_name` - (Optional) The name of RAI policy.
 - `version_upgrade_option` - (Optional) Deployment model version upgrade option. Possible values are `OnceNewDefaultVersionAvailable`, `OnceCurrentVersionExpired`, and `NoAutoUpgrade`. Defaults to `OnceNewDefaultVersionAvailable`. Changing this forces a new resource to be created.
-- `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled.
+- `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled. Defaults to `false`.
 
 ---
 `model` block supports the following:
@@ -117,7 +117,7 @@ Description: - `name` - (Required) The name of the Cognitive Services Account De
 
 ---
 `scale` block supports the following:
-- `capacity` - (Optional) Tokens-per-Minute (TPM). The unit of measure for this field is in the thousands of Tokens-per-Minute. Defaults to `1` which means that the limitation is `1000` tokens per minute. If the resources SKU supports scale in/out then the capacity field should be included in the resources' configuration. If the scale in/out is not supported by the resources SKU then this field can be safely omitted. For more information about TPM please see the [product documentation](https://learn.microsoft.com/azure/ai-services/openai/how-to/quota?tabs=rest).
+- `capacity` - (Optional) Tokens-per-Minute (TPM). The unit of measure for this field is in the thousands of Tokens-per-Minute. Defaults to `1` which means that the limitation is `1000` tokens per minute. If the resources SKU supports scale in/out then the capacity field should be included in the resources' configuration. If the scale in/out is not supported by the resources SKU then this field can be safely omitted. For more information about TPM please see the [product documentation](https://learn.microsoft.com/azure/ai-services/openai/how-to/quota?tabs=rest). Defaults to `1`.
 - `family` - (Optional) If the service has different generations of hardware, for the same SKU, then that can be captured here. Changing this forces a new resource to be created.
 - `size` - (Optional) The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code. Changing this forces a new resource to be created.
 - `tier` - (Optional) Possible values are `Free`, `Basic`, `Standard`, `Premium`, `Enterprise`. Changing this forces a new resource to be created.
@@ -136,15 +136,15 @@ Type:
 map(object({
     name                       = string
     rai_policy_name            = optional(string)
-    version_upgrade_option     = optional(string)
-    dynamic_throttling_enabled = optional(bool)
+    version_upgrade_option     = optional(string, "OnceNewDefaultVersionAvailable")
+    dynamic_throttling_enabled = optional(bool, false)
     model = object({
       format  = string
       name    = string
       version = optional(string)
     })
     scale = object({
-      capacity = optional(number)
+      capacity = optional(number, 1)
       family   = optional(string)
       size     = optional(string)
       tier     = optional(string)
@@ -598,6 +598,10 @@ The following outputs are exported:
 
 Description: The cognitive account resource created in AzAPI schema.
 
+### <a name="output_azapi_resource_cognitive_deployment"></a> [azapi\_resource\_cognitive\_deployment](#output\_azapi\_resource\_cognitive\_deployment)
+
+Description: The map of cognitive deployments created in AzAPI schema.
+
 ### <a name="output_endpoint"></a> [endpoint](#output\_endpoint)
 
 Description: The endpoint used to connect to the Cognitive Service Account.
@@ -624,7 +628,7 @@ Description: The cognitive account resource created in AzureRM schema.
 
 ### <a name="output_resource_cognitive_deployment"></a> [resource\_cognitive\_deployment](#output\_resource\_cognitive\_deployment)
 
-Description: The map of cognitive deployments created.
+Description: The map of cognitive deployments created in AzureRM schema.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 

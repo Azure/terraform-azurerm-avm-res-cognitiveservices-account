@@ -39,15 +39,15 @@ variable "cognitive_deployments" {
   type = map(object({
     name                       = string
     rai_policy_name            = optional(string)
-    version_upgrade_option     = optional(string)
-    dynamic_throttling_enabled = optional(bool)
+    version_upgrade_option     = optional(string, "OnceNewDefaultVersionAvailable")
+    dynamic_throttling_enabled = optional(bool, false)
     model = object({
       format  = string
       name    = string
       version = optional(string)
     })
     scale = object({
-      capacity = optional(number)
+      capacity = optional(number, 1)
       family   = optional(string)
       size     = optional(string)
       tier     = optional(string)
@@ -65,7 +65,7 @@ variable "cognitive_deployments" {
  - `name` - (Required) The name of the Cognitive Services Account Deployment. Changing this forces a new resource to be created.
  - `rai_policy_name` - (Optional) The name of RAI policy.
  - `version_upgrade_option` - (Optional) Deployment model version upgrade option. Possible values are `OnceNewDefaultVersionAvailable`, `OnceCurrentVersionExpired`, and `NoAutoUpgrade`. Defaults to `OnceNewDefaultVersionAvailable`. Changing this forces a new resource to be created.
- - `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled.
+ - `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled. Defaults to `false`.
 
  ---
  `model` block supports the following:
@@ -75,7 +75,7 @@ variable "cognitive_deployments" {
 
  ---
  `scale` block supports the following:
- - `capacity` - (Optional) Tokens-per-Minute (TPM). The unit of measure for this field is in the thousands of Tokens-per-Minute. Defaults to `1` which means that the limitation is `1000` tokens per minute. If the resources SKU supports scale in/out then the capacity field should be included in the resources' configuration. If the scale in/out is not supported by the resources SKU then this field can be safely omitted. For more information about TPM please see the [product documentation](https://learn.microsoft.com/azure/ai-services/openai/how-to/quota?tabs=rest).
+ - `capacity` - (Optional) Tokens-per-Minute (TPM). The unit of measure for this field is in the thousands of Tokens-per-Minute. Defaults to `1` which means that the limitation is `1000` tokens per minute. If the resources SKU supports scale in/out then the capacity field should be included in the resources' configuration. If the scale in/out is not supported by the resources SKU then this field can be safely omitted. For more information about TPM please see the [product documentation](https://learn.microsoft.com/azure/ai-services/openai/how-to/quota?tabs=rest). Defaults to `1`.
  - `family` - (Optional) If the service has different generations of hardware, for the same SKU, then that can be captured here. Changing this forces a new resource to be created.
  - `size` - (Optional) The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code. Changing this forces a new resource to be created.
  - `tier` - (Optional) Possible values are `Free`, `Basic`, `Standard`, `Premium`, `Enterprise`. Changing this forces a new resource to be created.
