@@ -140,6 +140,16 @@ resource "azapi_resource" "this" {
   }
 }
 
+resource "time_sleep" "wait_account_creation" {
+  count = var.kind != "AIServices" ? 1 : 0
+
+  create_duration = "10s"
+
+  depends_on = [
+    azapi_resource.this
+  ]
+}
+
 data "azapi_resource_action" "account_keys" {
   count = var.kind != "AIServices" ? 1 : 0
 
@@ -147,6 +157,10 @@ data "azapi_resource_action" "account_keys" {
   resource_id                      = azapi_resource.this[0].id
   type                             = azapi_resource.this[0].type
   sensitive_response_export_values = ["*"]
+
+  depends_on = [
+    time_sleep.wait_account_creation
+  ]
 }
 
 locals {

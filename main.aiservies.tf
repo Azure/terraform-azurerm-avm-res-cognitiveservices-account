@@ -91,6 +91,16 @@ resource "terraform_data" "ai_service_hsm_key_trigger" {
   }
 }
 
+resource "time_sleep" "wait_ai_service_creation" {
+  count = var.kind == "AIServices" ? 1 : 0
+
+  create_duration = "10s"
+
+  depends_on = [
+    azapi_resource.ai_service
+  ]
+}
+
 resource "azapi_update_resource" "ai_service_hsm_key" {
   count = var.kind == "AIServices" && var.is_hsm_key ? 1 : 0
 
@@ -107,6 +117,7 @@ resource "azapi_update_resource" "ai_service_hsm_key" {
   depends_on = [
     azapi_resource.ai_service,
     terraform_data.ai_service_hsm_key_trigger,
+    time_sleep.wait_ai_service_creation,
   ]
 
   lifecycle {
@@ -124,4 +135,8 @@ data "azapi_resource_action" "ai_service_account_keys" {
   resource_id                      = azapi_resource.ai_service[0].id
   type                             = azapi_resource.ai_service[0].type
   sensitive_response_export_values = ["*"]
+
+  depends_on = [
+    azapi_update_resource.ai_service_hsm_key,
+  ]
 }
