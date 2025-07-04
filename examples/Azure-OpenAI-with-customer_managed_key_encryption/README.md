@@ -194,11 +194,7 @@ No optional inputs.
 
 ## Outputs
 
-The following outputs are exported:
-
-### <a name="output_deployment"></a> [deployment](#output\_deployment)
-
-Description: n/a
+No outputs.
 
 ## Modules
 
