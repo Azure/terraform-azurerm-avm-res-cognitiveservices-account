@@ -31,13 +31,16 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "test" {
-  source = "../../"
+  source  = "Azure/avm-res-cognitiveservices-account/azurerm"
+  version = "0.7.1"
+  # source = "../../"
 
   kind                = "OpenAI"
   location            = azurerm_resource_group.this.location
   name                = "OpenAI-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
+
   cognitive_deployments = {
     "gpt-4o-mini" = {
       name = "gpt-4o-mini"

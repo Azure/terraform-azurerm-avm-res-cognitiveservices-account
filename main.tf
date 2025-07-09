@@ -29,8 +29,18 @@ locals {
   sensitive_body_index   = local.sensitive_body_present ? 0 : 1
   sensitive_body_present = nonsensitive(anytrue([for item in local.sensitive_inputs : item != null]))
   sensitive_inputs = [
-    var.custom_question_answering_search_service_key,
+    var.sensitive_data,
   ]
+}
+
+resource "random_string" "sensitive_salt" {
+  count = local.sensitive_body_present ? 1 : 0
+
+  length  = 32
+  lower   = true
+  numeric = true
+  special = true
+  upper   = true
 }
 
 resource "azapi_resource" "this" {
@@ -86,10 +96,15 @@ resource "azapi_resource" "this" {
   sensitive_body = [{
     properties = {
       apiProperties = {
-        qnaAzureSearchEndpointKey = var.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.custom_question_answering_search_service_key : null
+        qnaAzureSearchEndpointKey = try(var.sensitive_data.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.sensitive_data.custom_question_answering_search_service_key : null, null)
       }
     }
     },
+    null,
+  ][local.sensitive_body_index]
+  sensitive_body_version = [try({
+    "properties.apiProperties.qnaAzureSearchEndpointKey" = nonsensitive(sha512(random_string.sensitive_salt[0].result + var.sensitive_data.custom_question_answering_search_service_key != null && var.kind == "TextAnalytics" ? var.sensitive_data.custom_question_answering_search_service_key : "")),
+    }, null),
     null,
   ][local.sensitive_body_index]
   tags           = var.tags
@@ -114,7 +129,7 @@ resource "azapi_resource" "this" {
       error_message = "the Search Service ID `custom_question_answering_search_service_id` can only be set when kind is set to `TextAnalytics`"
     }
     precondition {
-      condition     = var.custom_question_answering_search_service_key == null || var.kind == "TextAnalytics"
+      condition     = var.sensitive_data.custom_question_answering_search_service_key == null || var.kind == "TextAnalytics"
       error_message = "the Search Service Key `custom_question_answering_search_service_key` can only be set when kind is set to `TextAnalytics`"
     }
     precondition {

@@ -97,11 +97,16 @@ variable "custom_question_answering_search_service_id" {
   description = "(Optional) If `kind` is `TextAnalytics` this specifies the ID of the Search service."
 }
 
-variable "custom_question_answering_search_service_key" {
-  type        = string
-  default     = null
-  description = "(Optional) If `kind` is `TextAnalytics` this specifies the key of the Search service."
-  sensitive   = true
+variable "sensitive_data" {
+  type = object({
+    custom_question_answering_search_service_key = optional(string)
+  })
+  sensitive = true
+  description = <<DESCRIPTION
+  Sensitive data for this module. The following properties can be specified:
+
+  - `custom_question_answering_search_service_key` - (Optional) If `kind` is `TextAnalytics` this specifies the key of the Search service.
+  DESCRIPTION
 }
 
 variable "custom_subdomain_name" {
