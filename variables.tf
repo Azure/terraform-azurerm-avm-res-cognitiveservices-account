@@ -180,6 +180,7 @@ variable "dynamic_throttling_enabled" {
   type        = bool
   default     = false
   description = "(Optional) Whether to enable the dynamic throttling for this Cognitive Service Account."
+  nullable    = false
 }
 
 variable "enable_telemetry" {
