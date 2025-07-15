@@ -6,6 +6,7 @@ This deploys an Azure AI service
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -200,6 +201,10 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "h
   principal_id       = data.azurerm_client_config.this.object_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
   scope              = "/keys"
+
+  depends_on = [
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
+  ]
 }
 
 # this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
@@ -209,6 +214,10 @@ resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "u
   principal_id       = azurerm_user_assigned_identity.this.principal_id
   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
   scope              = "/keys"
+
+  depends_on = [
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
+  ]
 }
 
 resource "time_sleep" "role_assignment" {
@@ -248,7 +257,8 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  is_hsm_key = true
+  enable_telemetry = false
+  is_hsm_key       = true
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])

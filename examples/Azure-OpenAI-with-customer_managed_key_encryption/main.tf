@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -137,8 +138,10 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
+  enable_telemetry = false
   managed_identities = {
     system_assigned            = true
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
 }
+

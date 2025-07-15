@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -37,4 +38,5 @@ module "test" {
   name                = "AI-Document-Intelligence-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
+  enable_telemetry    = false
 }

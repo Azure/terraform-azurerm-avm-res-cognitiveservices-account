@@ -27,13 +27,13 @@ output "rai_policy_id" {
 }
 
 output "resource" {
-  description = "The cognitive account resource created."
+  description = "The cognitive account resource created in AzureRM schema."
   value       = local.resource_block
 }
 
 output "resource_cognitive_deployment" {
-  description = "The map of cognitive deployments created."
-  value       = azurerm_cognitive_deployment.this
+  description = "The map of cognitive deployments created in AzureRM schema."
+  value       = local.resource_cognitive_deployment
 }
 
 output "resource_id" {

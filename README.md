@@ -17,7 +17,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.5)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.17.0, < 5.0)
 
@@ -25,15 +25,18 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.10)
+
 ## Resources
 
 The following resources are used by this module:
 
+- [azapi_resource.ai_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.cognitive_deployment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azurerm_ai_services.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/ai_services) (resource)
-- [azurerm_cognitive_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
-- [azurerm_cognitive_deployment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
@@ -43,9 +46,16 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_string.default_custom_subdomain_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [terraform_data.ai_service_hsm_key_trigger](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [time_sleep.wait_account_creation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [time_sleep.wait_ai_service_creation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [azapi_resource_action.account_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_action.ai_service_account_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_key_vault_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_key) (data source)
+- [azurerm_key_vault_managed_hardware_security_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_managed_hardware_security_module) (data source)
 - [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_managed_hardware_security_module_key) (data source)
+- [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/data-sources/module_source) (data source)
 
@@ -88,12 +98,20 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### <a name="input_allow_project_management"></a> [allow\_project\_management](#input\_allow\_project\_management)
+
+Description: Specifies whether this resource support project management as child resources, used as containers for access management, data isolation and cost in AI Foundry.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_cognitive_deployments"></a> [cognitive\_deployments](#input\_cognitive\_deployments)
 
 Description: - `name` - (Required) The name of the Cognitive Services Account Deployment. Changing this forces a new resource to be created.
 - `rai_policy_name` - (Optional) The name of RAI policy.
 - `version_upgrade_option` - (Optional) Deployment model version upgrade option. Possible values are `OnceNewDefaultVersionAvailable`, `OnceCurrentVersionExpired`, and `NoAutoUpgrade`. Defaults to `OnceNewDefaultVersionAvailable`. Changing this forces a new resource to be created.
-- `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled.
+- `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled. Defaults to `false`.
 
 ---
 `model` block supports the following:
@@ -103,7 +121,7 @@ Description: - `name` - (Required) The name of the Cognitive Services Account De
 
 ---
 `scale` block supports the following:
-- `capacity` - (Optional) Tokens-per-Minute (TPM). The unit of measure for this field is in the thousands of Tokens-per-Minute. Defaults to `1` which means that the limitation is `1000` tokens per minute. If the resources SKU supports scale in/out then the capacity field should be included in the resources' configuration. If the scale in/out is not supported by the resources SKU then this field can be safely omitted. For more information about TPM please see the [product documentation](https://learn.microsoft.com/azure/ai-services/openai/how-to/quota?tabs=rest).
+- `capacity` - (Optional) Tokens-per-Minute (TPM). The unit of measure for this field is in the thousands of Tokens-per-Minute. Defaults to `1` which means that the limitation is `1000` tokens per minute. If the resources SKU supports scale in/out then the capacity field should be included in the resources' configuration. If the scale in/out is not supported by the resources SKU then this field can be safely omitted. For more information about TPM please see the [product documentation](https://learn.microsoft.com/azure/ai-services/openai/how-to/quota?tabs=rest). Defaults to `1`.
 - `family` - (Optional) If the service has different generations of hardware, for the same SKU, then that can be captured here. Changing this forces a new resource to be created.
 - `size` - (Optional) The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code. Changing this forces a new resource to be created.
 - `tier` - (Optional) Possible values are `Free`, `Basic`, `Standard`, `Premium`, `Enterprise`. Changing this forces a new resource to be created.
@@ -122,15 +140,15 @@ Type:
 map(object({
     name                       = string
     rai_policy_name            = optional(string)
-    version_upgrade_option     = optional(string)
-    dynamic_throttling_enabled = optional(bool)
+    version_upgrade_option     = optional(string, "OnceNewDefaultVersionAvailable")
+    dynamic_throttling_enabled = optional(bool, false)
     model = object({
       format  = string
       name    = string
       version = optional(string)
     })
     scale = object({
-      capacity = optional(number)
+      capacity = optional(number, 1)
       family   = optional(string)
       size     = optional(string)
       tier     = optional(string)
@@ -236,12 +254,12 @@ Description: (Optional) Whether to enable the dynamic throttling for this Cognit
 
 Type: `bool`
 
-Default: `null`
+Default: `false`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see https://aka.ms/avm/telemetryinfo.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -254,7 +272,7 @@ Description: (Optional) List of FQDNs allowed for the Cognitive Account.
 
 Type: `list(string)`
 
-Default: `null`
+Default: `[]`
 
 ### <a name="input_is_hsm_key"></a> [is\_hsm\_key](#input\_is\_hsm\_key)
 
@@ -602,11 +620,11 @@ Description: The ID of the RAI policy created.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The cognitive account resource created.
+Description: The cognitive account resource created in AzureRM schema.
 
 ### <a name="output_resource_cognitive_deployment"></a> [resource\_cognitive\_deployment](#output\_resource\_cognitive\_deployment)
 
-Description: The map of cognitive deployments created.
+Description: The map of cognitive deployments created in AzureRM schema.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
