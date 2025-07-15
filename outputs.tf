@@ -1,13 +1,3 @@
-output "azapi_resource" {
-  description = "The cognitive account resource created in AzAPI schema."
-  value       = try(azapi_resource.this[0], azapi_resource.ai_service[0])
-}
-
-output "azapi_resource_cognitive_deployment" {
-  description = "The map of cognitive deployments created in AzAPI schema."
-  value       = azapi_resource.cognitive_deployment
-}
-
 output "endpoint" {
   description = "The endpoint used to connect to the Cognitive Service Account."
   value       = local.resource_block.endpoint

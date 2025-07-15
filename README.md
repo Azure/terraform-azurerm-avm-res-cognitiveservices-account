@@ -598,14 +598,6 @@ Default: `null`
 
 The following outputs are exported:
 
-### <a name="output_azapi_resource"></a> [azapi\_resource](#output\_azapi\_resource)
-
-Description: The cognitive account resource created in AzAPI schema.
-
-### <a name="output_azapi_resource_cognitive_deployment"></a> [azapi\_resource\_cognitive\_deployment](#output\_azapi\_resource\_cognitive\_deployment)
-
-Description: The map of cognitive deployments created in AzAPI schema.
-
 ### <a name="output_endpoint"></a> [endpoint](#output\_endpoint)
 
 Description: The endpoint used to connect to the Cognitive Service Account.
