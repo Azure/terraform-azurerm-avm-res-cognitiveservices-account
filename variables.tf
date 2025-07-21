@@ -53,6 +53,13 @@ variable "cognitive_deployments" {
       tier     = optional(string)
       type     = string
     })
+    retry = optional(object({
+      error_message_regex  = list(string)
+      interval_seconds     = optional(number, 30)
+      max_interval_seconds = optional(number, 300)
+      multiplier           = optional(number, 1.5)
+      randomization_factor = optional(number, 0.3)
+    }))
     timeouts = optional(object({
       create = optional(string)
       delete = optional(string)
@@ -80,6 +87,14 @@ variable "cognitive_deployments" {
  - `size` - (Optional) The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code. Changing this forces a new resource to be created.
  - `tier` - (Optional) Possible values are `Free`, `Basic`, `Standard`, `Premium`, `Enterprise`. Changing this forces a new resource to be created.
  - `type` - (Required) The name of the SKU. Ex
+
+ ---
+ `retry` block supports the following:
+ - `error_message_regex` - (Required) A list of regular expressions to match against error messages. If any of the regular expressions match, the request will be retried.
+ - `interval_seconds` - (Optional) The base number of seconds to wait between retries. Defaults to `30`.
+ - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Defaults to `300`.
+ - `multiplier` - (Optional) The multiplier to apply to the interval between retries. Defaults to `1.5`.
+ - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. The formula for the randomized interval is: `RetryInterval * (random value in range [1 - RandomizationFactor, 1 + RandomizationFactor])`. Therefore set to zero `0.0` for no randomization. Defaults to `0.3`.
 
  ---
  `timeouts` block supports the following:

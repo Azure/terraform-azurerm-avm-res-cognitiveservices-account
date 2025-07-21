@@ -249,6 +249,14 @@ resource "azapi_resource" "cognitive_deployment" {
       tier     = each.value.scale.tier
     } : k => v if v != null }
   }
+  # Add conditional retry logic to handle 409 conflicts when specified
+  retry = each.value.retry != null ? {
+    error_message_regex  = each.value.retry.error_message_regex
+    interval_seconds     = each.value.retry.interval_seconds
+    max_interval_seconds = each.value.retry.max_interval_seconds
+    multiplier           = each.value.retry.multiplier
+    randomization_factor = each.value.retry.randomization_factor
+  } : null
   schema_validation_enabled = false
 
   depends_on = [
