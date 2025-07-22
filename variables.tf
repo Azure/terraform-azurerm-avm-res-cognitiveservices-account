@@ -59,6 +59,13 @@ variable "cognitive_deployments" {
       read   = optional(string)
       update = optional(string)
     }))
+    retry = optional(object({
+      error_message_regex  = optional(list(string))
+      interval_seconds     = optional(number)
+      max_interval_seconds = optional(number)
+      multiplier           = optional(number)
+      randomization_factor = optional(number)
+    }))
   }))
   default     = {}
   description = <<-DESCRIPTION
@@ -87,6 +94,14 @@ variable "cognitive_deployments" {
  - `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Services Account Deployment.
  - `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Services Account Deployment.
  - `update` - (Defaults to 30 minutes) Used when updating the Cognitive Services Account Deployment.
+
+ ---
+ `retry` block supports the following:
+ - `error_message_regex` - (Optional) A list of regular expressions to match against error messages. If any of the regular expressions match, the request will be retried. Recommended for 409 conflicts: `[".*RequestConflict.*", ".*Another operation is being performed.*"]`.
+ - `interval_seconds` - (Optional) The base number of seconds to wait between retries. Default is `10`. Recommended for Azure 409 conflicts: `30`.
+ - `max_interval_seconds` - (Optional) The maximum number of seconds to wait between retries. Default is `180`. Recommended for Azure 409 conflicts: `300`.
+ - `multiplier` - (Optional) The multiplier to apply to the interval between retries. Default is `1.5`.
+ - `randomization_factor` - (Optional) The randomization factor to apply to the interval between retries. The formula for the randomized interval is: `RetryInterval * (random value in range [1 - RandomizationFactor, 1 + RandomizationFactor])`. Therefore set to zero `0.0` for no randomization. Default is `0.5`. Recommended for Azure 409 conflicts: `0.3`.
 DESCRIPTION
   nullable    = false
 }

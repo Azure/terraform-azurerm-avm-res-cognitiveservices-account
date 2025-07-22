@@ -249,6 +249,7 @@ resource "azapi_resource" "cognitive_deployment" {
       tier     = each.value.scale.tier
     } : k => v if v != null }
   }
+  retry                     = each.value.retry
   schema_validation_enabled = false
 
   depends_on = [
