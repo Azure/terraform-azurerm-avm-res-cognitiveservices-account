@@ -249,6 +249,8 @@ resource "azapi_resource" "cognitive_deployment" {
       tier     = each.value.scale.tier
     } : k => v if v != null }
   }
+  # Add conditional locking to serialize deployment creation
+  locks = var.deployment_serialization_enabled ? [local.resource_id] : null
   # Add conditional retry logic to handle 409 conflicts when specified
   retry = each.value.retry != null ? {
     error_message_regex  = each.value.retry.error_message_regex
