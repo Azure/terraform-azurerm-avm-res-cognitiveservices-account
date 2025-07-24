@@ -229,6 +229,14 @@ object({
 
 Default: `null`
 
+### <a name="input_deployment_serialization_enabled"></a> [deployment\_serialization\_enabled](#input\_deployment\_serialization\_enabled)
+
+Description: (Optional) Whether to enable serialized creation of cognitive deployments to avoid operation conflicts. When enabled, all deployments will be created sequentially by locking on the parent cognitive account resource. This prevents the '409 Conflict' errors that can occur when creating multiple deployments simultaneously. Users may choose to disable this if they prefer to handle deployment conflicts through other means or if they are only creating single deployments. Defaults to `false`.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
 Description:   A map of diagnostic settings to create on the Cognitive Account. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
