@@ -106,6 +106,14 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_associated_projects"></a> [associated\_projects](#input\_associated\_projects)
+
+Description: (Optional) Specifies the projects, by project name, that are associated with this resource.
+
+Type: `list(string)`
+
+Default: `[]`
+
 ### <a name="input_cognitive_deployments"></a> [cognitive\_deployments](#input\_cognitive\_deployments)
 
 Description: - `name` - (Required) The name of the Cognitive Services Account Deployment. Changing this forces a new resource to be created.
@@ -226,6 +234,14 @@ object({
     }), null)
   })
 ```
+
+Default: `null`
+
+### <a name="input_default_project"></a> [default\_project](#input\_default\_project)
+
+Description: (Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter.
+
+Type: `string`
 
 Default: `null`
 

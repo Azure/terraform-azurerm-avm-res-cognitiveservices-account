@@ -18,7 +18,9 @@ resource "azapi_resource" "ai_service" {
     properties = { for k, v in {
       allowProjectManagement        = var.allow_project_management
       allowedFqdnList               = try(length(var.fqdns) > 0 ? var.fqdns : null, null)
+      associatedProjects            = var.associated_projects
       customSubDomainName           = var.custom_subdomain_name
+      defaultProject                = var.default_project
       disableLocalAuth              = try(!var.local_auth_enabled, false)
       dynamicThrottlingEnabled      = var.dynamic_throttling_enabled == false ? null : var.dynamic_throttling_enabled
       publicNetworkAccess           = var.public_network_access_enabled ? "Enabled" : "Disabled"

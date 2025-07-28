@@ -35,6 +35,12 @@ variable "allow_project_management" {
   nullable    = false
 }
 
+variable "associated_projects" {
+  type        = list(string)
+  default     = []
+  description = "(Optional) Specifies the projects, by project name, that are associated with this resource."
+}
+
 variable "cognitive_deployments" {
   type = map(object({
     name                       = string
@@ -144,6 +150,12 @@ variable "customer_managed_key" {
   - `user_assigned_identity` - (Optional) The User Assigned Identity that has access to the key.
     - `resource_id` - (Required) The resource ID of the User Assigned Identity that has access to the key.
   DESCRIPTION
+}
+
+variable "default_project" {
+  type        = string
+  default     = null
+  description = "(Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter."
 }
 
 variable "diagnostic_settings" {
