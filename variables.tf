@@ -38,7 +38,7 @@ variable "allow_project_management" {
 variable "associated_projects" {
   type        = list(string)
   default     = []
-  description = "(Optional) List of projects that are associated with this resource."
+  description = "(Optional) Specifies the projects, by project name, that are associated with this resource."
 }
 
 variable "cognitive_deployments" {
@@ -155,7 +155,7 @@ variable "customer_managed_key" {
 variable "default_project" {
   type        = string
   default     = null
-  description = "(Optional) The default project that is targeted when data plane endpoints are called without a project parameter."
+  description = "(Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter."
 }
 
 variable "diagnostic_settings" {
