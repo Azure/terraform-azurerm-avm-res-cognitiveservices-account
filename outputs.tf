@@ -9,7 +9,7 @@ output "name" {
 }
 
 output "primary_access_key" {
-  description = "A primary access key which can be used to connect to the Cognitive Service Account."
+  description = "A primary access key which can be used to connect to the Cognitive Service Account. This will be null when `var.local_auth_enabled` is set to false."
   sensitive   = true
   value       = local.resource_block_sensitive.primary_access_key
 }
@@ -48,7 +48,7 @@ output "resource_sensitive" {
 }
 
 output "secondary_access_key" {
-  description = "A secondary access key which can be used to connect to the Cognitive Service Account."
+  description = "A secondary access key which can be used to connect to the Cognitive Service Account. This will be null when local_auth_enabled is set to false."
   sensitive   = true
   value       = local.resource_block_sensitive.secondary_access_key
 }

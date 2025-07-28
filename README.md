@@ -639,7 +639,7 @@ Description: The name of cognitive account created.
 
 ### <a name="output_primary_access_key"></a> [primary\_access\_key](#output\_primary\_access\_key)
 
-Description: A primary access key which can be used to connect to the Cognitive Service Account.
+Description: A primary access key which can be used to connect to the Cognitive Service Account. This will be null when `var.local_auth_enabled` is set to false.
 
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
@@ -667,7 +667,7 @@ Description: The cognitive account resource created, sensitive data only.
 
 ### <a name="output_secondary_access_key"></a> [secondary\_access\_key](#output\_secondary\_access\_key)
 
-Description: A secondary access key which can be used to connect to the Cognitive Service Account.
+Description: A secondary access key which can be used to connect to the Cognitive Service Account. This will be null when local\_auth\_enabled is set to false.
 
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
