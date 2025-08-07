@@ -158,6 +158,13 @@ variable "default_project" {
   description = "(Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter."
 }
 
+variable "deployment_serialization_enabled" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether to enable serialized creation of cognitive deployments to avoid operation conflicts. When enabled, all deployments will be created sequentially by locking on the parent cognitive account resource. This prevents the '409 Conflict' errors that can occur when creating multiple deployments simultaneously. Users may choose to disable this if they prefer to handle deployment conflicts through other means or if they are only creating single deployments. Defaults to `false`."
+  nullable    = false
+}
+
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
