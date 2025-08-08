@@ -273,7 +273,7 @@ resource "azurerm_key_vault_access_policy" "this" {
 }
 
 resource "azurerm_storage_account" "this" {
-  account_replication_type = "LRS"
+  account_replication_type = "GRS"
   account_tier             = "Standard"
   location                 = azurerm_resource_group.this.location
   name                     = "sa${replace(random_string.suffix.result, "-", "")}"
