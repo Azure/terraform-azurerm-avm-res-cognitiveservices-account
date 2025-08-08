@@ -514,6 +514,23 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_rai_monitor_config"></a> [rai\_monitor\_config](#input\_rai\_monitor\_config)
+
+Description:   Controls the Rai Monitor configuration on this resource. The following properties can be specified:
+ - `adx_storage_resource_id` - (Required) Full resource id of Storage.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the Storage.
+
+Type:
+
+```hcl
+object({
+    adx_storage_resource_id = string
+    identity_client_id      = optional(string, null)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_rai_policies"></a> [rai\_policies](#input\_rai\_policies)
 
 Description: - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.

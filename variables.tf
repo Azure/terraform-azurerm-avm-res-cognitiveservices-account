@@ -408,6 +408,19 @@ variable "qna_runtime_endpoint" {
   description = "(Optional) A URL to link a QnAMaker cognitive account to a QnA runtime."
 }
 
+variable "rai_monitor_config" {
+  type = object({
+    adx_storage_resource_id = string
+    identity_client_id      = optional(string, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Controls the Rai Monitor configuration on this resource. The following properties can be specified:
+ - `adx_storage_resource_id` - (Required) Full resource id of Storage.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the Storage.
+  DESCRIPTION
+}
+
 variable "rai_policies" {
   type = map(object({
     name             = string
