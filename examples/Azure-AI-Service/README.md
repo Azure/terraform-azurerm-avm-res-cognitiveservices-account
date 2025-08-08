@@ -243,6 +243,56 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
   ]
 }
 
+resource "azurerm_application_insights" "this" {
+  application_type    = "web"
+  location            = azurerm_resource_group.this.location
+  name                = "appInsights-${module.naming.application_insights.name_unique}"
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+resource "azurerm_key_vault" "this2" {
+  location                 = azurerm_resource_group.this.location
+  name                     = "kv2${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name      = azurerm_resource_group.this.name
+  sku_name                 = "standard"
+  tenant_id                = data.azurerm_client_config.this.tenant_id
+  purge_protection_enabled = true
+}
+
+resource "azurerm_key_vault_access_policy" "this" {
+  key_vault_id = azurerm_key_vault.this2.id
+  object_id    = data.azurerm_client_config.this.object_id
+  tenant_id    = data.azurerm_client_config.this.tenant_id
+  key_permissions = [
+    "Create",
+    "Get",
+    "Delete",
+    "Purge",
+    "GetRotationPolicy",
+  ]
+}
+
+resource "azurerm_storage_account" "this" {
+  account_replication_type = "GRS"
+  account_tier             = "Standard"
+  location                 = azurerm_resource_group.this.location
+  name                     = "sa${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name      = azurerm_resource_group.this.name
+}
+
+resource "azurerm_machine_learning_workspace" "this" {
+  application_insights_id = azurerm_application_insights.this.id
+  key_vault_id            = azurerm_key_vault.this2.id
+  location                = azurerm_resource_group.this.location
+  name                    = "AMLW-${module.naming.machine_learning_workspace.name_unique}"
+  resource_group_name     = azurerm_resource_group.this.name
+  storage_account_id      = azurerm_storage_account.this.id
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
 module "test" {
   source = "../../"
 
@@ -251,6 +301,10 @@ module "test" {
   name                = "AIService-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
+  aml_workspace = {
+    resource_id        = azurerm_machine_learning_workspace.this.id
+    identity_client_id = azurerm_machine_learning_workspace.this.identity[0].principal_id
+  }
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault_managed_hardware_security_module.this.id
     key_name              = azurerm_key_vault_managed_hardware_security_module_key.this.name
@@ -284,14 +338,19 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azurerm_application_insights.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_insights) (resource)
 - [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
+- [azurerm_key_vault.this2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
+- [azurerm_key_vault_access_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) (resource)
 - [azurerm_key_vault_certificate.cert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
 - [azurerm_key_vault_managed_hardware_security_module.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_key) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
 - [azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_managed_hardware_security_module_role_assignment) (resource)
+- [azurerm_machine_learning_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/machine_learning_workspace) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.role_assignments_names](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
