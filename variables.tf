@@ -408,7 +408,7 @@ variable "rai_monitor_config" {
   })
   default     = null
   description = <<DESCRIPTION
-  Controls the AML Workspace configuration on this resource. The following properties can be specified:
+  Controls the Rai Monitor configuration on this resource. The following properties can be specified:
  - `adx_storage_resource_id` - (Required) Full resource id of Storage.
  - `identity_client_id` - (Optional) The client ID of the managed identity associated with the Storage.
   DESCRIPTION
