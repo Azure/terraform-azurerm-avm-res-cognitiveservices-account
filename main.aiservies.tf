@@ -21,6 +21,11 @@ resource "azapi_resource" "ai_service" {
           resourceId       = var.aml_workspace.resource_id
           identityClientId = var.aml_workspace.identity_client_id
         } : null
+        networkInjections = var.network_injections != null ? [{
+          subnetArmId                 = var.network_injections.subnet_id
+          scenario                    = var.network_injections.scenario
+          useMicrosoftManagedNetwork = var.network_injections.microsoft_managed_network_enabled
+        }] : null
         raiMonitorConfig = var.rai_monitor_config != null ? {
           adxStorageResourceId = var.rai_monitor_config.adx_storage_resource_id
           identityClientId     = var.rai_monitor_config.identity_client_id
