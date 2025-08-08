@@ -443,6 +443,25 @@ object({
 
 Default: `null`
 
+### <a name="input_network_injections"></a> [network\_injections](#input\_network\_injections)
+
+Description:   Controls the Network Injections on this resource. The following properties can be specified:
+ - `subnet_id` - (Required) Full resource id of the Subnet resource.
+ - `scenario` - (Required) The scenario for the network injection. Only `agent` is supported.
+ - `microsoft_managed_network_enabled` - (Optional) Whether to use a Microsoft managed network.
+
+Type:
+
+```hcl
+object({
+    subnet_id                         = string
+    scenario                          = string
+    microsoft_managed_network_enabled = optional(bool, false)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_outbound_network_access_restricted"></a> [outbound\_network\_access\_restricted](#input\_outbound\_network\_access\_restricted)
 
 Description: (Optional) Whether outbound network access is restricted for the Cognitive Account. Defaults to `false`.
