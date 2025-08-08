@@ -321,6 +321,30 @@ variable "network_acls" {
 DESCRIPTION
 }
 
+variable "network_injections" {
+  type = object({
+    subnet_id                         = string
+    scenario                          = string
+    microsoft_managed_network_enabled = optional(bool, false)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Controls the Network Injections on this resource. The following properties can be specified:
+ - `subnet_id` - (Required) Full resource id of the Subnet resource.
+ - `scenario` - (Required) The scenario for the network injection. Only `agent` is supported.
+ - `microsoft_managed_network_enabled` - (Optional) Whether to use a Microsoft managed network.
+  DESCRIPTION
+
+  validation {
+    condition = (
+      var.network_injections == null ||
+      var.network_injections.scenario == null ||
+      var.network_injections.scenario == "agent"
+    )
+    error_message = "If specified, the value of 'scenario' must be \"agent\"."
+  }
+}
+
 variable "outbound_network_access_restricted" {
   type        = bool
   default     = null
@@ -481,30 +505,6 @@ variable "storage" {
  - `identity_client_id` - (Optional) The client ID of the managed identity associated with the storage resource.
  - `storage_account_id` - (Required) Full resource id of a Microsoft.Storage resource.
 DESCRIPTION
-}
-
-variable "network_injections" {
-  type = object({
-    subnet_id                 = string
-    scenario                      = string
-    microsoft_managed_network_enabled = optional(bool, false)
-  })
-  default     = null
-  description = <<DESCRIPTION
-  Controls the Network Injections on this resource. The following properties can be specified:
- - `subnet_id` - (Required) Full resource id of the Subnet resource.
- - `scenario` - (Required) The scenario for the network injection. Only `agent` is supported.
- - `microsoft_managed_network_enabled` - (Optional) Whether to use a Microsoft managed network.
-  DESCRIPTION
-
-  validation {
-    condition = (
-      var.network_injections == null ||
-      var.network_injections.scenario == null ||
-      var.network_injections.scenario == "agent"
-    )
-    error_message = "If specified, the value of 'scenario' must be \"agent\"."
-  }
 }
 
 variable "tags" {
