@@ -162,79 +162,79 @@ resource "azurerm_key_vault_certificate" "cert" {
   }
 }
 
-# resource "azurerm_key_vault_managed_hardware_security_module" "this" {
-#   admin_object_ids                          = [data.azurerm_client_config.this.object_id]
-#   location                                  = azurerm_resource_group.this.location
-#   name                                      = "avmcoghsm${replace(random_string.suffix.result, "-", "")}"
-#   resource_group_name                       = azurerm_resource_group.this.name
-#   sku_name                                  = "Standard_B1"
-#   tenant_id                                 = data.azurerm_client_config.this.tenant_id
-#   purge_protection_enabled                  = true
-#   security_domain_key_vault_certificate_ids = [for cert in azurerm_key_vault_certificate.cert : cert.id]
-#   security_domain_quorum                    = 2
-#   soft_delete_retention_days                = 7
-# }
+resource "azurerm_key_vault_managed_hardware_security_module" "this" {
+  admin_object_ids                          = [data.azurerm_client_config.this.object_id]
+  location                                  = azurerm_resource_group.this.location
+  name                                      = "avmcoghsm${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name                       = azurerm_resource_group.this.name
+  sku_name                                  = "Standard_B1"
+  tenant_id                                 = data.azurerm_client_config.this.tenant_id
+  purge_protection_enabled                  = true
+  security_domain_key_vault_certificate_ids = [for cert in azurerm_key_vault_certificate.cert : cert.id]
+  security_domain_quorum                    = 2
+  soft_delete_retention_days                = 7
+}
 
-# resource "random_uuid" "role_assignments_names" {
-#   count = 3
-# }
+resource "random_uuid" "role_assignments_names" {
+  count = 3
+}
 
-# # this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
-# resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_user" {
-#   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-#   name               = random_uuid.role_assignments_names[0].result
-#   principal_id       = data.azurerm_client_config.this.object_id
-#   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
-#   scope              = "/keys"
-# }
+# this gives your service principal the HSM Crypto User role which lets you create and destroy hsm keys
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_user" {
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+  name               = random_uuid.role_assignments_names[0].result
+  principal_id       = data.azurerm_client_config.this.object_id
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
+  scope              = "/keys"
+}
 
-# # this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
-# resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_officer" {
-#   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-#   name               = random_uuid.role_assignments_names[1].result
-#   principal_id       = data.azurerm_client_config.this.object_id
-#   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
-#   scope              = "/keys"
+# this gives your service principal the HSM Crypto Officer role which lets you purge hsm keys
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "hsm_crypto_officer" {
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+  name               = random_uuid.role_assignments_names[1].result
+  principal_id       = data.azurerm_client_config.this.object_id
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/515eb02d-2335-4d2d-92f2-b1cbdf9c3778"
+  scope              = "/keys"
 
-#   depends_on = [
-#     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
-#   ]
-# }
+  depends_on = [
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
+  ]
+}
 
-# # this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
-# resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
-#   managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
-#   name               = random_uuid.role_assignments_names[2].result
-#   principal_id       = azurerm_user_assigned_identity.this.principal_id
-#   role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
-#   scope              = "/keys"
+# this gives your service principal the HSM Crypto User role to UAI for wrap/unwrap operations
+resource "azurerm_key_vault_managed_hardware_security_module_role_assignment" "uai_crypto_user" {
+  managed_hsm_id     = azurerm_key_vault_managed_hardware_security_module.this.id
+  name               = random_uuid.role_assignments_names[2].result
+  principal_id       = azurerm_user_assigned_identity.this.principal_id
+  role_definition_id = "/Microsoft.KeyVault/providers/Microsoft.Authorization/roleDefinitions/21dbd100-6940-42c2-9190-5d6cb909625b"
+  scope              = "/keys"
 
-#   depends_on = [
-#     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
-#   ]
-# }
+  depends_on = [
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
+  ]
+}
 
-# resource "time_sleep" "role_assignment" {
-#   create_duration = "30s"
+resource "time_sleep" "role_assignment" {
+  create_duration = "30s"
 
-#   depends_on = [
-#     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
-#     azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
-#     azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user
-#   ]
-# }
+  depends_on = [
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_user,
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.hsm_crypto_officer,
+    azurerm_key_vault_managed_hardware_security_module_role_assignment.uai_crypto_user
+  ]
+}
 
-# resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-#   key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
-#   key_type       = "RSA-HSM"
-#   managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
-#   name           = "cognitiveaccountkey"
-#   key_size       = 2048
+resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
+  key_opts       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+  key_type       = "RSA-HSM"
+  managed_hsm_id = azurerm_key_vault_managed_hardware_security_module.this.id
+  name           = "cognitiveaccountkey"
+  key_size       = 2048
 
-#   depends_on = [
-#     time_sleep.role_assignment
-#   ]
-# }
+  depends_on = [
+    time_sleep.role_assignment
+  ]
+}
 
 resource "azurerm_virtual_network" "this" {
   name                = "virtnet-aiservice-${module.naming.virtual_network.name_unique}"
@@ -258,13 +258,13 @@ module "test" {
   name                = "AIService-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
-  # customer_managed_key = {
-  #   key_vault_resource_id = azurerm_key_vault_managed_hardware_security_module.this.id
-  #   key_name              = azurerm_key_vault_managed_hardware_security_module_key.this.name
-  #   user_assigned_identity = {
-  #     resource_id = azurerm_user_assigned_identity.this.id
-  #   }
-  # }
+  customer_managed_key = {
+    key_vault_resource_id = azurerm_key_vault_managed_hardware_security_module.this.id
+    key_name              = azurerm_key_vault_managed_hardware_security_module_key.this.name
+    user_assigned_identity = {
+      resource_id = azurerm_user_assigned_identity.this.id
+    }
+  }
   enable_telemetry = false
   is_hsm_key       = true
   managed_identities = {
