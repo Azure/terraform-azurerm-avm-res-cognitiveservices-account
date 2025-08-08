@@ -237,28 +237,25 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
 }
 
 resource "azurerm_application_insights" "this" {
-  name                = "appInsights-${module.naming.application_insights.name_unique}"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
   application_type    = "web"
+  location            = azurerm_resource_group.this.location
+  name                = "appInsights-${module.naming.application_insights.name_unique}"
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_key_vault" "this2" {
-  name                = "kv2${replace(random_string.suffix.result, "-", "")}"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  tenant_id           = data.azurerm_client_config.this.tenant_id
-
-  sku_name = "standard"
-
+  location                 = azurerm_resource_group.this.location
+  name                     = "kv2${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name      = azurerm_resource_group.this.name
+  sku_name                 = "standard"
+  tenant_id                = data.azurerm_client_config.this.tenant_id
   purge_protection_enabled = true
 }
 
 resource "azurerm_key_vault_access_policy" "this" {
   key_vault_id = azurerm_key_vault.this2.id
-  tenant_id    = data.azurerm_client_config.this.tenant_id
   object_id    = data.azurerm_client_config.this.object_id
-
+  tenant_id    = data.azurerm_client_config.this.tenant_id
   key_permissions = [
     "Create",
     "Get",
@@ -269,19 +266,19 @@ resource "azurerm_key_vault_access_policy" "this" {
 }
 
 resource "azurerm_storage_account" "this" {
-  name                     = "sa${replace(random_string.suffix.result, "-", "")}"
-  location                 = azurerm_resource_group.this.location
-  resource_group_name      = azurerm_resource_group.this.name
-  account_tier             = "Standard"
   account_replication_type = "LRS"
+  account_tier             = "Standard"
+  location                 = azurerm_resource_group.this.location
+  name                     = "sa${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name      = azurerm_resource_group.this.name
 }
 
 resource "azurerm_machine_learning_workspace" "this" {
-  name                    = "AMLW-${module.naming.machine_learning_workspace.name_unique}"
-  location                = azurerm_resource_group.this.location
-  resource_group_name     = azurerm_resource_group.this.name
   application_insights_id = azurerm_application_insights.this.id
   key_vault_id            = azurerm_key_vault.this2.id
+  location                = azurerm_resource_group.this.location
+  name                    = "AMLW-${module.naming.machine_learning_workspace.name_unique}"
+  resource_group_name     = azurerm_resource_group.this.name
   storage_account_id      = azurerm_storage_account.this.id
 
   identity {
@@ -297,6 +294,10 @@ module "test" {
   name                = "AIService-${module.naming.cognitive_account.name_unique}"
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "S0"
+  aml_workspace = {
+    resource_id        = azurerm_machine_learning_workspace.this.id
+    identity_client_id = azurerm_machine_learning_workspace.this.identity[0].principal_id
+  }
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault_managed_hardware_security_module.this.id
     key_name              = azurerm_key_vault_managed_hardware_security_module_key.this.name
@@ -309,9 +310,5 @@ module "test" {
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
-  }
-  aml_workspace = {
-    resource_id        = azurerm_machine_learning_workspace.this.id
-    identity_client_id = azurerm_machine_learning_workspace.this.identity[0].principal_id
   }
 }

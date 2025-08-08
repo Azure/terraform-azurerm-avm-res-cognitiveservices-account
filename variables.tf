@@ -35,6 +35,20 @@ variable "allow_project_management" {
   nullable    = false
 }
 
+variable "aml_workspace" {
+  type = object({
+    resource_id        = string
+    identity_client_id = optional(string, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Controls the AML Workspace configuration on this resource. The following properties can be specified:
+
+ - `resource_id` - (Required) Full resource id of a Microsoft.AMLWorkspace resource.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the AML Workspace resource.
+  DESCRIPTION
+}
+
 variable "associated_projects" {
   type        = list(string)
   default     = []
@@ -481,20 +495,6 @@ variable "storage" {
  - `identity_client_id` - (Optional) The client ID of the managed identity associated with the storage resource.
  - `storage_account_id` - (Required) Full resource id of a Microsoft.Storage resource.
 DESCRIPTION
-}
-
-variable "aml_workspace" {
-  type = object({
-    resource_id        = string
-    identity_client_id = optional(string, null)
-  })
-  default     = null
-  description = <<DESCRIPTION
-  Controls the AML Workspace configuration on this resource. The following properties can be specified:
-
- - `resource_id` - (Required) Full resource id of a Microsoft.AMLWorkspace resource.
- - `identity_client_id` - (Optional) The client ID of the managed identity associated with the AML Workspace resource.
-  DESCRIPTION
 }
 
 variable "tags" {
