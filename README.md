@@ -264,6 +264,14 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_deployment_serialization_enabled"></a> [deployment\_serialization\_enabled](#input\_deployment\_serialization\_enabled)
+
+Description: (Optional) Whether to enable serialized creation of cognitive deployments to avoid operation conflicts. When enabled, all deployments will be created sequentially by locking on the parent cognitive account resource. This prevents the '409 Conflict' errors that can occur when creating multiple deployments simultaneously. Users may choose to disable this if they prefer to handle deployment conflicts through other means or if they are only creating single deployments. Defaults to `false`.
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
 Description:   A map of diagnostic settings to create on the Cognitive Account. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -524,6 +532,23 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_rai_monitor_config"></a> [rai\_monitor\_config](#input\_rai\_monitor\_config)
+
+Description:   Controls the Rai Monitor configuration on this resource. The following properties can be specified:
+ - `adx_storage_resource_id` - (Required) Full resource id of Storage.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the Storage.
+
+Type:
+
+```hcl
+object({
+    adx_storage_resource_id = string
+    identity_client_id      = optional(string, null)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_rai_policies"></a> [rai\_policies](#input\_rai\_policies)
 
 Description: - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.
@@ -658,7 +683,7 @@ Description: The name of cognitive account created.
 
 ### <a name="output_primary_access_key"></a> [primary\_access\_key](#output\_primary\_access\_key)
 
-Description: A primary access key which can be used to connect to the Cognitive Service Account.
+Description: A primary access key which can be used to connect to the Cognitive Service Account. This will be null when `var.local_auth_enabled` is set to false.
 
 ### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
@@ -686,7 +711,7 @@ Description: The cognitive account resource created, sensitive data only.
 
 ### <a name="output_secondary_access_key"></a> [secondary\_access\_key](#output\_secondary\_access\_key)
 
-Description: A secondary access key which can be used to connect to the Cognitive Service Account.
+Description: A secondary access key which can be used to connect to the Cognitive Service Account. This will be null when local\_auth\_enabled is set to false.
 
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
