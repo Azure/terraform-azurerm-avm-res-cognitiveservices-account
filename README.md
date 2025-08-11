@@ -107,6 +107,24 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_aml_workspace"></a> [aml\_workspace](#input\_aml\_workspace)
+
+Description:   Controls the AML Workspace configuration on this resource. The following properties can be specified:
+
+ - `resource_id` - (Required) Full resource id of a Microsoft.AMLWorkspace resource.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the AML Workspace resource.
+
+Type:
+
+```hcl
+object({
+    resource_id        = string
+    identity_client_id = optional(string, null)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_associated_projects"></a> [associated\_projects](#input\_associated\_projects)
 
 Description: (Optional) Specifies the projects, by project name, that are associated with this resource.

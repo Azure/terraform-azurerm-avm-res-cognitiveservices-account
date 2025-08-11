@@ -17,6 +17,10 @@ resource "azapi_resource" "ai_service" {
     }
     properties = merge(
       {
+        amlWorkspace = var.aml_workspace != null ? {
+          resourceId       = var.aml_workspace.resource_id
+          identityClientId = var.aml_workspace.identity_client_id
+        } : null
         raiMonitorConfig = var.rai_monitor_config != null ? {
           adxStorageResourceId = var.rai_monitor_config.adx_storage_resource_id
           identityClientId     = var.rai_monitor_config.identity_client_id
