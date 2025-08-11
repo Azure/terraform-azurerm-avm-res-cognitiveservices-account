@@ -319,9 +319,9 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  local_auth_enabled = true
   enable_telemetry   = false
   is_hsm_key         = true
+  local_auth_enabled = true
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])

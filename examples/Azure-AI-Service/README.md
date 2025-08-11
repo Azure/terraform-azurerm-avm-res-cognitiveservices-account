@@ -243,6 +243,20 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
   ]
 }
 
+resource "azurerm_virtual_network" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = "virtnet-aiservice-${module.naming.virtual_network.name_unique}"
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
+}
+
+resource "azurerm_subnet" "this" {
+  address_prefixes     = ["10.0.2.0/24"]
+  name                 = "internal"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+}
+
 resource "azurerm_application_insights" "this" {
   application_type    = "web"
   location            = azurerm_resource_group.this.location
@@ -293,20 +307,6 @@ resource "azurerm_machine_learning_workspace" "this" {
   }
 }
 
-resource "azurerm_virtual_network" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "virtnet-aiservice-${module.naming.virtual_network.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "this" {
-  address_prefixes     = ["10.0.2.0/24"]
-  name                 = "internal"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-}
-
 module "test" {
   source = "../../"
 
@@ -326,8 +326,9 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  enable_telemetry = false
-  is_hsm_key       = true
+  enable_telemetry   = false
+  is_hsm_key         = true
+  local_auth_enabled = true
   managed_identities = {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
