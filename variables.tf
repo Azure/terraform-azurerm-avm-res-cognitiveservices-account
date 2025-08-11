@@ -35,6 +35,20 @@ variable "allow_project_management" {
   nullable    = false
 }
 
+variable "aml_workspace" {
+  type = object({
+    resource_id        = string
+    identity_client_id = optional(string, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Controls the AML Workspace configuration on this resource. The following properties can be specified:
+
+ - `resource_id` - (Required) Full resource id of a Microsoft.AMLWorkspace resource.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the AML Workspace resource.
+  DESCRIPTION
+}
+
 variable "associated_projects" {
   type        = list(string)
   default     = []
@@ -156,6 +170,13 @@ variable "default_project" {
   type        = string
   default     = null
   description = "(Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter."
+}
+
+variable "deployment_serialization_enabled" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether to enable serialized creation of cognitive deployments to avoid operation conflicts. When enabled, all deployments will be created sequentially by locking on the parent cognitive account resource. This prevents the '409 Conflict' errors that can occur when creating multiple deployments simultaneously. Users may choose to disable this if they prefer to handle deployment conflicts through other means or if they are only creating single deployments. Defaults to `false`."
+  nullable    = false
 }
 
 variable "diagnostic_settings" {
@@ -399,6 +420,19 @@ variable "qna_runtime_endpoint" {
   type        = string
   default     = null
   description = "(Optional) A URL to link a QnAMaker cognitive account to a QnA runtime."
+}
+
+variable "rai_monitor_config" {
+  type = object({
+    adx_storage_resource_id = string
+    identity_client_id      = optional(string, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Controls the Rai Monitor configuration on this resource. The following properties can be specified:
+ - `adx_storage_resource_id` - (Required) Full resource id of Storage.
+ - `identity_client_id` - (Optional) The client ID of the managed identity associated with the Storage.
+  DESCRIPTION
 }
 
 variable "rai_policies" {

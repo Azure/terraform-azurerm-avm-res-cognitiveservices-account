@@ -151,7 +151,7 @@ resource "time_sleep" "wait_account_creation" {
 }
 
 data "azapi_resource_action" "account_keys" {
-  count = var.kind != "AIServices" ? 1 : 0
+  count = var.kind != "AIServices" && try(var.local_auth_enabled, true) ? 1 : 0
 
   action                           = "listKeys"
   resource_id                      = azapi_resource.this[0].id
@@ -249,6 +249,8 @@ resource "azapi_resource" "cognitive_deployment" {
       tier     = each.value.scale.tier
     } : k => v if v != null }
   }
+  # Add conditional locking to serialize deployment creation
+  locks = var.deployment_serialization_enabled ? [local.resource_id] : null
   # Add conditional retry logic to handle 409 conflicts when specified
   retry = each.value.retry != null ? {
     error_message_regex  = each.value.retry.error_message_regex

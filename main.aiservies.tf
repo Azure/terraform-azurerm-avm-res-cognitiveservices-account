@@ -18,10 +18,18 @@ resource "azapi_resource" "ai_service" {
     properties = merge(
       {
         networkInjections = var.network_injections != null ? [{
-    subnetArmId                 = var.network_injections.subnet_id
-    scenario                    = var.network_injections.scenario
-    useMicrosoftManagedNetwork = var.network_injections.microsoft_managed_network_enabled
-  }] : null
+          subnetArmId                = var.network_injections.subnet_id
+          scenario                   = var.network_injections.scenario
+          useMicrosoftManagedNetwork = var.network_injections.microsoft_managed_network_enabled
+        }] : null
+        amlWorkspace = var.aml_workspace != null ? {
+          resourceId       = var.aml_workspace.resource_id
+          identityClientId = var.aml_workspace.identity_client_id
+        } : null
+        raiMonitorConfig = var.rai_monitor_config != null ? {
+          adxStorageResourceId = var.rai_monitor_config.adx_storage_resource_id
+          identityClientId     = var.rai_monitor_config.identity_client_id
+        } : null
       },
       { for k, v in {
         allowProjectManagement        = var.allow_project_management
@@ -142,7 +150,7 @@ resource "azapi_update_resource" "ai_service_hsm_key" {
 }
 
 data "azapi_resource_action" "ai_service_account_keys" {
-  count = var.kind == "AIServices" ? 1 : 0
+  count = var.kind == "AIServices" && try(var.local_auth_enabled, true) ? 1 : 0
 
   action                           = "listKeys"
   resource_id                      = azapi_resource.ai_service[0].id
