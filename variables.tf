@@ -359,8 +359,8 @@ variable "network_injections" {
   validation {
     condition = (
       var.network_injections == null ||
-      var.network_injections.scenario == null ||
-      var.network_injections.scenario == "agent"
+      try(var.network_injections.scenario, null) == null ||
+      try(var.network_injections.scenario, null) == "agent"
     )
     error_message = "If specified, the value of 'scenario' must be \"agent\"."
   }
