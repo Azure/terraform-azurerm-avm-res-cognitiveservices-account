@@ -249,8 +249,11 @@ resource "azapi_resource" "cognitive_deployment" {
       tier     = each.value.scale.tier
     } : k => v if v != null }
   }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   # Add conditional locking to serialize deployment creation
-  locks = var.deployment_serialization_enabled ? [local.resource_id] : null
+  locks        = var.deployment_serialization_enabled ? [local.resource_id] : null
+  read_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   # Add conditional retry logic to handle 409 conflicts when specified
   retry = each.value.retry != null ? {
     error_message_regex  = each.value.retry.error_message_regex
@@ -260,6 +263,7 @@ resource "azapi_resource" "cognitive_deployment" {
     randomization_factor = each.value.retry.randomization_factor
   } : null
   schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azurerm_cognitive_account_customer_managed_key.this,
