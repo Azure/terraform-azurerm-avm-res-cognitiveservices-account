@@ -133,6 +133,8 @@ resource "azapi_update_resource" "ai_service_hsm_key" {
     }
   }
   ignore_missing_property = true
+  read_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.ai_service,
