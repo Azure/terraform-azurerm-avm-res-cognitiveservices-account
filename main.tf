@@ -312,11 +312,13 @@ locals {
     identity_ids = azapi_resource.this[0].identity[0].identity_ids
     principal_id = azapi_resource.this[0].output.identity.principalId
     tenant_id    = azapi_resource.this[0].output.identity.tenantId
+    client_id    = azapi_resource.this[0].output.identity.clientId
     }], [{
     type         = try(azapi_resource.ai_service[0].identity[0].type, null)
     identity_ids = try(azapi_resource.ai_service[0].identity[0].identity_ids, null)
     principal_id = try(azapi_resource.ai_service[0].identity[0].principal_id)
     tenant_id    = try(azapi_resource.ai_service[0].identity[0].tenant_id, null)
+    client_id    = try(azapi_resource.ai_service[0].identity[0].client_id, null)
   }], null)
   ip_rules = try([for rule in azapi_resource.this[0].body.properties.networkAcls.ipRules : rule.value], [])
   network_acls = try({
