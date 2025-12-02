@@ -732,6 +732,10 @@ Description: The cognitive account resource created, sensitive data only.
 
 Description: A secondary access key which can be used to connect to the Cognitive Service Account. This will be null when local\_auth\_enabled is set to false.
 
+### <a name="output_system_assigned_mi_client_id"></a> [system\_assigned\_mi\_client\_id](#output\_system\_assigned\_mi\_client\_id)
+
+Description: The client ID of system assigned managed identity on the Cognitive/AI Service account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`.
+
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
 Description: The principal ID of system assigned managed identity on the Cognitive/AI Service account created, when `var.managed_identities` is `null` or `var.managed_identities.system_assigned` is `false` this output is `null`.
