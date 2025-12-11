@@ -504,12 +504,6 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = null
-  description = "(Optional) The name of the resource group in which the Cognitive Service or AI Service Account is created. This variable is deprecated and will be removed in a future version. Please use `parent_id` instead."
-}
-
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string

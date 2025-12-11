@@ -611,14 +611,6 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: (Optional) The name of the resource group in which the Cognitive Service or AI Service Account is created. This variable is deprecated and will be removed in a future version. Please use `parent_id` instead.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
