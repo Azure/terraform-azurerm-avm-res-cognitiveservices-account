@@ -307,6 +307,15 @@ resource "azurerm_machine_learning_workspace" "this" {
   }
 }
 
+module "feature" {
+  source  = "Azure/avm-res-features-feature/azurerm"
+  version = "0.1.0"
+
+  name             = "AI.ManagedVnetPreview"
+  provider_name    = "Microsoft.CognitiveServices"
+  enable_telemetry = var.enable_telemetry
+}
+
 module "test" {
   source = "../../"
 
@@ -338,6 +347,10 @@ module "test" {
     scenario                          = "agent"
     microsoft_managed_network_enabled = true
   }
+
+  depends_on = [
+    module.feature,
+  ]
 }
 ```
 
@@ -395,6 +408,12 @@ No outputs.
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_feature"></a> [feature](#module\_feature)
+
+Source: Azure/avm-res-features-feature/azurerm
+
+Version: 0.1.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
