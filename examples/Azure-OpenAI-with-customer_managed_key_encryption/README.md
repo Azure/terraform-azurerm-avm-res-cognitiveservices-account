@@ -133,11 +133,11 @@ resource "azurerm_key_vault_key" "key" {
 module "test" {
   source = "../../"
 
-  kind                = "Face"
-  location            = azurerm_resource_group.this.location
-  name                = "Face-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "E0"
+  kind      = "Face"
+  location  = azurerm_resource_group.this.location
+  name      = "Face-${module.naming.cognitive_account.name_unique}"
+  parent_id = azurerm_resource_group.this.id
+  sku_name  = "E0"
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault.this.id
     key_name              = azurerm_key_vault_key.key.name

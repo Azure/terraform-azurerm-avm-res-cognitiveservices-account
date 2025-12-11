@@ -8,7 +8,7 @@ resource "azapi_resource" "ai_service" {
 
   location  = var.location
   name      = var.name
-  parent_id = data.azurerm_resource_group.rg.id
+  parent_id = local.parent_id
   type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
   body = { for k, v in {
     kind = "AIServices"

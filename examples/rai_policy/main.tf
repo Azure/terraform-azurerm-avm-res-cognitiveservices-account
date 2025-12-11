@@ -39,11 +39,11 @@ resource "random_pet" "pet" {}
 module "test" {
   source = "../../"
 
-  kind                = "OpenAI"
-  location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${random_pet.pet.id}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  kind      = "OpenAI"
+  location  = azurerm_resource_group.this.location
+  name      = "OpenAI-${random_pet.pet.id}"
+  parent_id = azurerm_resource_group.this.id
+  sku_name  = "S0"
   cognitive_deployments = {
     "gpt-4o-mini" = {
       name            = "gpt-4o-mini"

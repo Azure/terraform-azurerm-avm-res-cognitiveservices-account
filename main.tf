@@ -21,11 +21,9 @@ moved {
   to   = azapi_resource.this[0]
 }
 
-data "azurerm_resource_group" "rg" {
-  name = var.resource_group_name
-}
-
 locals {
+  parent_id              = var.parent_id
+  resource_group_name    = split("/", var.parent_id)[4]
   sensitive_body_index   = local.sensitive_body_present ? 0 : 1
   sensitive_body_present = nonsensitive(anytrue([for item in local.sensitive_inputs : item != null]))
   sensitive_inputs = [
@@ -38,7 +36,7 @@ resource "azapi_resource" "this" {
 
   location  = var.location
   name      = var.name
-  parent_id = data.azurerm_resource_group.rg.id
+  parent_id = local.parent_id
   type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
   body = { for k, v in {
     kind = var.kind
@@ -284,7 +282,7 @@ locals {
     id                                 = local.resource_id
     name                               = try(azapi_resource.this[0].name, azapi_resource.ai_service[0].name)
     location                           = try(azapi_resource.this[0].location, azapi_resource.ai_service[0].location)
-    resource_group_name                = var.resource_group_name
+    resource_group_name                = local.resource_group_name
     sku_name                           = try(azapi_resource.this[0].body.sku.name, azapi_resource.ai_service[0].body.sku.name)
     custom_subdomain_name              = try(azapi_resource.this[0].body.properties.customSubDomainName, local.ai_service_custom_subdomain_name, null)
     customer_managed_key               = try(length(local.customer_managed_key) > 0 ? local.customer_managed_key : [], [])

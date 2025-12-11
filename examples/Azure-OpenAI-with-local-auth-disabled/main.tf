@@ -35,11 +35,11 @@ module "test_openai" {
   source = "../../"
 
   # Core configuration
-  kind                = "OpenAI"
-  location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  kind      = "OpenAI"
+  location  = azurerm_resource_group.this.location
+  name      = "OpenAI-${module.naming.cognitive_account.name_unique}"
+  parent_id = azurerm_resource_group.this.id
+  sku_name  = "S0"
   # Disable telemetry for testing
   enable_telemetry   = false
   local_auth_enabled = false
@@ -51,11 +51,11 @@ module "test_aiservices" {
   source = "../../"
 
   # Core configuration - THIS IS THE PROBLEMATIC SCENARIO
-  kind                = "AIServices"
-  location            = azurerm_resource_group.this.location
-  name                = "AIServices-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  kind      = "AIServices"
+  location  = azurerm_resource_group.this.location
+  name      = "AIServices-${module.naming.cognitive_account.name_unique}"
+  parent_id = azurerm_resource_group.this.id
+  sku_name  = "S0"
   # Disable telemetry for testing
   enable_telemetry   = false
   local_auth_enabled = false

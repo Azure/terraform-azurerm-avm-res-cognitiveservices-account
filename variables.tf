@@ -16,10 +16,15 @@ variable "name" {
   nullable    = false
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = "(Required) The name of the resource group in which the Cognitive Service or AI Service Account is created. Changing this forces a new resource to be created."
+  description = "(Required) The parent resource ID where the Cognitive Service or AI Service Account is created. This should be the ID of the resource group. Changing this forces a new resource to be created."
   nullable    = false
+
+  validation {
+    condition     = can(regex("^/subscriptions/[a-f0-9-]+/resourceGroups/.+$", var.parent_id))
+    error_message = "The parent_id must be a valid Azure Resource Group ID in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}"
+  }
 }
 
 variable "sku_name" {
@@ -497,6 +502,12 @@ variable "rai_policies" {
  - `blocking` - (Required) If blocking would occur.
 DESCRIPTION
   nullable    = false
+}
+
+variable "resource_group_name" {
+  type        = string
+  default     = null
+  description = "(Optional) The name of the resource group in which the Cognitive Service or AI Service Account is created. This variable is deprecated and will be removed in a future version. Please use `parent_id` instead."
 }
 
 variable "role_assignments" {
