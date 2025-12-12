@@ -306,7 +306,7 @@ module "feature" {
 
   name             = "AI.ManagedVnetPreview"
   provider_name    = "Microsoft.CognitiveServices"
-  enable_telemetry = var.enable_telemetry
+  enable_telemetry = false
 }
 
 module "test" {
