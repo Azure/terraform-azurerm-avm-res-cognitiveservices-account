@@ -2,6 +2,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -300,13 +304,12 @@ resource "azurerm_machine_learning_workspace" "this" {
   }
 }
 
-module "feature" {
-  source  = "Azure/avm-res-features-feature/azurerm"
-  version = "0.1.0"
-
-  name             = "AI.ManagedVnetPreview"
-  provider_name    = "Microsoft.CognitiveServices"
-  enable_telemetry = false
+resource "azapi_update_resource" "allow_ai_managed_vnet_preview" {
+  resource_id = "/subscriptions/${data.azurerm_client_config.this.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.CognitiveServices/subscriptionFeatureRegistrations/AI.ManagedVnetPreview"
+  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
+  body = {
+    properties = {}
+  }
 }
 
 module "test" {
@@ -342,6 +345,6 @@ module "test" {
   }
 
   depends_on = [
-    module.feature,
+    azapi_update_resource.allow_ai_managed_vnet_preview,
   ]
 }

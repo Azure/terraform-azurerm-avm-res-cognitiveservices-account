@@ -9,6 +9,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -307,13 +311,12 @@ resource "azurerm_machine_learning_workspace" "this" {
   }
 }
 
-module "feature" {
-  source  = "Azure/avm-res-features-feature/azurerm"
-  version = "0.1.0"
-
-  name             = "AI.ManagedVnetPreview"
-  provider_name    = "Microsoft.CognitiveServices"
-  enable_telemetry = false
+resource "azapi_update_resource" "allow_ai_managed_vnet_preview" {
+  resource_id = "/subscriptions/${data.azurerm_client_config.this.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.CognitiveServices/subscriptionFeatureRegistrations/AI.ManagedVnetPreview"
+  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
+  body = {
+    properties = {}
+  }
 }
 
 module "test" {
@@ -349,7 +352,7 @@ module "test" {
   }
 
   depends_on = [
-    module.feature,
+    azapi_update_resource.allow_ai_managed_vnet_preview,
   ]
 }
 ```
@@ -361,6 +364,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
@@ -371,6 +376,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_update_resource.allow_ai_managed_vnet_preview](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_application_insights.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_insights) (resource)
 - [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
 - [azurerm_key_vault.this2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
@@ -408,12 +414,6 @@ No outputs.
 ## Modules
 
 The following Modules are called:
-
-### <a name="module_feature"></a> [feature](#module\_feature)
-
-Source: Azure/avm-res-features-feature/azurerm
-
-Version: 0.1.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
