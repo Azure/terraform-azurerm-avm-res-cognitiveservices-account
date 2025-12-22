@@ -1,3 +1,44 @@
+module "avm_interfaces" {
+  source  = "Azure/avm-utl-interfaces/azure//examples/private-endpoints-azapi"
+  version = "0.5.0"
+
+  private_endpoints = {
+    for k, v in var.private_endpoints : k => {
+      subnet_resource_id  = v.subnet_resource_id
+      name                = v.name != null ? v.name : "pep-${var.name}-${k}"
+      location            = v.location != null ? v.location : var.location
+      resource_group_name = v.resource_group_name != null ? v.resource_group_name : local.resource_group_name
+      tags                = v.tags
+      ip_configurations   = v.ip_configurations
+      subresource_name    = "account"
+    }
+  }
+  private_endpoints_scope = local.resource_block.id
+}
+
+resource "azapi_resource" "private_endpoints" {
+  for_each = module.avm_interfaces.private_endpoints_azapi
+
+  location       = var.private_endpoints[each.key].location != null ? var.private_endpoints[each.key].location : var.location
+  name           = each.value.name
+  parent_id      = azapi_resource.rg.id
+  type           = each.value.type
+  body           = each.value.body
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  retry = {
+    error_message_regex  = ["ScopeLocked"]
+    interval_seconds     = 15
+    max_interval_seconds = 60
+  }
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  timeouts {
+    delete = "5m"
+  }
+}
+
 resource "azurerm_private_endpoint" "this" {
   for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
 

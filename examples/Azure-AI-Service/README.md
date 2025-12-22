@@ -247,20 +247,6 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
   ]
 }
 
-resource "azurerm_virtual_network" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "virtnet-aiservice-${module.naming.virtual_network.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "this" {
-  address_prefixes     = ["10.0.2.0/24"]
-  name                 = "internal"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-}
-
 resource "azurerm_application_insights" "this" {
   application_type    = "web"
   location            = azurerm_resource_group.this.location
@@ -345,11 +331,6 @@ module "test" {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
-  network_injections = {
-    subnet_id                         = azurerm_subnet.this.id
-    scenario                          = "agent"
-    microsoft_managed_network_enabled = true
-  }
 
   depends_on = [
     azapi_update_resource.allow_ai_managed_vnet_preview,
@@ -390,9 +371,7 @@ The following resources are used by this module:
 - [azurerm_machine_learning_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/machine_learning_workspace) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
-- [azurerm_subnet.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
-- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.role_assignments_names](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [time_sleep.role_assignment](https://registry.terraform.io/providers/hashicorp/time/0.12.1/docs/resources/sleep) (resource)
