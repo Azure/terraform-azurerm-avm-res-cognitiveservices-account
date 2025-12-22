@@ -1,5 +1,5 @@
 module "avm_interfaces" {
-  source  = "Azure/avm-utl-interfaces/azure//examples/private-endpoints-azapi"
+  source  = "Azure/avm-utl-interfaces/azure"
   version = "0.5.0"
 
   private_endpoints = {

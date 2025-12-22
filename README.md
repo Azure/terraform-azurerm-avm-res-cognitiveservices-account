@@ -742,7 +742,7 @@ The following Modules are called:
 
 ### <a name="module_avm_interfaces"></a> [avm\_interfaces](#module\_avm\_interfaces)
 
-Source: Azure/avm-utl-interfaces/azure//examples/private-endpoints-azapi
+Source: Azure/avm-utl-interfaces/azure
 
 Version: 0.5.0
 
