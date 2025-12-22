@@ -1,8 +1,3 @@
-locals {
-  # /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1
-  resource_group_name = reverse(split(var.parent_id, "/"))[0]
-}
-
 resource "azurerm_private_endpoint" "this" {
   for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
 
