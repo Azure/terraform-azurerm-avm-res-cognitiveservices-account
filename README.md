@@ -34,7 +34,6 @@ The following resources are used by this module:
 
 - [azapi_resource.ai_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.cognitive_deployment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.private_endpoints](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_update_resource.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
@@ -738,13 +737,7 @@ Description: The principal ID of system assigned managed identity on the Cogniti
 
 ## Modules
 
-The following Modules are called:
-
-### <a name="module_avm_interfaces"></a> [avm\_interfaces](#module\_avm\_interfaces)
-
-Source: Azure/avm-utl-interfaces/azure
-
-Version: 0.5.0
+No modules.
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
