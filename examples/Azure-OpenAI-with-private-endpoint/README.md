@@ -70,11 +70,11 @@ resource "azurerm_private_dns_zone_virtual_network_link" "link" {
 module "test" {
   source = "../../"
 
-  kind                = "OpenAI"
-  location            = azurerm_resource_group.this.location
-  name                = "OpenAI-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  kind      = "OpenAI"
+  location  = azurerm_resource_group.this.location
+  name      = "OpenAI-${module.naming.cognitive_account.name_unique}"
+  parent_id = azurerm_resource_group.this.id
+  sku_name  = "S0"
   cognitive_deployments = {
     "gpt-4o-mini" = {
       name = "gpt-4o-mini"

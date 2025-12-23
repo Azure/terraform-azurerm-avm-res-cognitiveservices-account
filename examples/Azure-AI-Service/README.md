@@ -9,6 +9,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -243,20 +247,6 @@ resource "azurerm_key_vault_managed_hardware_security_module_key" "this" {
   ]
 }
 
-resource "azurerm_virtual_network" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = "virtnet-aiservice-${module.naming.virtual_network.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "this" {
-  address_prefixes     = ["10.0.2.0/24"]
-  name                 = "internal"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-}
-
 resource "azurerm_application_insights" "this" {
   application_type    = "web"
   location            = azurerm_resource_group.this.location
@@ -307,14 +297,22 @@ resource "azurerm_machine_learning_workspace" "this" {
   }
 }
 
+resource "azapi_update_resource" "allow_ai_managed_vnet_preview" {
+  resource_id = "/subscriptions/${data.azurerm_client_config.this.subscription_id}/providers/Microsoft.Features/featureProviders/Microsoft.CognitiveServices/subscriptionFeatureRegistrations/AI.ManagedVnetPreview"
+  type        = "Microsoft.Features/featureProviders/subscriptionFeatureRegistrations@2021-07-01"
+  body = {
+    properties = {}
+  }
+}
+
 module "test" {
   source = "../../"
 
-  kind                = "AIServices"
-  location            = azurerm_resource_group.this.location
-  name                = "AIService-${module.naming.cognitive_account.name_unique}"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "S0"
+  kind      = "AIServices"
+  location  = azurerm_resource_group.this.location
+  name      = "AIService-${module.naming.cognitive_account.name_unique}"
+  parent_id = azurerm_resource_group.this.id
+  sku_name  = "S0"
   aml_workspace = {
     resource_id        = azurerm_machine_learning_workspace.this.id
     identity_client_id = azurerm_machine_learning_workspace.this.identity[0].principal_id
@@ -333,11 +331,10 @@ module "test" {
     system_assigned            = false
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
-  network_injections = {
-    subnet_id                         = azurerm_subnet.this.id
-    scenario                          = "agent"
-    microsoft_managed_network_enabled = true
-  }
+
+  depends_on = [
+    azapi_update_resource.allow_ai_managed_vnet_preview,
+  ]
 }
 ```
 
@@ -347,6 +344,8 @@ module "test" {
 The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
@@ -358,6 +357,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_update_resource.allow_ai_managed_vnet_preview](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_application_insights.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_insights) (resource)
 - [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
 - [azurerm_key_vault.this2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) (resource)
@@ -371,9 +371,7 @@ The following resources are used by this module:
 - [azurerm_machine_learning_workspace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/machine_learning_workspace) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
-- [azurerm_subnet.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
-- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.role_assignments_names](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [time_sleep.role_assignment](https://registry.terraform.io/providers/hashicorp/time/0.12.1/docs/resources/sleep) (resource)
