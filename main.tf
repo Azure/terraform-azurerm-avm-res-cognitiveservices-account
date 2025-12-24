@@ -149,7 +149,7 @@ resource "time_sleep" "wait_account_creation" {
 }
 
 data "azapi_resource_action" "account_keys" {
-  count = var.kind != "AIServices" && try(var.local_auth_enabled, true) ? 1 : 0
+  count = var.kind != "AIServices" && coalesce(var.local_auth_enabled, true) ? 1 : 0
 
   action                           = "listKeys"
   resource_id                      = azapi_resource.this[0].id
