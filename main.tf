@@ -69,7 +69,7 @@ resource "azapi_resource" "this" {
           id                               = rule.subnet_id
           ignoreMissingVnetServiceEndpoint = rule.ignore_missing_vnet_service_endpoint == true
         }], null)
-        bypass = var.kind == "OpenAI" ? var.network_acls.bypass : null
+        bypass = var.network_acls.bypass
       }, null) : k => v if v != null }, null)
       userOwnedStorage = try([for storage in var.storage : {
         resourceId       = storage.storage_account_id
@@ -130,10 +130,6 @@ resource "azapi_resource" "this" {
     precondition {
       condition     = var.metrics_advisor_website_name == null || var.kind == "MetricsAdvisor"
       error_message = "metrics_advisor_website_name can only used set when kind is set to `MetricsAdvisor`"
-    }
-    precondition {
-      condition     = var.network_acls == null ? true : (var.network_acls.bypass == null || var.network_acls.bypass == "" || var.kind == "OpenAI")
-      error_message = "the `network_acls.bypass` does not support Trusted Services for the kind `${var.kind}`"
     }
   }
 }
