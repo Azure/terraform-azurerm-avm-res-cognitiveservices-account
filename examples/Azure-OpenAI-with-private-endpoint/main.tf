@@ -63,7 +63,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "link" {
 module "test" {
   source = "../../"
 
-  kind      = "OpenAI"
+  kind = "OpenAI"
   location  = azurerm_resource_group.this.location
   name      = "OpenAI-${module.naming.cognitive_account.name_unique}"
   parent_id = azurerm_resource_group.this.id
@@ -97,3 +97,20 @@ module "test" {
     }
   }
 }
+
+# ============================================================================
+# MIGRATION IMPORT BLOCK (for upgrading from v0.10.2 to newer versions)
+# ============================================================================
+# Uncomment this block when upgrading from v0.10.2 (or earlier) to import
+# existing DNS zone groups that were previously embedded in azurerm_private_endpoint
+#
+# After uncommenting, run: terraform plan -generate-config-out=generated.tf
+# Then run: terraform apply
+#
+# Once imported successfully, you can comment this block out again or remove it.
+# ============================================================================
+
+#import {
+#  to = module.test.azapi_resource.private_dns_zone_groups["pe_endpoint"]
+#  id = "${module.test.private_endpoints["pe_endpoint"].id}/privateDnsZoneGroups/default"
+#}
