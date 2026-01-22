@@ -11,6 +11,44 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 >
 > However, it is important to note that this **DOES NOT** mean that the modules cannot be consumed and utilized. They **CAN** be leveraged in all types of environments (dev, test, prod etc.). Consumers can treat them just like any other IaC module and raise issues or feature requests against them as they learn from the usage of the module. Consumers should also read the release notes for each version, if considering updating to a more recent version of a module to see if there are any considerations or breaking changes etc.
 
+## Migration Guide for Private Endpoint Users
+
+> [!WARNING]
+> **Breaking Change for Private Endpoint Users (v0.10.2 → v0.11.0+)**
+>
+> If you are using `private_endpoints` with `private_endpoints_manage_dns_zone_group = true`, upgrading from v0.10.2 or earlier requires an import operation to prevent resource recreation.
+>
+> The module has migrated from `azurerm_private_endpoint` to `azapi_resource` for better control and retry logic. DNS zone groups that were previously embedded now need to be imported as separate resources.
+>
+> **Required Steps:**
+>
+> 1. Before upgrading the module version, add an import block for each private endpoint's DNS zone group:
+>
+> ```hcl
+> import {
+>   to = module.your_module_name.azapi_resource.private_dns_zone_groups["your_pe_key"]
+>   id = "${module.your_module_name.private_endpoints["your_pe_key"].id}/privateDnsZoneGroups/default"
+> }
+>
+```
+>
+> 2. Run: `terraform plan -generate-config-out=generated.tf`
+> 3. Run: `terraform apply`
+> 4. Once imported successfully, remove the import block
+>
+> **Example:**
+>
+> ```hcl
+> # Uncomment when upgrading from v0.10.2 to import existing DNS zone groups
+> import {
+>   to = module.cognitive_service.azapi_resource.private_dns_zone_groups["pe_endpoint"]
+>   id = "${module.cognitive_service.private_endpoints["pe_endpoint"].id}/privateDnsZoneGroups/default"
+> }
+>
+```
+>
+> If you have `private_endpoints_manage_dns_zone_group = false`, no action is required.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -34,15 +72,17 @@ The following resources are used by this module:
 
 - [azapi_resource.ai_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.cognitive_deployment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone_groups](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_endpoint_locks](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_endpoint_role_assignments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_endpoints](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_endpoints_unmanaged](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_update_resource.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_string.default_custom_subdomain_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
@@ -51,6 +91,7 @@ The following resources are used by this module:
 - [time_sleep.wait_account_creation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_ai_service_creation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.existing_private_endpoints](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource_action.account_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.ai_service_account_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azurerm_key_vault_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_key) (data source)
@@ -737,7 +778,13 @@ Description: The principal ID of system assigned managed identity on the Cogniti
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_private_endpoint_interfaces"></a> [private\_endpoint\_interfaces](#module\_private\_endpoint\_interfaces)
+
+Source: Azure/avm-utl-interfaces/azure
+
+Version: 0.5.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
