@@ -50,6 +50,7 @@ resource "azapi_resource" "ai_service" {
             id                               = rule.subnet_id
             ignoreMissingVnetServiceEndpoint = rule.ignore_missing_vnet_service_endpoint == true
           }], null)
+          bypass = var.network_acls.bypass
         }, null) : k => v if v != null }, null)
         userOwnedStorage = try([for storage in var.storage : {
           resourceId       = storage.storage_account_id
@@ -80,11 +81,6 @@ resource "azapi_resource" "ai_service" {
       body.properties.apiProperties.qnaAzureSearchEndpointKey,
       body.properties.encryption
     ]
-
-    precondition {
-      condition     = var.network_acls == null ? true : (var.network_acls.bypass == null || var.network_acls.bypass == "")
-      error_message = "the `network_acls.bypass` does not support Trusted Services for the kind `${var.kind}`"
-    }
   }
 }
 
