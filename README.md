@@ -14,9 +14,9 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 ## Migration Guide for Private Endpoint Users
 
 > [!WARNING]
-> **Breaking Change for Private Endpoint Users (v0.10.2 → v0.11.0+)**
+> **Breaking Change for Private Endpoint Users (v0.10.x → v0.11.0+)**
 >
-> If you are using `private_endpoints` with `private_endpoints_manage_dns_zone_group = true`, upgrading from v0.10.2 or earlier requires an import operation to prevent resource recreation.
+> If you are using `private_endpoints` with `private_endpoints_manage_dns_zone_group = true`, upgrading from v0.10.x or earlier requires an import operation to prevent resource recreation.
 >
 > The module has migrated from `azurerm_private_endpoint` to `azapi_resource` for better control and retry logic. DNS zone groups that were previously embedded now need to be imported as separate resources.
 >
@@ -39,7 +39,7 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 > **Example:**
 >
 > ```hcl
-> # Uncomment when upgrading from v0.10.2 to import existing DNS zone groups
+> # Uncomment when upgrading from v0.10.x to import existing DNS zone groups
 > import {
 >   to = module.cognitive_service.azapi_resource.private_dns_zone_groups["pe_endpoint"]
 >   id = "${module.cognitive_service.private_endpoints["pe_endpoint"].id}/privateDnsZoneGroups/default"
