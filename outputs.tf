@@ -23,7 +23,7 @@ output "private_endpoints" {
 
 output "rai_policy_id" {
   description = "The ID of the RAI policy created."
-  value       = { for k, v in azapi_resource.rai_policy : k => v.id }
+  value       = { for k, v in module.rai_policy : k => v.resource_id }
 }
 
 output "resource" {
