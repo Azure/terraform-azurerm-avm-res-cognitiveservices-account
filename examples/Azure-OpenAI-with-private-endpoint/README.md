@@ -76,8 +76,8 @@ module "test" {
   parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   cognitive_deployments = {
-    "gpt-4-1-mini" = {
-      name = "gpt-4-1-mini"
+    "gpt-4.1-mini" = {
+      name = "gpt-4.1-mini"
       model = {
         format  = "OpenAI"
         name    = "gpt-4.1-mini"
