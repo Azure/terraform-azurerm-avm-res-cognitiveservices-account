@@ -480,6 +480,19 @@ variable "rai_policies" {
       block_list_name = string
       blocking        = bool
     })))
+    retry = optional(object({
+      error_message_regex  = optional(list(string))
+      interval_seconds     = optional(number)
+      max_interval_seconds = optional(number)
+      multiplier           = optional(number)
+      randomization_factor = optional(number)
+    }))
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
   }))
   default     = {}
   description = <<-DESCRIPTION
@@ -500,8 +513,50 @@ variable "rai_policies" {
  - `source` - (Required) Content source to apply the Custom Block Lists. Possible values are `Prompt`, `Completion`.
  - `block_list_name` - (Required) Name of ContentFilter.
  - `blocking` - (Required) If blocking would occur.
+
+ ---
+ `retry` block supports the following (per AVM TFFR7; overrides the module-level `var.retry` for this policy):
+ - `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
+ - `interval_seconds`     - (Optional) Initial interval between retries in seconds.
+ - `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+ - `multiplier`           - (Optional) The multiplier applied to the retry interval after each attempt.
+ - `randomization_factor` - (Optional) The randomization factor applied to the retry interval.
+
+ ---
+ `timeouts` block supports the following (overrides the module-level `var.timeouts` for this policy):
+ - `create` - (Optional) Used when creating the RAI policy.
+ - `delete` - (Optional) Used when deleting the RAI policy.
+ - `read`   - (Optional) Used when retrieving the RAI policy.
+ - `update` - (Optional) Used when updating the RAI policy.
 DESCRIPTION
   nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+    multiplier           = optional(number)
+    randomization_factor = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Default retry configuration applied to every `azapi_resource` managed by this module
+(the Cognitive / AI Services account and the cascaded `deployment` and `rai_policy`
+submodules). Defaults to `null` (no custom retry).
+
+Per-item overrides may be supplied through `cognitive_deployments[*].retry` and
+`rai_policies[*].retry`; when set, the per-item value wins.
+
+- `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
+- `interval_seconds`     - (Optional) Initial interval between retries in seconds.
+- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+- `multiplier`           - (Optional) The multiplier applied to the retry interval after each attempt.
+- `randomization_factor` - (Optional) The randomization factor applied to the retry interval.
+
+See <https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#retry> for full semantics.
+DESCRIPTION
 }
 
 variable "role_assignments" {
@@ -560,6 +615,15 @@ variable "timeouts" {
   })
   default     = null
   description = <<-DESCRIPTION
+Default per-operation timeouts applied to every `azapi_resource` managed by this module
+(the Cognitive / AI Services account and the cascaded `deployment` and `rai_policy`
+submodules) as well as the `azurerm_cognitive_account_customer_managed_key` resource.
+Defaults to `null` (provider defaults). Each value is a Go duration string (e.g. `30m`, `1h`).
+
+Per-item overrides may be supplied through `cognitive_deployments[*].timeouts` and
+`rai_policies[*].timeouts`; when set, the per-item value wins for that submodule
+instance.
+
  - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service or AI Service Account.
  - `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service or AI Service Account.
  - `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service or AI Service Account.

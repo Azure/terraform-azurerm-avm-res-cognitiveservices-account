@@ -80,6 +80,7 @@ resource "azapi_resource" "this" {
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  retry          = var.retry
   # This weird workaround is needed to avoid configuration drift, the Terraform conditional expression `condition ? true_val : false_val` would execute implicitly type conversion, which would cause the `null` value to be converted to an `null` value with object type.
   sensitive_body = [{
     properties = {
@@ -99,6 +100,16 @@ resource "azapi_resource" "this" {
     content {
       type         = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
       identity_ids = var.managed_identities.user_assigned_resource_ids
+    }
+  }
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 
@@ -218,57 +229,37 @@ moved {
   to   = azapi_resource.cognitive_deployment
 }
 
-resource "azapi_resource" "cognitive_deployment" {
+moved {
+  from = azapi_resource.cognitive_deployment
+  to   = module.deployment.azapi_resource.this
+}
+
+module "deployment" {
+  source   = "./modules/deployment"
   for_each = var.cognitive_deployments
 
-  name      = each.value.name
-  parent_id = local.resource_id
-  type      = "Microsoft.CognitiveServices/accounts/deployments@2025-06-01"
-  body = {
-    properties = { for k, v in {
-      dynamicThrottlingEnabled = each.value.dynamic_throttling_enabled
-      model = {
-        format  = each.value.model.format
-        name    = each.value.model.name
-        version = each.value.model.version
-      }
-      raiPolicyName        = each.value.rai_policy_name
-      versionUpgradeOption = each.value.version_upgrade_option
-    } : k => v if v != null }
-    sku = { for k, v in {
-      name     = each.value.scale.type
-      capacity = each.value.scale.capacity
-      family   = each.value.scale.family
-      size     = each.value.scale.size
-      tier     = each.value.scale.tier
-    } : k => v if v != null }
-  }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  # Add conditional locking to serialize deployment creation
-  locks        = var.deployment_serialization_enabled ? [local.resource_id] : null
-  read_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  # Add conditional retry logic to handle 409 conflicts when specified
+  model                      = each.value.model
+  name                       = each.value.name
+  parent_id                  = local.resource_id
+  scale                      = each.value.scale
+  dynamic_throttling_enabled = each.value.dynamic_throttling_enabled
+  enable_telemetry           = var.enable_telemetry
+  lock_id                    = var.deployment_serialization_enabled ? local.resource_id : null
+  rai_policy_name            = each.value.rai_policy_name
   retry = each.value.retry != null ? {
     error_message_regex  = each.value.retry.error_message_regex
     interval_seconds     = each.value.retry.interval_seconds
     max_interval_seconds = each.value.retry.max_interval_seconds
     multiplier           = each.value.retry.multiplier
     randomization_factor = each.value.retry.randomization_factor
-  } : null
-  schema_validation_enabled = false
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  } : var.retry
+  timeouts               = each.value.timeouts != null ? each.value.timeouts : var.timeouts
+  version_upgrade_option = each.value.version_upgrade_option
 
   depends_on = [
     azurerm_cognitive_account_customer_managed_key.this,
-    azapi_resource.rai_policy,
+    module.rai_policy,
   ]
-
-  lifecycle {
-    ignore_changes = [
-      schema_validation_enabled,
-    ]
-  }
 }
 
 # for output resource body
@@ -353,37 +344,8 @@ locals {
     primary_access_key   = sensitive(try(data.azapi_resource_action.ai_service_account_keys[0].sensitive_output.key1, null))
     secondary_access_key = sensitive(try(data.azapi_resource_action.ai_service_account_keys[0].sensitive_output.key2, null))
   }
-  resource_cognitive_deployment = {
-    for k, v in azapi_resource.cognitive_deployment : k => {
-      id                         = v.id
-      name                       = v.name
-      cognitive_account_id       = v.parent_id
-      dynamic_throttling_enabled = try(v.body.properties.dynamicThrottlingEnabled, false)
-      model = [
-        {
-          format  = try(v.body.properties.model.format, null)
-          name    = try(v.body.properties.model.name, null)
-          version = try(v.body.properties.model.version, null)
-      }]
-      sku = [
-        {
-          name     = try(v.body.sku.name, "")
-          capacity = try(v.body.sku.capacity, 1)
-          family   = try(v.body.sku.family, "")
-          size     = try(v.body.sku.size, "")
-          tier     = try(v.body.sku.tier, "")
-      }]
-      rai_policy_name        = try(v.body.properties.raiPolicyName == null, true) ? "" : v.body.properties.raiPolicyName
-      version_upgrade_option = v.body.properties.versionUpgradeOption
-      timeouts = try({
-        create = var.timeouts.create
-        delete = var.timeouts.delete
-        read   = var.timeouts.read
-        update = var.timeouts.update
-      }, null)
-    }
-  }
-  resource_id = try(azapi_resource.this[0].id, azapi_resource.ai_service[0].id)
+  resource_cognitive_deployment = { for k, v in module.deployment : k => v.resource }
+  resource_id                   = try(azapi_resource.this[0].id, azapi_resource.ai_service[0].id)
   storage = try([for s in azapi_resource.this[0].body.properties.userOwnedStorage : {
     storage_account_id = s.resourceId
     identity_client_id = s.identityClientId

@@ -1,29 +1,19 @@
-resource "azapi_resource" "rai_policy" {
+moved {
+  from = azapi_resource.rai_policy
+  to   = module.rai_policy.azapi_resource.this
+}
+
+module "rai_policy" {
+  source   = "./modules/rai_policy"
   for_each = var.rai_policies
 
-  name      = each.value.name
-  parent_id = local.resource_block.id
-  type      = "Microsoft.CognitiveServices/accounts/raiPolicies@2024-10-01"
-  body = {
-    properties = {
-      basePolicyName = each.value.base_policy_name
-      mode           = each.value.mode
-      contentFilters = try([for c in each.value.content_filters : {
-        blocking          = c.blocking
-        enabled           = c.enabled
-        name              = c.name
-        severityThreshold = c.severity_threshold
-        source            = c.source
-      }], null)
-      customBlocklists = try([for c in each.value.custom_block_lists : {
-        source        = c.source
-        blocklistName = c.block_list_name
-        blocking      = c.blocking
-      }], null)
-    }
-  }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  base_policy_name   = each.value.base_policy_name
+  mode               = each.value.mode
+  name               = each.value.name
+  parent_id          = local.resource_id
+  content_filters    = each.value.content_filters
+  custom_block_lists = each.value.custom_block_lists
+  enable_telemetry   = var.enable_telemetry
+  retry              = each.value.retry != null ? each.value.retry : var.retry
+  timeouts           = each.value.timeouts != null ? each.value.timeouts : var.timeouts
 }

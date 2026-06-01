@@ -71,13 +71,11 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.ai_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.cognitive_deployment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.private_dns_zone_groups](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.private_endpoint_locks](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.private_endpoint_role_assignments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.private_endpoints](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.private_endpoints_unmanaged](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.rai_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_update_resource.ai_service_hsm_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_cognitive_account_customer_managed_key.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account_customer_managed_key) (resource)
@@ -628,6 +626,21 @@ Description: - `name` - (Required) The name of the RAI policy. Changing this for
 - `block_list_name` - (Required) Name of ContentFilter.
 - `blocking` - (Required) If blocking would occur.
 
+---
+`retry` block supports the following (per AVM TFFR7; overrides the module-level `var.retry` for this policy):
+- `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
+- `interval_seconds`     - (Optional) Initial interval between retries in seconds.
+- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+- `multiplier`           - (Optional) The multiplier applied to the retry interval after each attempt.
+- `randomization_factor` - (Optional) The randomization factor applied to the retry interval.
+
+---
+`timeouts` block supports the following (overrides the module-level `var.timeouts` for this policy):
+- `create` - (Optional) Used when creating the RAI policy.
+- `delete` - (Optional) Used when deleting the RAI policy.
+- `read`   - (Optional) Used when retrieving the RAI policy.
+- `update` - (Optional) Used when updating the RAI policy.
+
 Type:
 
 ```hcl
@@ -647,10 +660,54 @@ map(object({
       block_list_name = string
       blocking        = bool
     })))
+    retry = optional(object({
+      error_message_regex  = optional(list(string))
+      interval_seconds     = optional(number)
+      max_interval_seconds = optional(number)
+      multiplier           = optional(number)
+      randomization_factor = optional(number)
+    }))
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
   }))
 ```
 
 Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Default retry configuration applied to every `azapi_resource` managed by this module
+(the Cognitive / AI Services account and the cascaded `deployment` and `rai_policy`  
+submodules). Defaults to `null` (no custom retry).
+
+Per-item overrides may be supplied through `cognitive_deployments[*].retry` and
+`rai_policies[*].retry`; when set, the per-item value wins.
+
+- `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
+- `interval_seconds`     - (Optional) Initial interval between retries in seconds.
+- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+- `multiplier`           - (Optional) The multiplier applied to the retry interval after each attempt.
+- `randomization_factor` - (Optional) The randomization factor applied to the retry interval.
+
+See <https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#retry> for full semantics.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+    multiplier           = optional(number)
+    randomization_factor = optional(number)
+  })
+```
+
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -710,10 +767,19 @@ Default: `null`
 
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
-Description: - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service or AI Service Account.
-- `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service or AI Service Account.
-- `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service or AI Service Account.
-- `update` - (Defaults to 30 minutes) Used when updating the Cognitive Service or AI Service Account.
+Description: Default per-operation timeouts applied to every `azapi_resource` managed by this module
+(the Cognitive / AI Services account and the cascaded `deployment` and `rai_policy`  
+submodules) as well as the `azurerm_cognitive_account_customer_managed_key` resource.  
+Defaults to `null` (provider defaults). Each value is a Go duration string (e.g. `30m`, `1h`).
+
+Per-item overrides may be supplied through `cognitive_deployments[*].timeouts` and
+`rai_policies[*].timeouts`; when set, the per-item value wins for that submodule  
+instance.
+
+ - `create` - (Defaults to 30 minutes) Used when creating the Cognitive Service or AI Service Account.
+ - `delete` - (Defaults to 30 minutes) Used when deleting the Cognitive Service or AI Service Account.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Cognitive Service or AI Service Account.
+ - `update` - (Defaults to 30 minutes) Used when updating the Cognitive Service or AI Service Account.
 
 Type:
 
@@ -780,11 +846,23 @@ Description: The principal ID of system assigned managed identity on the Cogniti
 
 The following Modules are called:
 
+### <a name="module_deployment"></a> [deployment](#module\_deployment)
+
+Source: ./modules/deployment
+
+Version:
+
 ### <a name="module_private_endpoint_interfaces"></a> [private\_endpoint\_interfaces](#module\_private\_endpoint\_interfaces)
 
 Source: Azure/avm-utl-interfaces/azure
 
 Version: 0.5.0
+
+### <a name="module_rai_policy"></a> [rai\_policy](#module\_rai\_policy)
+
+Source: ./modules/rai_policy
+
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
