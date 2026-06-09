@@ -25,7 +25,7 @@ locals {
 
 module "private_endpoint_interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.5.0"
+  version = "0.6.0"
 
   # Disable other interfaces - only using private endpoints
   customer_managed_key = null
