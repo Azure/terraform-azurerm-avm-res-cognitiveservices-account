@@ -23,7 +23,7 @@ terraform {
     }
     time = {
       source  = "hashicorp/time"
-      version = "0.12.1"
+      version = "0.14.0"
     }
   }
 }
@@ -45,7 +45,7 @@ provider "azurerm" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 # This is required for resource modules
@@ -351,7 +351,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
 
-- <a name="requirement_time"></a> [time](#requirement\_time) (0.12.1)
+- <a name="requirement_time"></a> [time](#requirement\_time) (0.14.0)
 
 ## Resources
 
@@ -374,7 +374,7 @@ The following resources are used by this module:
 - [azurerm_user_assigned_identity.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.role_assignments_names](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
-- [time_sleep.role_assignment](https://registry.terraform.io/providers/hashicorp/time/0.12.1/docs/resources/sleep) (resource)
+- [time_sleep.role_assignment](https://registry.terraform.io/providers/hashicorp/time/0.14.0/docs/resources/sleep) (resource)
 - [azurerm_client_config.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -398,7 +398,7 @@ The following Modules are called:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_test"></a> [test](#module\_test)
 
