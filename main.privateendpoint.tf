@@ -25,7 +25,7 @@ locals {
 
 module "private_endpoint_interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.5.0"
+  version = "0.6.0"
 
   # Disable other interfaces - only using private endpoints
   customer_managed_key = null
@@ -39,7 +39,6 @@ module "private_endpoint_interfaces" {
   private_endpoints_manage_dns_zone_group = var.private_endpoints_manage_dns_zone_group
   private_endpoints_scope                 = local.resource_block.id
   role_assignment_definition_scope        = local.resource_block.id
-  role_assignment_name_use_random_uuid    = true
   role_assignments                        = null
 
   depends_on = [local.resource_block]

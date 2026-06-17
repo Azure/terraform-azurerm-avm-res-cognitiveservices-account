@@ -16,7 +16,7 @@ terraform {
     }
     time = {
       source  = "hashicorp/time"
-      version = "0.12.1"
+      version = "0.14.0"
     }
   }
 }
@@ -38,7 +38,7 @@ provider "azurerm" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 # This is required for resource modules

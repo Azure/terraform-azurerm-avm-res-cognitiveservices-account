@@ -75,6 +75,7 @@ resource "azapi_resource" "ai_service" {
       identity_ids = var.managed_identities.user_assigned_resource_ids
     }
   }
+
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
 
@@ -155,18 +156,17 @@ resource "azapi_update_resource" "ai_service_hsm_key" {
     }
   }
 
-  depends_on = [
-    azapi_resource.ai_service,
-    terraform_data.ai_service_hsm_key_trigger,
-    time_sleep.wait_ai_service_creation,
-  ]
-
   lifecycle {
     ignore_changes = all
     replace_triggered_by = [
       terraform_data.ai_service_hsm_key_trigger
     ]
   }
+  depends_on = [
+    azapi_resource.ai_service,
+    terraform_data.ai_service_hsm_key_trigger,
+    time_sleep.wait_ai_service_creation,
+  ]
 }
 
 data "azapi_resource_action" "ai_service_account_keys" {
