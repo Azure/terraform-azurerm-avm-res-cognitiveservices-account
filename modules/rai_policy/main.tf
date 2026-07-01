@@ -1,34 +1,20 @@
-resource "azapi_resource" "this" {
-  name      = var.name
-  parent_id = var.parent_id
-  type      = "Microsoft.CognitiveServices/accounts/raiPolicies@2024-10-01"
-  body = {
-    properties = {
-      basePolicyName = var.base_policy_name
-      mode           = var.mode
-      contentFilters = try([for c in var.content_filters : {
-        blocking          = c.blocking
-        enabled           = c.enabled
-        name              = c.name
-        severityThreshold = c.severity_threshold
-        source            = c.source
-      }], null)
-      customBlocklists = try([for c in var.custom_block_lists : {
-        source        = c.source
-        blocklistName = c.block_list_name
-        blocking      = c.blocking
-      }], null)
+resource "azurerm_cognitive_account_rai_policy" "this" {
+  name                 = var.name
+  cognitive_account_id = var.cognitive_account_id
+  base_policy_name     = var.base_policy_name
+  mode = var.mode
+  dynamic "content_filter" {
+    for_each = var.content_filters
+    content {
+      name               = content_filter.value.name
+      filter_enabled     = content_filter.value.enabled
+      block_enabled      = content_filter.value.blocking
+      severity_threshold = content_filter.value.severity_threshold
+      source             = content_filter.value.source
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  retry          = var.retry
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
-
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete

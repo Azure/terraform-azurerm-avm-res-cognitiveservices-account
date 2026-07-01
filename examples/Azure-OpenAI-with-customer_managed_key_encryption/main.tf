@@ -125,11 +125,10 @@ resource "azurerm_key_vault_key" "key" {
 
 module "test" {
   source = "../../"
-
+  resource_group_name = azurerm_resource_group.this.name
   kind      = "OpenAI"
   location  = azurerm_resource_group.this.location
   name      = "OpenAI-${module.naming.cognitive_account.name_unique}"
-  parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault.this.id
@@ -138,7 +137,6 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  enable_telemetry = false
   managed_identities = {
     system_assigned            = true
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])

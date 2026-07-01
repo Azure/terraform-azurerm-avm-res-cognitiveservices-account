@@ -32,11 +32,9 @@ resource "azurerm_resource_group" "this" {
 
 module "test" {
   source = "../../"
-
+  resource_group_name = azurerm_resource_group.this.name
   kind             = "FormRecognizer"
   location         = azurerm_resource_group.this.location
   name             = "AI-Document-Intelligence-${module.naming.cognitive_account.name_unique}"
-  parent_id        = azurerm_resource_group.this.id
   sku_name         = "S0"
-  enable_telemetry = false
 }
