@@ -10,22 +10,27 @@ variable "location" {
   nullable    = false
 }
 
+variable "resource_group_name" {
+  description = "Specifies the name of the Resource Group in which the Virtual Machine should exist"
+  type        = string
+}
+
 variable "name" {
   type        = string
   description = "(Required) Specifies the name of the Cognitive Service or AI Service Account. Changing this forces a new resource to be created."
   nullable    = false
 }
 
-variable "parent_id" {
-  type        = string
-  description = "(Required) The parent resource ID where the Cognitive Service or AI Service Account is created. This should be the ID of the resource group. Changing this forces a new resource to be created."
-  nullable    = false
+# variable "parent_id" {
+#   type        = string
+#   description = "(Required) The parent resource ID where the Cognitive Service or AI Service Account is created. This should be the ID of the resource group. Changing this forces a new resource to be created."
+#   nullable    = false
 
-  validation {
-    condition     = can(regex("^/subscriptions/[a-f0-9-]+/resourceGroups/.+$", var.parent_id))
-    error_message = "The parent_id must be a valid Azure Resource Group ID in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}"
-  }
-}
+#   validation {
+#     condition     = can(regex("^/subscriptions/[a-f0-9-]+/resourceGroups/.+$", var.parent_id))
+#     error_message = "The parent_id must be a valid Azure Resource Group ID in the format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}"
+#   }
+# }
 
 variable "sku_name" {
   type        = string
@@ -236,28 +241,10 @@ variable "dynamic_throttling_enabled" {
   nullable    = false
 }
 
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-  nullable    = false
-}
-
 variable "fqdns" {
   type        = list(string)
   default     = []
   description = "(Optional) List of FQDNs allowed for the Cognitive Account."
-}
-
-variable "is_hsm_key" {
-  type        = bool
-  default     = false
-  description = "(Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`."
-  nullable    = false
 }
 
 variable "local_auth_enabled" {
@@ -389,10 +376,6 @@ variable "private_endpoints" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    lock = optional(object({
-      kind = string
-      name = optional(string, null)
-    }), null)
     tags                                    = optional(map(string), null)
     subnet_resource_id                      = string
     private_dns_zone_group_name             = optional(string, "default")

@@ -16,7 +16,7 @@ variable "name" {
   nullable    = false
 }
 
-variable "parent_id" {
+variable "cognitive_account_id" {
   type        = string
   description = "(Required) The resource ID of the parent Cognitive Services / AI Services account that owns this RAI policy."
   nullable    = false
@@ -38,53 +38,6 @@ variable "content_filters" {
  - `severity_threshold` - (Required) Level at which content is filtered. Possible values are `Low`, `Medium`, `High`.
  - `blocking`           - (Required) If blocking would occur.
  - `source`             - (Required) Content source to apply the Content Filters. Possible values are `Prompt`, `Completion`.
-DESCRIPTION
-}
-
-variable "custom_block_lists" {
-  type = list(object({
-    source          = string
-    block_list_name = string
-    blocking        = bool
-  }))
-  default     = null
-  description = <<-DESCRIPTION
- `custom_block_lists` block supports the following:
- - `source`          - (Required) Content source to apply the Custom Block Lists. Possible values are `Prompt`, `Completion`.
- - `block_list_name` - (Required) Name of ContentFilter.
- - `blocking`        - (Required) If blocking would occur.
-DESCRIPTION
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the submodule.
-For more information see <https://aka.ms/avm/telemetryinfo>.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-}
-
-variable "retry" {
-  type = object({
-    error_message_regex  = optional(list(string))
-    interval_seconds     = optional(number)
-    max_interval_seconds = optional(number)
-    multiplier           = optional(number)
-    randomization_factor = optional(number)
-  })
-  default     = null
-  description = <<DESCRIPTION
-Retry configuration applied to the `azapi_resource` managed by this submodule. Defaults to `null` (no custom retry).
-
-- `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
-- `interval_seconds`     - (Optional) Initial interval between retries in seconds.
-- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
-- `multiplier`           - (Optional) The multiplier applied to the retry interval after each attempt.
-- `randomization_factor` - (Optional) The randomization factor applied to the retry interval.
-
-See <https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#retry> for full semantics.
 DESCRIPTION
 }
 
