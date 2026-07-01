@@ -18,7 +18,7 @@ variable "name" {
   nullable    = false
 }
 
-variable "parent_id" {
+variable "cognitive_account_id" {
   type        = string
   description = "(Required) The resource ID of the parent Cognitive Services Account that owns this deployment."
   nullable    = false
@@ -48,48 +48,10 @@ variable "dynamic_throttling_enabled" {
   description = "(Optional) Whether dynamic throttling is enabled. Defaults to `false`."
 }
 
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the submodule.
-For more information see <https://aka.ms/avm/telemetryinfo>.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-}
-
-variable "lock_id" {
-  type        = string
-  default     = null
-  description = "(Optional) Resource ID used as a mutex to serialize deployment operations. When set, the parent Cognitive Services Account ID is typically used so AzAPI serializes create/update operations across sibling deployments."
-}
-
 variable "rai_policy_name" {
   type        = string
   default     = null
   description = "(Optional) The name of the RAI policy associated with the deployment."
-}
-
-variable "retry" {
-  type = object({
-    error_message_regex  = optional(list(string))
-    interval_seconds     = optional(number)
-    max_interval_seconds = optional(number)
-    multiplier           = optional(number)
-    randomization_factor = optional(number)
-  })
-  default     = null
-  description = <<DESCRIPTION
-Retry configuration applied to the `azapi_resource` managed by this submodule. Defaults to `null` (no custom retry).
-
-- `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
-- `interval_seconds`     - (Optional) Initial interval between retries in seconds.
-- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
-- `multiplier`           - (Optional) The multiplier applied to the retry interval after each attempt.
-- `randomization_factor` - (Optional) The randomization factor applied to the retry interval.
-
-See <https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#retry> for full semantics.
-DESCRIPTION
 }
 
 variable "timeouts" {

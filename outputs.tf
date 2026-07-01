@@ -18,7 +18,7 @@ output "private_endpoints" {
   description = <<DESCRIPTION
   A map of the private endpoints created.
   DESCRIPTION
-  value       = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints : azapi_resource.private_endpoints_unmanaged
+  value       = var.private_endpoints_manage_dns_zone_group ? azurerm_private_endpoint.private_endpoints : null
 }
 
 output "rai_policy_id" {

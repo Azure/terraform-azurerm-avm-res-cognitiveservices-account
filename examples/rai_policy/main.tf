@@ -38,11 +38,10 @@ resource "random_pet" "pet" {}
 
 module "test" {
   source = "../../"
-
+  resource_group_name = var.resource_group_name
   kind      = "OpenAI"
   location  = azurerm_resource_group.this.location
   name      = "OpenAI-${random_pet.pet.id}"
-  parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   cognitive_deployments = {
     "gpt-4.1-mini" = {
@@ -58,7 +57,6 @@ module "test" {
       }
     }
   }
-  enable_telemetry = false
   rai_policies = {
     policy1 = {
       name             = "policy0"

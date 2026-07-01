@@ -1,33 +1,33 @@
 output "name" {
   description = "The name of the Cognitive Services deployment."
-  value       = azapi_resource.this.name
+  value       = var.name
 }
 
 output "resource" {
   description = "The deployment resource shaped to match the AzureRM cognitive deployment schema."
   value = {
-    id                         = azapi_resource.this.id
-    name                       = azapi_resource.this.name
-    cognitive_account_id       = azapi_resource.this.parent_id
-    dynamic_throttling_enabled = try(azapi_resource.this.body.properties.dynamicThrottlingEnabled, false)
+    id                         = azurerm_cognitive_deployment.this.id
+    name                       = var.name
+    cognitive_account_id       = var.cognitive_account_id
+    dynamic_throttling_enabled = try(var.dynamic_throttling_enabled, false)
     model = [
       {
-        format  = try(azapi_resource.this.body.properties.model.format, null)
-        name    = try(azapi_resource.this.body.properties.model.name, null)
-        version = try(azapi_resource.this.body.properties.model.version, null)
+        format  = try(var.model.format, null)
+        name    = try(var.model.name, null)
+        version = try(var.model.version, null)
       }
     ]
     sku = [
       {
-        name     = try(azapi_resource.this.body.sku.name, "")
-        capacity = try(azapi_resource.this.body.sku.capacity, 1)
-        family   = try(azapi_resource.this.body.sku.family, "")
-        size     = try(azapi_resource.this.body.sku.size, "")
-        tier     = try(azapi_resource.this.body.sku.tier, "")
+        name     = try(var.scale.name, "")
+        capacity = try(var.scale.capacity, 1)
+        family   = try(var.scale.family, "")
+        size     = try(var.scale.size, "")
+        tier     = try(var.scale.tier, "")
       }
     ]
-    rai_policy_name        = try(azapi_resource.this.body.properties.raiPolicyName == null, true) ? "" : azapi_resource.this.body.properties.raiPolicyName
-    version_upgrade_option = azapi_resource.this.body.properties.versionUpgradeOption
+    rai_policy_name        = var.rai_policy_name
+    version_upgrade_option = var.version_upgrade_option
     timeouts = var.timeouts == null ? null : {
       create = var.timeouts.create
       delete = var.timeouts.delete
@@ -39,5 +39,5 @@ output "resource" {
 
 output "resource_id" {
   description = "The resource ID of the Cognitive Services deployment."
-  value       = azapi_resource.this.id
+  value       = azurerm_cognitive_deployment.this.id
 }

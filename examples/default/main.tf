@@ -32,11 +32,10 @@ resource "azurerm_resource_group" "this" {
 
 module "test" {
   source = "../../"
-
+  resource_group_name = var.resource_group_name
   kind      = "OpenAI"
   location  = azurerm_resource_group.this.location
   name      = "OpenAI-${module.naming.cognitive_account.name_unique}"
-  parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   cognitive_deployments = {
     "gpt-4.1-mini" = {
@@ -51,5 +50,4 @@ module "test" {
       }
     }
   }
-  enable_telemetry = false
 }
