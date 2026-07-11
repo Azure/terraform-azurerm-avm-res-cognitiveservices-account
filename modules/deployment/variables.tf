@@ -5,7 +5,7 @@ variable "model" {
     version = optional(string)
   })
   description = <<-DESCRIPTION
- - `format`  - (Required) The format of the Cognitive Services Account Deployment model. Possible value is `OpenAI`.
+ - `format`  - (Required) The format of the Cognitive Services Account Deployment model. Common values are `OpenAI` and `Anthropic`.
  - `name`    - (Required) The name of the Cognitive Services Account Deployment model.
  - `version` - (Optional) The version of Cognitive Services Account Deployment model.
 DESCRIPTION
@@ -62,6 +62,22 @@ variable "lock_id" {
   type        = string
   default     = null
   description = "(Optional) Resource ID used as a mutex to serialize deployment operations. When set, the parent Cognitive Services Account ID is typically used so AzAPI serializes create/update operations across sibling deployments."
+}
+
+variable "model_provider_data" {
+  type = object({
+    organization_name = string
+    country_code      = string
+    industry          = string
+  })
+  default     = null
+  description = <<-DESCRIPTION
+(Optional) Model-provider attestation data required for supported partner-model deployments (for example, Anthropic Claude). Defaults to `null`, in which case `modelProviderData` is omitted from the deployment request. Not required for first-party `OpenAI` deployments.
+
+ - `organization_name` - (Required) The name of the organization accepting the partner model's terms.
+ - `country_code`      - (Required) The country code of the organization, as expected by the Azure resource provider.
+ - `industry`          - (Required) The industry of the organization, as expected by the Azure resource provider.
+DESCRIPTION
 }
 
 variable "rai_policy_name" {
