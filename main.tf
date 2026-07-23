@@ -246,6 +246,7 @@ module "deployment" {
   dynamic_throttling_enabled = each.value.dynamic_throttling_enabled
   enable_telemetry           = var.enable_telemetry
   lock_id                    = var.deployment_serialization_enabled ? local.resource_id : null
+  model_provider_data        = each.value.model_provider_data
   rai_policy_name            = each.value.rai_policy_name
   retry = each.value.retry != null ? {
     error_message_regex  = each.value.retry.error_message_regex
