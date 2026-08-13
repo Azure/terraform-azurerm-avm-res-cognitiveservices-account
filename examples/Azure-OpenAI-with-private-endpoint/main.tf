@@ -62,11 +62,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "link" {
 
 module "test" {
   source = "../../"
-
+  resource_group_name = azurerm_resource_group.this.name
   kind      = "OpenAI"
   location  = azurerm_resource_group.this.location
   name      = "OpenAI-${module.naming.cognitive_account.name_unique}"
-  parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   cognitive_deployments = {
     "gpt-4.1-mini" = {
@@ -81,7 +80,6 @@ module "test" {
       }
     }
   }
-  enable_telemetry = false
   network_acls = {
     default_action = "Deny"
     virtual_network_rules = toset([{

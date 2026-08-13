@@ -1,9 +1,9 @@
 output "name" {
   description = "The name of the RAI policy."
-  value       = azapi_resource.this.name
+  value       = var.name
 }
 
 output "resource_id" {
   description = "The resource ID of the RAI policy."
-  value       = azapi_resource.this.id
+  value       = azurerm_cognitive_account_rai_policy.this.id
 }

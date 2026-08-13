@@ -300,11 +300,10 @@ resource "azapi_update_resource" "allow_ai_managed_vnet_preview" {
 
 module "test" {
   source = "../../"
-
+  resource_group_name = azurerm_resource_group.this.name
   kind      = "AIServices"
   location  = azurerm_resource_group.this.location
   name      = "AIService-${module.naming.cognitive_account.name_unique}"
-  parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   aml_workspace = {
     resource_id        = azurerm_machine_learning_workspace.this.id
@@ -317,8 +316,6 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  enable_telemetry   = false
-  is_hsm_key         = true
   local_auth_enabled = true
   managed_identities = {
     system_assigned            = false

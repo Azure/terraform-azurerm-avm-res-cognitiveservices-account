@@ -1,33 +1,23 @@
-resource "azapi_resource" "this" {
-  name      = var.name
-  parent_id = var.parent_id
-  type      = "Microsoft.CognitiveServices/accounts/deployments@2025-06-01"
-  body = {
-    properties = { for k, v in {
-      dynamicThrottlingEnabled = var.dynamic_throttling_enabled
-      model = {
-        format  = var.model.format
-        name    = var.model.name
-        version = var.model.version
-      }
-      raiPolicyName        = var.rai_policy_name
-      versionUpgradeOption = var.version_upgrade_option
-    } : k => v if v != null }
-    sku = { for k, v in {
-      name     = var.scale.type
-      capacity = var.scale.capacity
-      family   = var.scale.family
-      size     = var.scale.size
-      tier     = var.scale.tier
-    } : k => v if v != null }
+resource "azurerm_cognitive_deployment" "this" {
+  name                 = var.name
+  cognitive_account_id = var.cognitive_account_id
+  dynamic_throttling_enabled = var.dynamic_throttling_enabled
+  rai_policy_name = var.rai_policy_name
+  version_upgrade_option = var.version_upgrade_option 
+
+  model {
+    format  = var.model.format
+    name    = var.model.name
+    version = var.model.version
   }
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  locks                     = var.lock_id != null ? [var.lock_id] : null
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  retry                     = var.retry
-  schema_validation_enabled = false
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  sku {
+    name     = var.scale.type
+    capacity = var.scale.capacity
+    family   = var.scale.family
+    size     = var.scale.size
+    tier     = var.scale.tier
+  }
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -38,11 +28,5 @@ resource "azapi_resource" "this" {
       read   = timeouts.value.read
       update = timeouts.value.update
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      schema_validation_enabled,
-    ]
   }
 }
