@@ -58,7 +58,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.5)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.17.0, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.17.0, < 5.3)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -856,7 +856,7 @@ Version:
 
 Source: Azure/avm-utl-interfaces/azure
 
-Version: 0.6.0
+Version: 0.7.0
 
 ### <a name="module_rai_policy"></a> [rai\_policy](#module\_rai\_policy)
 
