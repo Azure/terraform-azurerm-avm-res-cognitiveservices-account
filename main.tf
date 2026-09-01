@@ -225,15 +225,22 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
   }
 }
 
-moved {
-  from = azurerm_cognitive_deployment.this
-  to   = azapi_resource.cognitive_deployment
-}
-
-moved {
-  from = azapi_resource.cognitive_deployment
-  to   = module.deployment.azapi_resource.this
-}
+# NOTE: there is deliberately no `moved` block migrating `azapi_resource.cognitive_deployment`
+# into `module.deployment`.
+#
+# Terraform cannot express a move from a `for_each`'d resource into a `for_each`'d module
+# call. The source instance keys are applied to the *last* component of the target address,
+# producing `module.deployment.azapi_resource.this["<key>"]` instead of
+# `module.deployment["<key>"].azapi_resource.this`. That address does not exist in the
+# configuration, so Terraform reports `module.deployment is not in configuration`, plans a
+# destroy, and then creates the deployment fresh - dropping the live model endpoint.
+#
+# Cardinality must stay on the module call (AVM TFRMNFR1 forbids `for_each` on a submodule's
+# primary resource), so this migration cannot be shipped by the module. Consumers upgrading
+# from v0.11.1 or earlier declare per-key `moved` blocks in their own configuration instead;
+# see "Migration Guide for Cognitive Deployments and RAI Policies" in the README.
+#
+# Ref: https://github.com/Azure/terraform-azurerm-avm-res-cognitiveservices-account/issues/202
 
 module "deployment" {
   source   = "./modules/deployment"

@@ -49,6 +49,80 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 >
 > If you have `private_endpoints_manage_dns_zone_group = false`, no action is required.
 
+## Migration Guide for Cognitive Deployments and RAI Policies
+
+> [!WARNING]
+> **Breaking Change for `cognitive_deployments` and `rai_policies` Users (v0.11.1 → v0.12.0+)**
+>
+> v0.11.1 relocated model deployments and RAI policies from root-level resources into the
+> `modules/deployment` and `modules/rai_policy` submodules, and shipped `moved` blocks that
+> Terraform cannot resolve. A `moved` block cannot carry a resource's instance keys across
+> into module instance keys, so the move resolved to
+> `module.deployment.azapi_resource.this["<key>"]` — an address that does not exist — and
+> Terraform planned a **destroy and recreate of every deployment**. Destroying a live
+> `Microsoft.CognitiveServices/accounts/deployments` drops the model endpoint during apply.
+>
+> Those `moved` blocks have been removed. Because AVM
+> [TFRMNFR1](https://azure.github.io/Azure-Verified-Modules/spec/TFRMNFR1) requires
+> cardinality to stay on the submodule call, this migration cannot be shipped inside the
+> module — declare per-key `moved` blocks in your own configuration instead.
+>
+> **Who needs to act:** anyone with a non-empty `cognitive_deployments` or `rai_policies`
+> whose state still holds `azapi_resource.cognitive_deployment` / `azapi_resource.rai_policy`
+> (that is, anyone on v0.11.0 or earlier, and anyone on v0.11.1 who has not applied the
+> destructive plan). If you already applied v0.11.1 your state is at the new addresses and
+> **no action is required**.
+>
+> **Always run `terraform plan` and confirm it reports no changes before applying.**
+>
+> **Step 1 — generate the `moved` blocks from your current state:**
+>
+> ```bash
+> terraform state list \
+>   | grep -E '\.azapi_resource\.(cognitive_deployment|rai_policy)\[' \
+>   | while IFS= read -r addr; do
+>       prefix="${addr%%.azapi_resource.*}"
+>       rest="${addr#*.azapi_resource.}"
+>       rtype="${rest%%\[*}"
+>       key="${rest#*[\"}"; key="${key%\"]}"
+>       case "$rtype" in
+>         cognitive_deployment) sub="deployment" ;;
+>         rai_policy)           sub="rai_policy" ;;
+>       esac
+>       printf 'moved {\n  from = %s\n  to   = %s.module.%s["%s"].azapi_resource.this\n}\n\n' \
+>         "$addr" "$prefix" "$sub" "$key"
+>     done
+> ```
+>
+> **Step 2 — paste the output into your root configuration alongside the version bump:**
+>
+> ```hcl
+> moved {
+>   from = module.cognitive_service.azapi_resource.cognitive_deployment["gpt-4o"]
+>   to   = module.cognitive_service.module.deployment["gpt-4o"].azapi_resource.this
+> }
+>
+> moved {
+>   from = module.cognitive_service.azapi_resource.rai_policy["policy0"]
+>   to   = module.cognitive_service.module.rai_policy["policy0"].azapi_resource.this
+> }
+> ```
+>
+> **Step 3** — run `terraform plan`. It must report **no changes** for the deployment and
+> policy resources. If it still plans a destroy, a key is missing or misspelled; do not
+> apply. Once applied, the `moved` blocks can be deleted.
+>
+> **Upgrading from a pre-`azapi` version:** if your state still holds
+> `azurerm_cognitive_deployment.this["<key>"]`, move it straight to the new address in one
+> hop — the `azapi` provider supports the cross-type move:
+>
+> ```hcl
+> moved {
+>   from = module.cognitive_service.azurerm_cognitive_deployment.this["gpt-4o"]
+>   to   = module.cognitive_service.module.deployment["gpt-4o"].azapi_resource.this
+> }
+> ```
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
