@@ -21,13 +21,9 @@ resource "azapi_resource" "this" {
       tier     = var.scale.tier
     } : k => v if v != null }
   }
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   locks                     = var.lock_id != null ? [var.lock_id] : null
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   retry                     = var.retry
   schema_validation_enabled = false
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]

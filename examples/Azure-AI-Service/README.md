@@ -70,13 +70,11 @@ resource "azurerm_user_assigned_identity" "this" {
 }
 
 resource "azurerm_key_vault" "this" {
-  location                   = azurerm_resource_group.this.location
-  name                       = "avmcog${replace(random_string.suffix.result, "-", "")}"
-  resource_group_name        = azurerm_resource_group.this.name
-  sku_name                   = "premium"
-  tenant_id                  = data.azurerm_client_config.this.tenant_id
-  purge_protection_enabled   = true
-  soft_delete_retention_days = 7
+  location            = azurerm_resource_group.this.location
+  name                = "avmcog${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "premium"
+  tenant_id           = data.azurerm_client_config.this.tenant_id
 
   access_policy {
     certificate_permissions = [
@@ -128,6 +126,8 @@ resource "azurerm_key_vault" "this" {
     ]
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
+  purge_protection_enabled   = true
+  soft_delete_retention_days = 7
 }
 
 resource "azurerm_key_vault_certificate" "cert" {
