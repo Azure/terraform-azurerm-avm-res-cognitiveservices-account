@@ -52,15 +52,11 @@ resource "azapi_resource" "private_endpoints" {
   parent_id               = coalesce(var.private_endpoints[each.key].resource_group_name, local.resource_group_name) != local.resource_group_name ? "/subscriptions/${split("/", local.parent_id)[2]}/resourceGroups/${var.private_endpoints[each.key].resource_group_name}" : local.parent_id
   type                    = each.value.type
   body                    = each.value.body
-  create_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_missing_property = true
-  read_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   retry = {
     error_message_regex = ["Account.*state Accepted"]
   }
-  tags           = var.private_endpoints[each.key].tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = var.private_endpoints[each.key].tags
 
   lifecycle {
     ignore_changes = [
@@ -77,15 +73,11 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
   parent_id               = coalesce(var.private_endpoints[each.key].resource_group_name, local.resource_group_name) != local.resource_group_name ? "/subscriptions/${split("/", local.parent_id)[2]}/resourceGroups/${var.private_endpoints[each.key].resource_group_name}" : local.parent_id
   type                    = each.value.type
   body                    = each.value.body
-  create_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_missing_property = true
-  read_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   retry = {
     error_message_regex = ["Account.*state Accepted"]
   }
-  tags           = var.private_endpoints[each.key].tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = var.private_endpoints[each.key].tags
 
   lifecycle {
     ignore_changes = [
@@ -97,14 +89,10 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
 resource "azapi_resource" "private_dns_zone_groups" {
   for_each = module.private_endpoint_interfaces.private_dns_zone_groups_azapi
 
-  name           = each.value.name
-  parent_id      = azapi_resource.private_endpoints[each.key].id
-  type           = each.value.type
-  body           = each.value.body
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  name      = each.value.name
+  parent_id = azapi_resource.private_endpoints[each.key].id
+  type      = each.value.type
+  body      = each.value.body
 
   lifecycle {
     # During migration, DNS zone groups may already exist as embedded blocks
@@ -128,27 +116,19 @@ moved {
 resource "azapi_resource" "private_endpoint_role_assignments" {
   for_each = module.private_endpoint_interfaces.role_assignments_private_endpoint_azapi
 
-  name           = each.value.name
-  parent_id      = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
-  type           = each.value.type
-  body           = each.value.body
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  name      = each.value.name
+  parent_id = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
+  type      = each.value.type
+  body      = each.value.body
 }
 
 resource "azapi_resource" "private_endpoint_locks" {
   for_each = module.private_endpoint_interfaces.lock_private_endpoint_azapi
 
-  name           = each.value.name
-  parent_id      = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
-  type           = each.value.type
-  body           = each.value.body
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  name      = each.value.name
+  parent_id = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
+  type      = each.value.type
+  body      = each.value.body
 
   depends_on = [
     azapi_resource.private_dns_zone_groups,

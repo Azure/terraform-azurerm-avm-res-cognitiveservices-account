@@ -32,7 +32,6 @@ provider "azurerm" {
   }
 }
 
-
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
@@ -55,13 +54,11 @@ resource "random_string" "suffix" {
 data "azurerm_client_config" "this" {}
 
 resource "azurerm_key_vault" "this" {
-  location                   = azurerm_resource_group.this.location
-  name                       = "zjhecogkv${replace(random_string.suffix.result, "-", "")}"
-  resource_group_name        = azurerm_resource_group.this.name
-  sku_name                   = "premium"
-  tenant_id                  = data.azurerm_client_config.this.tenant_id
-  purge_protection_enabled   = true
-  soft_delete_retention_days = 7
+  location            = azurerm_resource_group.this.location
+  name                = "zjhecogkv${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "premium"
+  tenant_id           = data.azurerm_client_config.this.tenant_id
 
   access_policy {
     key_permissions = [
@@ -98,6 +95,8 @@ resource "azurerm_key_vault" "this" {
     ]
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
+  purge_protection_enabled   = true
+  soft_delete_retention_days = 7
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -151,7 +150,6 @@ module "test" {
     user_assigned_resource_ids = toset([azurerm_user_assigned_identity.this.id])
   }
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
