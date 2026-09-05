@@ -39,7 +39,7 @@ The following input variables are required:
 
 ### <a name="input_model"></a> [model](#input\_model)
 
-Description: - `format`  - (Required) The format of the Cognitive Services Account Deployment model. Possible value is `OpenAI`.
+Description: - `format`  - (Required) The format of the Cognitive Services Account Deployment model. Common values are `OpenAI` and `Anthropic`.
 - `name`    - (Required) The name of the Cognitive Services Account Deployment model.
 - `version` - (Optional) The version of Cognitive Services Account Deployment model.
 
@@ -112,6 +112,26 @@ Default: `true`
 Description: (Optional) Resource ID used as a mutex to serialize deployment operations. When set, the parent Cognitive Services Account ID is typically used so AzAPI serializes create/update operations across sibling deployments.
 
 Type: `string`
+
+Default: `null`
+
+### <a name="input_model_provider_data"></a> [model\_provider\_data](#input\_model\_provider\_data)
+
+Description: (Optional) Model-provider attestation data required for supported partner-model deployments (for example, Anthropic Claude). Defaults to `null`, in which case `modelProviderData` is omitted from the deployment request. Not required for first-party `OpenAI` deployments.
+
+ - `organization_name` - (Required) The name of the organization accepting the partner model's terms.
+ - `country_code`      - (Required) The country code of the organization, as expected by the Azure resource provider.
+ - `industry`          - (Required) The industry of the organization, as expected by the Azure resource provider.
+
+Type:
+
+```hcl
+object({
+    organization_name = string
+    country_code      = string
+    industry          = string
+  })
+```
 
 Default: `null`
 
