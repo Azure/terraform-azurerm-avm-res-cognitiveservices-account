@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Cognitive Service",
+  "moduleDescription": "AVM Resource Module for Cognitive Services account ( Open AI)",
+  "canonicalType": "Microsoft.CognitiveServices/accounts",
+  "owners": [
+    "segraef"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.res.4dd4b4d"
+}

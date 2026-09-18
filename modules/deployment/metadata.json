@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Cognitive Services Account Deployment submodule",
+  "moduleDescription": "This submodule manages a single `Microsoft.CognitiveServices/accounts/deployments` resource (model deployment) under a parent Cognitive Services / AI Services account.",
+  "canonicalType": "Microsoft.CognitiveServices/accounts/deployments",
+  "telemetryIdPrefix": "46d3xtrf.res.30698d6"
+}
