@@ -36,7 +36,7 @@ module "vnet" {
   resource_group_name = azurerm_resource_group.this.name
   vnet_location       = azurerm_resource_group.this.location
   address_space       = ["10.52.0.0/16"]
-  enable_telemetry    = false
+  enable_telemetry    = var.enable_telemetry
   subnet_names        = ["openai", "app"]
   subnet_prefixes     = ["10.52.0.0/24", "10.52.1.0/24"]
   subnet_service_endpoints = {
@@ -80,7 +80,7 @@ module "test" {
       }
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   network_acls = {
     default_action = "Deny"
     virtual_network_rules = toset([{
