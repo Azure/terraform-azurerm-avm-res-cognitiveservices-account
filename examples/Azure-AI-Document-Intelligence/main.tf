@@ -37,5 +37,5 @@ module "test" {
   name             = "AI-Document-Intelligence-${module.naming.cognitive_account.name_unique}"
   parent_id        = azurerm_resource_group.this.id
   sku_name         = "S0"
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
 }

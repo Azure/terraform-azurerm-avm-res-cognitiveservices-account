@@ -57,7 +57,7 @@ module "test" {
       }
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   rai_policies = {
     policy1 = {
       name             = "policy0"

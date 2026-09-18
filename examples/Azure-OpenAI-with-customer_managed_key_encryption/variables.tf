@@ -1,8 +1,3 @@
-variable "location" {
-  type    = string
-  default = "eastus"
-}
-
 variable "enable_telemetry" {
   type        = bool
   default     = false

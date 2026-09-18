@@ -317,7 +317,7 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   is_hsm_key         = true
   local_auth_enabled = true
   managed_identities = {
