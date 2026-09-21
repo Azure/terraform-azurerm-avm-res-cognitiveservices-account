@@ -1,7 +1,7 @@
 resource "azapi_resource" "this" {
   name      = var.name
   parent_id = var.parent_id
-  type      = "Microsoft.CognitiveServices/accounts/deployments@2025-06-01"
+  type      = "Microsoft.CognitiveServices/accounts/deployments@2026-05-01"
   body = {
     properties = { for k, v in {
       dynamicThrottlingEnabled = var.dynamic_throttling_enabled
@@ -9,6 +9,11 @@ resource "azapi_resource" "this" {
         format  = var.model.format
         name    = var.model.name
         version = var.model.version
+      }
+      modelProviderData = var.model_provider_data == null ? null : {
+        organizationName = var.model_provider_data.organization_name
+        countryCode      = var.model_provider_data.country_code
+        industry         = var.model_provider_data.industry
       }
       raiPolicyName        = var.rai_policy_name
       versionUpgradeOption = var.version_upgrade_option
