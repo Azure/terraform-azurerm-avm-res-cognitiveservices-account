@@ -77,10 +77,7 @@ resource "azapi_resource" "this" {
       }], null)
     } : k => v if v != null }
   } : k => v if v != null }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  retry          = var.retry
+  retry = var.retry
   # This weird workaround is needed to avoid configuration drift, the Terraform conditional expression `condition ? true_val : false_val` would execute implicitly type conversion, which would cause the `null` value to be converted to an `null` value with object type.
   sensitive_body = [{
     properties = {
@@ -91,8 +88,7 @@ resource "azapi_resource" "this" {
     },
     null,
   ][local.sensitive_body_index]
-  tags           = var.tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = var.tags
 
   dynamic "identity" {
     for_each = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? ["identity"] : []

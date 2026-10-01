@@ -17,7 +17,6 @@ provider "azurerm" {
   }
 }
 
-
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
@@ -51,5 +50,5 @@ module "test" {
       }
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
 }

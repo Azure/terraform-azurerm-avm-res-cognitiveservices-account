@@ -41,4 +41,8 @@ avm.tflint_module.hcl
 avm.tflint_module.merged.hcl
 examples/*/policy
 *.mptfbackup
-.avm
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.avm/managed-files.json

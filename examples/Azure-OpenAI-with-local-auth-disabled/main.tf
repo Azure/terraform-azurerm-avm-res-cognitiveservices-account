@@ -41,7 +41,7 @@ module "test_openai" {
   parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   # Disable telemetry for testing
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   local_auth_enabled = false
 }
 
@@ -57,6 +57,6 @@ module "test_aiservices" {
   parent_id = azurerm_resource_group.this.id
   sku_name  = "S0"
   # Disable telemetry for testing
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   local_auth_enabled = false
 }

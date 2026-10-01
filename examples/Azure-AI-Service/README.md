@@ -70,13 +70,11 @@ resource "azurerm_user_assigned_identity" "this" {
 }
 
 resource "azurerm_key_vault" "this" {
-  location                   = azurerm_resource_group.this.location
-  name                       = "avmcog${replace(random_string.suffix.result, "-", "")}"
-  resource_group_name        = azurerm_resource_group.this.name
-  sku_name                   = "premium"
-  tenant_id                  = data.azurerm_client_config.this.tenant_id
-  purge_protection_enabled   = true
-  soft_delete_retention_days = 7
+  location            = azurerm_resource_group.this.location
+  name                = "avmcog${replace(random_string.suffix.result, "-", "")}"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "premium"
+  tenant_id           = data.azurerm_client_config.this.tenant_id
 
   access_policy {
     certificate_permissions = [
@@ -128,6 +126,8 @@ resource "azurerm_key_vault" "this" {
     ]
     tenant_id = data.azurerm_client_config.this.tenant_id
   }
+  purge_protection_enabled   = true
+  soft_delete_retention_days = 7
 }
 
 resource "azurerm_key_vault_certificate" "cert" {
@@ -324,7 +324,7 @@ module "test" {
       resource_id = azurerm_user_assigned_identity.this.id
     }
   }
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   is_hsm_key         = true
   local_auth_enabled = true
   managed_identities = {
@@ -384,7 +384,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
 
 ## Outputs
 
