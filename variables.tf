@@ -71,6 +71,11 @@ variable "cognitive_deployments" {
       name    = string
       version = optional(string)
     })
+    model_provider_data = optional(object({
+      organization_name = string
+      country_code      = string
+      industry          = string
+    }), null)
     scale = object({
       capacity = optional(number, 1)
       family   = optional(string)
@@ -101,9 +106,17 @@ variable "cognitive_deployments" {
 
  ---
  `model` block supports the following:
- - `format` - (Required) The format of the Cognitive Services Account Deployment model. Changing this forces a new resource to be created. Possible value is `OpenAI`.
+ - `format` - (Required) The format of the Cognitive Services Account Deployment model. Changing this forces a new resource to be created. Common values are `OpenAI` and `Anthropic`.
  - `name` - (Required) The name of the Cognitive Services Account Deployment model. Changing this forces a new resource to be created.
  - `version` - (Optional) The version of Cognitive Services Account Deployment model. If `version` is not specified, the default version of the model at the time will be assigned.
+
+ ---
+ `model_provider_data` block supports the following:
+ - `organization_name` - (Required) The name of the organization accepting the partner model's terms.
+ - `country_code` - (Required) The country code of the organization, as expected by the Azure resource provider.
+ - `industry` - (Required) The industry of the organization, as expected by the Azure resource provider.
+
+ This block is required by the Azure resource provider for supported GA partner-model deployments (for example, Anthropic Claude models where `model.format` is `Anthropic`) and is omitted from the deployment request when not supplied. It is not required for first-party `OpenAI` deployments.
 
  ---
  `scale` block supports the following:
