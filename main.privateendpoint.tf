@@ -4,7 +4,7 @@ data "azapi_resource" "existing_private_endpoints" {
   for_each = var.private_endpoints
 
   name                   = each.value.name != null ? each.value.name : "pep-${var.name}"
-  parent_id              = coalesce(each.value.resource_group_name, local.resource_group_name) != local.resource_group_name ? "/subscriptions/${split("/", local.parent_id)[2]}/resourceGroups/${each.value.resource_group_name}" : local.parent_id
+  parent_id              = local.private_endpoint_parent_ids[each.key]
   type                   = "Microsoft.Network/privateEndpoints@2024-05-01"
   ignore_not_found       = true
   response_export_values = ["*"]
@@ -13,6 +13,10 @@ data "azapi_resource" "existing_private_endpoints" {
 }
 
 locals {
+  private_endpoint_parent_ids = { for k, v in var.private_endpoints : k => (
+    can(provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", v.resource_group_name)) ? v.resource_group_name :
+    coalesce(v.resource_group_name, local.resource_group_name) != local.resource_group_name ? "/subscriptions/${split("/", local.parent_id)[2]}/resourceGroups/${v.resource_group_name}" : local.parent_id
+  ) }
   # Determine network interface name: use existing if present, otherwise use variable or let module generate
   private_endpoints_with_nic = { for k, v in var.private_endpoints : k => merge(v, {
     network_interface_name = v.network_interface_name != null ? v.network_interface_name : (
@@ -34,7 +38,7 @@ module "private_endpoint_interfaces" {
   lock                 = null
   managed_identities   = null
   private_endpoints = { for k, v in local.private_endpoints_with_nic : k => merge(v, {
-    subresource_name = "account"
+    subresource_name = v.subresource_name != null ? v.subresource_name : "account"
   }) }
   private_endpoints_manage_dns_zone_group = var.private_endpoints_manage_dns_zone_group
   private_endpoints_scope                 = local.resource_block.id
@@ -49,7 +53,7 @@ resource "azapi_resource" "private_endpoints" {
 
   location                = var.private_endpoints[each.key].location != null ? var.private_endpoints[each.key].location : var.location
   name                    = each.value.name
-  parent_id               = coalesce(var.private_endpoints[each.key].resource_group_name, local.resource_group_name) != local.resource_group_name ? "/subscriptions/${split("/", local.parent_id)[2]}/resourceGroups/${var.private_endpoints[each.key].resource_group_name}" : local.parent_id
+  parent_id               = local.private_endpoint_parent_ids[each.key]
   type                    = each.value.type
   body                    = each.value.body
   ignore_missing_property = true
@@ -70,7 +74,7 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
 
   location                = var.private_endpoints[each.key].location != null ? var.private_endpoints[each.key].location : var.location
   name                    = each.value.name
-  parent_id               = coalesce(var.private_endpoints[each.key].resource_group_name, local.resource_group_name) != local.resource_group_name ? "/subscriptions/${split("/", local.parent_id)[2]}/resourceGroups/${var.private_endpoints[each.key].resource_group_name}" : local.parent_id
+  parent_id               = local.private_endpoint_parent_ids[each.key]
   type                    = each.value.type
   body                    = each.value.body
   ignore_missing_property = true
@@ -128,7 +132,13 @@ resource "azapi_resource" "private_endpoint_locks" {
   name      = each.value.name
   parent_id = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
   type      = each.value.type
-  body      = each.value.body
+  body = merge(each.value.body, {
+    properties = merge(each.value.body.properties,
+      var.private_endpoints[each.value.pe_key].lock.notes == null ? {} : {
+        notes = var.private_endpoints[each.value.pe_key].lock.notes
+      }
+    )
+  })
 
   depends_on = [
     azapi_resource.private_dns_zone_groups,
