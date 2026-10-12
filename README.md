@@ -10,6 +10,10 @@ Private endpoints now honor `role_assignments[*].name`, `lock.notes`, `subresour
 
 Review the plan if these fields were previously supplied but ignored: an explicit role assignment name replaces that assignment when it differs from its generated UUID. A non-default subresource changes connection/IP group IDs and generated endpoint, NIC and connection names; changing the endpoint name replaces the endpoint and its child resources. Lock notes and IP member names are now sent to ARM. `skip_service_principal_aad_check` remains an AzureRM compatibility flag with no AzAPI effect; it neither sends an ARM property nor infers `principal_type`.
 
+## Child resource tags
+
+Deployments and RAI policies accept per-item `tags` through `cognitive_deployments` and `rai_policies`, or `tags` when using their submodules directly. Omitted or null tags retain provider defaults and do not inherit account tags. Previously ignored supplied tags now update the child's tags; an empty map explicitly selects no tags. These bindings do not change resource names, addresses or API versions and add no replacement triggers.
+
 > [!IMPORTANT]
 > As the overall AVM framework is not GA (generally available) yet - the CI framework and test automation is not fully functional and implemented across all supported languages yet - breaking changes are expected, and additional customer feedback is yet to be gathered and incorporated. Hence, modules **MUST NOT** be published at version `1.0.0` or higher at this time.
 >
@@ -183,6 +187,7 @@ Description: - `name` - (Required) The name of the Cognitive Services Account De
 - `rai_policy_name` - (Optional) The name of RAI policy.
 - `version_upgrade_option` - (Optional) Deployment model version upgrade option. Possible values are `OnceNewDefaultVersionAvailable`, `OnceCurrentVersionExpired`, and `NoAutoUpgrade`. Defaults to `OnceNewDefaultVersionAvailable`. Changing this forces a new resource to be created.
 - `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled. Defaults to `false`.
+- `tags` - (Optional) Tags for this deployment. Omitted or null tags retain provider defaults; account tags are not inherited. An empty map explicitly selects no tags.
 
 ---
 `model` block supports the following:
@@ -221,6 +226,7 @@ map(object({
     rai_policy_name            = optional(string)
     version_upgrade_option     = optional(string, "OnceNewDefaultVersionAvailable")
     dynamic_throttling_enabled = optional(bool, false)
+    tags                       = optional(map(string), null)
     model = object({
       format  = string
       name    = string
@@ -635,6 +641,7 @@ Default: `null`
 Description: - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.
 - `base_policy_name` - (Required) The name of the base policy. Changing this forces a new resource to be created.
 - `mode` - Rai policy mode. The enum value mapping is as below: `Default`, `Deferred`, `Blocking`, `Asynchronous_filter`. Please use 'Asynchronous\_filter' after 2024-10-01. It is the same as 'Deferred' in previous version.
+- `tags` - (Optional) Tags for this policy. Omitted or null tags retain provider defaults; account tags are not inherited. An empty map explicitly selects no tags.
 
 ---
 `content_filters` block supports the following:
@@ -672,6 +679,7 @@ map(object({
     name             = string
     base_policy_name = string
     mode             = string
+    tags             = optional(map(string), null)
     content_filters = optional(list(object({
       blocking           = bool
       enabled            = bool

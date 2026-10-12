@@ -66,6 +66,7 @@ variable "cognitive_deployments" {
     rai_policy_name            = optional(string)
     version_upgrade_option     = optional(string, "OnceNewDefaultVersionAvailable")
     dynamic_throttling_enabled = optional(bool, false)
+    tags                       = optional(map(string), null)
     model = object({
       format  = string
       name    = string
@@ -98,6 +99,7 @@ variable "cognitive_deployments" {
  - `rai_policy_name` - (Optional) The name of RAI policy.
  - `version_upgrade_option` - (Optional) Deployment model version upgrade option. Possible values are `OnceNewDefaultVersionAvailable`, `OnceCurrentVersionExpired`, and `NoAutoUpgrade`. Defaults to `OnceNewDefaultVersionAvailable`. Changing this forces a new resource to be created.
  - `dynamic_throttling_enabled` - (Optional) Whether dynamic throttling is enabled. Defaults to `false`.
+ - `tags` - (Optional) Tags for this deployment. Omitted or null tags retain provider defaults; account tags are not inherited. An empty map explicitly selects no tags.
 
  ---
  `model` block supports the following:
@@ -521,6 +523,7 @@ variable "rai_policies" {
     name             = string
     base_policy_name = string
     mode             = string
+    tags             = optional(map(string), null)
     content_filters = optional(list(object({
       blocking           = bool
       enabled            = bool
@@ -552,6 +555,7 @@ variable "rai_policies" {
  - `name` - (Required) The name of the RAI policy. Changing this forces a new resource to be created.
  - `base_policy_name` - (Required) The name of the base policy. Changing this forces a new resource to be created.
  - `mode` - Rai policy mode. The enum value mapping is as below: `Default`, `Deferred`, `Blocking`, `Asynchronous_filter`. Please use 'Asynchronous_filter' after 2024-10-01. It is the same as 'Deferred' in previous version.
+ - `tags` - (Optional) Tags for this policy. Omitted or null tags retain provider defaults; account tags are not inherited. An empty map explicitly selects no tags.
 
  ---
  `content_filters` block supports the following:
