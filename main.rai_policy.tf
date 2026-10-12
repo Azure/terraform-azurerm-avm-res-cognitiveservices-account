@@ -1,7 +1,6 @@
-moved {
-  from = azapi_resource.rai_policy
-  to   = module.rai_policy.azapi_resource.this
-}
+# NOTE: no `moved` block migrating `azapi_resource.rai_policy` into `module.rai_policy`,
+# for the same reason as `module.deployment` in main.tf - a `for_each`'d resource cannot be
+# moved into a `for_each`'d module call. See the migration guide in the README.
 
 module "rai_policy" {
   source   = "./modules/rai_policy"
