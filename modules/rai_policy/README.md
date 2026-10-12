@@ -6,6 +6,8 @@ This submodule manages a single `Microsoft.CognitiveServices/accounts/raiPolicie
 
 It is consumed automatically by the parent module via `var.rai_policies`, and can also be consumed directly when finer-grained control over RAI policy lifecycle is required.
 
+Set `tags` directly, or `rai_policies[*].tags` through the parent module. Omitted or null tags retain provider defaults without inheriting account tags; an empty map explicitly selects no tags.
+
 > [!NOTE]
 > Per the AVM specification [TFRMNFR1](https://azure.github.io/Azure-Verified-Modules/spec/TFRMNFR1), this submodule deploys exactly one RAI policy per instance. Use `for_each` / `count` on the parent `module` call to manage multiple policies.
 
@@ -143,6 +145,14 @@ object({
 
 Default: `null`
 
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: (Optional) A mapping of tags to assign to the RAI policy. Omitted or null tags retain provider defaults; account tags are not inherited.
+
+Type: `map(string)`
+
+Default: `null`
+
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
 Description: Per-operation timeouts for the RAI policy resource. Defaults to `null` (provider defaults). Each value is a Go duration string (e.g. `30m`, `1h`).
@@ -171,6 +181,10 @@ Description: The name of the RAI policy.
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: The resource ID of the RAI policy.
+
+### <a name="output_tags"></a> [tags](#output\_tags)
+
+Description: The tags assigned to the RAI policy.
 
 ## Modules
 

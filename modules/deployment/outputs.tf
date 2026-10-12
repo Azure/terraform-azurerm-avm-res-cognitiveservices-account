@@ -41,3 +41,8 @@ output "resource_id" {
   description = "The resource ID of the Cognitive Services deployment."
   value       = azapi_resource.this.id
 }
+
+output "tags" {
+  description = "The tags assigned to the Cognitive Services deployment."
+  value       = azapi_resource.this.tags
+}

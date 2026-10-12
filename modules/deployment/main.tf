@@ -24,6 +24,7 @@ resource "azapi_resource" "this" {
   locks                     = var.lock_id != null ? [var.lock_id] : null
   retry                     = var.retry
   schema_validation_enabled = false
+  tags                      = var.tags
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]

@@ -15,5 +15,6 @@ module "rai_policy" {
   custom_block_lists = each.value.custom_block_lists
   enable_telemetry   = var.enable_telemetry
   retry              = each.value.retry != null ? each.value.retry : var.retry
+  tags               = each.value.tags
   timeouts           = each.value.timeouts != null ? each.value.timeouts : var.timeouts
 }

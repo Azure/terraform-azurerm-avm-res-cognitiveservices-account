@@ -250,6 +250,7 @@ module "deployment" {
     multiplier           = each.value.retry.multiplier
     randomization_factor = each.value.retry.randomization_factor
   } : var.retry
+  tags                   = each.value.tags
   timeouts               = each.value.timeouts != null ? each.value.timeouts : var.timeouts
   version_upgrade_option = each.value.version_upgrade_option
 

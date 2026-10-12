@@ -6,6 +6,8 @@ This submodule manages a single `Microsoft.CognitiveServices/accounts/deployment
 
 It is consumed automatically by the parent module via `var.cognitive_deployments`, and can also be consumed directly when finer-grained control over deployment lifecycle and dependencies is required.
 
+Set `tags` directly, or `cognitive_deployments[*].tags` through the parent module. Omitted or null tags retain provider defaults without inheriting account tags; an empty map explicitly selects no tags.
+
 > [!NOTE]
 > Per the AVM specification [TFRMNFR1](https://azure.github.io/Azure-Verified-Modules/spec/TFRMNFR1), this submodule deploys exactly one deployment per instance. Use `for_each` / `count` on the parent `module` call to manage multiple deployments.
 
@@ -149,6 +151,14 @@ object({
 
 Default: `null`
 
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: (Optional) A mapping of tags to assign to the deployment. Omitted or null tags retain provider defaults; account tags are not inherited.
+
+Type: `map(string)`
+
+Default: `null`
+
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
 Description: Per-operation timeouts for the deployment resource. Defaults to `null` (provider defaults). Each value is a Go duration string (e.g. `30m`, `1h`).
@@ -189,6 +199,10 @@ Description: The deployment resource shaped to match the AzureRM cognitive deplo
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: The resource ID of the Cognitive Services deployment.
+
+### <a name="output_tags"></a> [tags](#output\_tags)
+
+Description: The tags assigned to the Cognitive Services deployment.
 
 ## Modules
 
