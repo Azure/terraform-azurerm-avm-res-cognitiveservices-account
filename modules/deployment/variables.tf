@@ -92,6 +92,12 @@ See <https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/r
 DESCRIPTION
 }
 
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) A mapping of tags to assign to the deployment. Omitted or null tags retain provider defaults; account tags are not inherited."
+}
+
 variable "timeouts" {
   type = object({
     create = optional(string)
