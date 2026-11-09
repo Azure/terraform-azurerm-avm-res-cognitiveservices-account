@@ -6,5 +6,7 @@ It is consumed automatically by the parent module via `var.rai_policies`, and ca
 
 Set `tags` directly, or `rai_policies[*].tags` through the parent module. Omitted or null tags retain provider defaults without inheriting account tags; an empty map explicitly selects no tags.
 
+When calling this submodule directly, supply `location` for the subscription-scoped telemetry deployment, or set `enable_telemetry = false`. Enabled telemetry requires `Microsoft.Resources/deployments/read`, `Microsoft.Resources/deployments/write`, and `Microsoft.Resources/deployments/delete` at the active subscription. The parent module forwards its location and telemetry setting automatically.
+
 > [!NOTE]
 > Per the AVM specification [TFRMNFR1](https://azure.github.io/Azure-Verified-Modules/spec/TFRMNFR1), this submodule deploys exactly one RAI policy per instance. Use `for_each` / `count` on the parent `module` call to manage multiple policies.
