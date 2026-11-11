@@ -312,6 +312,7 @@ module "deployment" {
   scale                      = each.value.scale
   dynamic_throttling_enabled = each.value.dynamic_throttling_enabled
   enable_telemetry           = var.enable_telemetry
+  location                   = var.location
   lock_id                    = var.deployment_serialization_enabled ? local.resource_id : null
   rai_policy_name            = each.value.rai_policy_name
   retry = each.value.retry != null ? {

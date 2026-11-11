@@ -26,8 +26,8 @@ provider "azurerm" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.3"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # This is required for resource modules
@@ -37,21 +37,26 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "vnet" {
-  source  = "Azure/vnet/azurerm"
-  version = "5.0.1"
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "0.23.0"
 
-  resource_group_name = azurerm_resource_group.this.name
-  vnet_location       = azurerm_resource_group.this.location
-  address_space       = ["10.52.0.0/16"]
-  enable_telemetry    = var.enable_telemetry
-  subnet_names        = ["openai", "app"]
-  subnet_prefixes     = ["10.52.0.0/24", "10.52.1.0/24"]
-  subnet_service_endpoints = {
-    openai = ["Microsoft.CognitiveServices"]
-    app    = ["Microsoft.CognitiveServices"]
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.52.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "vnet"
+  subnets = {
+    openai = {
+      address_prefix    = "10.52.0.0/24"
+      name              = "openai"
+      service_endpoints = ["Microsoft.CognitiveServices"]
+    }
+    app = {
+      address_prefix    = "10.52.1.0/24"
+      name              = "app"
+      service_endpoints = ["Microsoft.CognitiveServices"]
+    }
   }
-  use_for_each = true
-  vnet_name    = "vnet"
 }
 
 resource "azurerm_private_dns_zone" "zone" {
@@ -63,7 +68,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "link" {
   name                  = "openai-private-dns-zone"
   private_dns_zone_name = azurerm_private_dns_zone.zone.name
   resource_group_name   = azurerm_resource_group.this.name
-  virtual_network_id    = module.vnet.vnet_id
+  virtual_network_id    = module.vnet.resource_id
 }
 
 module "test" {
@@ -91,7 +96,7 @@ module "test" {
   network_acls = {
     default_action = "Deny"
     virtual_network_rules = toset([{
-      subnet_id = module.vnet.vnet_subnets_name_id["openai"]
+      subnet_id = module.vnet.subnets["openai"].resource_id
     }])
   }
   private_endpoints = {
@@ -99,7 +104,7 @@ module "test" {
       name                            = "pe_endpoint"
       private_dns_zone_resource_ids   = toset([azurerm_private_dns_zone.zone.id])
       private_service_connection_name = "pe_endpoint_connection"
-      subnet_resource_id              = module.vnet.vnet_subnets_name_id["openai"]
+      subnet_resource_id              = module.vnet.subnets["openai"].resource_id
     }
   }
 }
@@ -176,9 +181,9 @@ The following Modules are called:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.4.3
+Version: 0.2.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 
@@ -188,9 +193,9 @@ Version:
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 
-Source: Azure/vnet/azurerm
+Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 5.0.1
+Version: 0.23.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
