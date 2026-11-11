@@ -92,7 +92,7 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
 }
 
 resource "azapi_resource" "private_dns_zone_groups" {
-  for_each = module.private_endpoint_interfaces.private_dns_zone_groups_azapi
+  for_each = local.private_dns_zone_groups_azapi
 
   name      = each.value.name
   parent_id = azapi_resource.private_endpoints[each.key].id
@@ -149,4 +149,23 @@ resource "azapi_resource" "private_endpoint_locks" {
     azapi_resource.private_dns_zone_groups,
     azapi_resource.private_endpoint_role_assignments
   ]
+}
+locals {
+  # avm-utl-interfaces names every privateDnsZoneConfigs entry after the zone group
+  # ("default"), and ARM rejects duplicate child names with DuplicateResourceName.
+  # When a group links more than one zone, name each config after its zone
+  # (dots replaced by dashes, as the portal does) so the names are unique.
+  private_dns_zone_groups_azapi = {
+    for k, v in module.private_endpoint_interfaces.private_dns_zone_groups_azapi : k => merge(v, {
+      body = merge(v.body, {
+        properties = merge(v.body.properties, {
+          privateDnsZoneConfigs = length(v.body.properties.privateDnsZoneConfigs) > 1 ? [
+            for config in v.body.properties.privateDnsZoneConfigs : merge(config, {
+              name = replace(element(split("/", config.properties.privateDnsZoneId), length(split("/", config.properties.privateDnsZoneId)) - 1), ".", "-")
+            })
+          ] : v.body.properties.privateDnsZoneConfigs
+        })
+      })
+    })
+  }
 }

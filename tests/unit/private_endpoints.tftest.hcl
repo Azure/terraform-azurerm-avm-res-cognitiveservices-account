@@ -642,3 +642,30 @@ run "invalid_delegated_identity" {
 
   expect_failures = [var.private_endpoints]
 }
+
+run "multiple_dns_zones_get_unique_config_names" {
+  command = apply
+
+  variables {
+    private_endpoints = {
+      multi = {
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/unit/subnets/endpoints"
+        private_dns_zone_resource_ids = [
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com",
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      azapi_resource.private_dns_zone_groups["multi"].name == "default" &&
+      length(azapi_resource.private_dns_zone_groups["multi"].body.properties.privateDnsZoneConfigs) == 3 &&
+      length(distinct([for c in azapi_resource.private_dns_zone_groups["multi"].body.properties.privateDnsZoneConfigs : c.name])) == 3 &&
+      contains([for c in azapi_resource.private_dns_zone_groups["multi"].body.properties.privateDnsZoneConfigs : c.name], "privatelink-openai-azure-com")
+    )
+    error_message = "Each privateDnsZoneConfigs entry must have a unique name when a zone group links several zones."
+  }
+}
