@@ -29,8 +29,9 @@ locals {
 
 module "private_endpoint_interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.6.0"
+  version = "0.9.0"
 
+  location = var.location
   # Disable other interfaces - only using private endpoints
   customer_managed_key = null
   diagnostic_settings  = null
@@ -133,7 +134,11 @@ resource "azapi_resource" "private_endpoint_locks" {
   parent_id = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
   type      = each.value.type
   body = merge(each.value.body, {
-    properties = merge(each.value.body.properties,
+    properties = merge(
+      {
+        for property, value in each.value.body.properties : property => value
+        if property != "notes" || value != null
+      },
       var.private_endpoints[each.value.pe_key].lock.notes == null ? {} : {
         notes = var.private_endpoints[each.value.pe_key].lock.notes
       }

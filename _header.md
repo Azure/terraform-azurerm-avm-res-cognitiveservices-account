@@ -4,13 +4,21 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 
 ## Private endpoint interface compatibility
 
-Private endpoints now honor `role_assignments[*].name`, `lock.notes`, `subresource_name`, and `ip_configurations[*].member_name`. Existing generated endpoint, NIC, connection and role assignment names are unchanged when these fields are omitted or null. The subresource still defaults to `account` and the IP configuration member to `default`. Per-endpoint tags remain independent of the account's tags.
+Private endpoints now honor `role_assignments[*].name`, `lock.notes`, `subresource_name`, and `ip_configurations[*].member_name`. Existing generated endpoint, NIC, connection and role assignment names are unchanged when these fields are omitted or null. Omitted or null lock notes are not sent to Azure; explicit notes, including an empty string, are preserved. The subresource still defaults to `account` and the IP configuration member to `default`. Per-endpoint tags remain independent of the account's tags.
 
 Review the plan if these fields were previously supplied but ignored: an explicit role assignment name replaces that assignment when it differs from its generated UUID. A non-default subresource changes connection/IP group IDs and generated endpoint, NIC and connection names; changing the endpoint name replaces the endpoint and its child resources. Lock notes and IP member names are now sent to ARM. `skip_service_principal_aad_check` remains an AzureRM compatibility flag with no AzAPI effect; it neither sends an ARM property nor infers `principal_type`.
 
 ## Child resource tags
 
 Deployments and RAI policies accept per-item `tags` through `cognitive_deployments` and `rai_policies`, or `tags` when using their submodules directly. Omitted or null tags retain provider defaults and do not inherit account tags. Previously ignored supplied tags now update the child's tags; an empty map explicitly selects no tags. These bindings do not change resource names, addresses or API versions and add no replacement triggers.
+
+## Telemetry migration compatibility
+
+The root and its deployment and RAI policy submodules no longer require the ModTM provider. When enabled, telemetry now uses an empty subscription-scoped Azure deployment and requires `Microsoft.Resources/deployments/read`, `Microsoft.Resources/deployments/write`, and `Microsoft.Resources/deployments/delete` permissions at the active subscription. Set `enable_telemetry = false` to disable these deployments; the parent forwards this setting and its `location` to both submodules.
+
+Direct deployment or RAI policy submodule callers must supply `location` when telemetry is enabled. Previously deployed telemetry state is forgotten with `destroy = false`; Terraform can still require the old providers for the first initialization of an existing state. Business resource addresses and API versions are unchanged.
+
+The private-endpoint example now uses published AVM Virtual Network `0.23.0` instead of legacy `Azure/vnet` `5.0.1`, which still required ModTM. Its VNet and subnet resource addresses differ: use fresh disposable example infrastructure or review and explicitly migrate existing example state before applying. This does not change networking owned by callers of the Cognitive Services module.
 
 ## Upgrading the lock, role assignments and diagnostic settings to AzAPI
 
