@@ -6,6 +6,8 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
+    # Only the moved blocks refer to AzureRM resources; upgrading from an AzureRM-based release needs the provider to read their state.
+    # tflint-ignore: terraform_unused_required_providers
     azurerm = {
       source  = "hashicorp/azurerm"
       version = ">= 4.17.0, < 5.0"

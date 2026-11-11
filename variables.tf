@@ -674,7 +674,7 @@ variable "timeouts" {
   description = <<-DESCRIPTION
 Default per-operation timeouts applied to every `azapi_resource` managed by this module
 (the Cognitive / AI Services account and the cascaded `deployment` and `rai_policy`
-submodules) as well as the `azurerm_cognitive_account_customer_managed_key` resource.
+submodules) as well as the `azapi_resource_action` resources that set the customer managed key.
 Defaults to `null` (provider defaults). Each value is a Go duration string (e.g. `30m`, `1h`).
 
 Per-item overrides may be supplied through `cognitive_deployments[*].timeouts` and

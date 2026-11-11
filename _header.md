@@ -20,6 +20,24 @@ Direct deployment or RAI policy submodule callers must supply `location` when te
 
 The private-endpoint example now uses published AVM Virtual Network `0.23.0` instead of legacy `Azure/vnet` `5.0.1`, which still required ModTM. Its VNet and subnet resource addresses differ: use fresh disposable example infrastructure or review and explicitly migrate existing example state before applying. This does not change networking owned by callers of the Cognitive Services module.
 
+## Upgrading the lock, role assignments and diagnostic settings to AzAPI
+
+The lock, role assignments and diagnostic settings move from AzureRM to AzAPI with `moved` blocks, so the plan after upgrading reports them as moved and Azure keeps them. Two cases need extra steps:
+
+- **`ReadOnly` lock.** The upgrade updates resources in place, which a `ReadOnly` lock blocks. Before upgrading, apply your configuration without the lock using the old version, then upgrade and restore the lock.
+- **Cross-tenant role assignments** (those that set `delegated_managed_identity_resource_id`, for example with Azure Lighthouse). The AzureRM provider stored their ID with a `|<tenant-id>` suffix that a `moved` block cannot convert. Before planning, remove each one from the state, then import it at its new address with an `import` block in your root module:
+
+  ```shell
+  terraform state rm 'module.<module-name>.azurerm_role_assignment.this["<key>"]'
+  ```
+
+  ```hcl
+  import {
+    to = module.<module-name>.azapi_resource.role_assignments["<key>"]
+    id = "<role assignment resource ID, without the |<tenant-id> suffix>"
+  }
+  ```
+
 > [!IMPORTANT]
 > As the overall AVM framework is not GA (generally available) yet - the CI framework and test automation is not fully functional and implemented across all supported languages yet - breaking changes are expected, and additional customer feedback is yet to be gathered and incorporated. Hence, modules **MUST NOT** be published at version `1.0.0` or higher at this time.
 >

@@ -165,49 +165,69 @@ data "azapi_resource_action" "account_keys" {
   ]
 }
 
-locals {
-  managed_key_identity_client_id = try(data.azurerm_user_assigned_identity.this[0].client_id, null)
-}
-
-data "azurerm_key_vault_key" "this" {
+# The key and the identity are read through ARM. Each read returns the latest key version, so the
+# account follows key rotation on the next apply, as it did with the AzureRM data sources.
+data "azapi_resource" "customer_managed_key" {
   count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
-  key_vault_id = var.customer_managed_key.key_vault_resource_id
-  name         = var.customer_managed_key.key_name
+  resource_id = "${var.customer_managed_key.key_vault_resource_id}/keys/${var.customer_managed_key.key_name}"
+  type        = "Microsoft.KeyVault/vaults/keys@2023-07-01"
+  response_export_values = {
+    key_uri_with_version = "properties.keyUriWithVersion"
+  }
 }
 
-locals {
-  hsm_id = var.customer_managed_key != null && var.is_hsm_key ? provider::azapi::parse_resource_id("Microsoft.KeyVault/managedHSMs", var.customer_managed_key.key_vault_resource_id) : null
-}
-
-data "azurerm_key_vault_managed_hardware_security_module" "this" {
+data "azapi_resource" "managed_hsm_key" {
   count = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
 
-  name                = local.hsm_id.name
-  resource_group_name = local.hsm_id.resource_group_name
+  resource_id = "${var.customer_managed_key.key_vault_resource_id}/keys/${var.customer_managed_key.key_name}"
+  type        = "Microsoft.KeyVault/managedHSMs/keys@2023-07-01"
+  response_export_values = {
+    key_uri_with_version = "properties.keyUriWithVersion"
+  }
 }
 
-data "azurerm_key_vault_managed_hardware_security_module_key" "this" {
-  count = var.customer_managed_key != null && var.is_hsm_key ? 1 : 0
-
-  managed_hsm_id = var.customer_managed_key.key_vault_resource_id
-  name           = var.customer_managed_key.key_name
-}
-
-data "azurerm_user_assigned_identity" "this" {
+data "azapi_resource" "customer_managed_key_identity" {
   count = try(var.customer_managed_key.user_assigned_identity != null, false) ? 1 : 0
 
-  #/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{userAssignedIdentityName}
-  name                = reverse(split("/", var.customer_managed_key.user_assigned_identity.resource_id))[0]
-  resource_group_name = split("/", var.customer_managed_key.user_assigned_identity.resource_id)[4]
+  resource_id = var.customer_managed_key.user_assigned_identity.resource_id
+  type        = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
+  response_export_values = {
+    client_id = "properties.clientId"
+  }
 }
 
-resource "azurerm_cognitive_account_customer_managed_key" "this" {
+locals {
+  # https://<vault-or-hsm-host>/keys/<key-name>/<key-version>
+  customer_managed_key_uri = try(data.azapi_resource.customer_managed_key[0].output.key_uri_with_version, data.azapi_resource.managed_hsm_key[0].output.key_uri_with_version, null)
+  customer_managed_key_encryption = var.customer_managed_key != null ? {
+    keySource = "Microsoft.KeyVault"
+    keyVaultProperties = {
+      identityClientId = local.managed_key_identity_client_id
+      keyName          = var.customer_managed_key.key_name
+      keyVaultUri      = regex("^https://[^/]+/", local.customer_managed_key_uri)
+      keyVersion       = reverse(split("/", local.customer_managed_key_uri))[0]
+    }
+  } : null
+  managed_key_identity_client_id = try(data.azapi_resource.customer_managed_key_identity[0].output.client_id, null)
+}
+
+# The AzureRM provider set the key with a PATCH of the encryption property only, and repeated it when the
+# key version changed. A PATCH leaves the other properties alone, including the API keys that a read does
+# not return and a PUT would drop.
+resource "azapi_resource_action" "customer_managed_key" {
   count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
 
-  cognitive_account_id = local.resource_id
-  key_vault_key_id     = data.azurerm_key_vault_key.this[0].id
-  identity_client_id   = local.managed_key_identity_client_id
+  method      = "PATCH"
+  resource_id = local.resource_id
+  type        = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  body = {
+    properties = {
+      encryption = local.customer_managed_key_encryption
+    }
+  }
+  response_export_values = []
+  retry                  = var.retry
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -218,6 +238,57 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
       read   = timeouts.value.read
       update = timeouts.value.update
     }
+  }
+
+  depends_on = [
+    time_sleep.wait_account_creation,
+    time_sleep.wait_ai_service_creation,
+  ]
+}
+
+# Removing the AzureRM resource switched the account back to Microsoft-managed keys. This action does the
+# same when the customer managed key is removed or the account is destroyed.
+resource "azapi_resource_action" "customer_managed_key_removal" {
+  count = var.customer_managed_key != null && !var.is_hsm_key ? 1 : 0
+
+  method      = "PATCH"
+  resource_id = local.resource_id
+  type        = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  body = {
+    properties = {
+      encryption = {
+        keySource = "Microsoft.CognitiveServices"
+      }
+    }
+  }
+  response_export_values = []
+  retry                  = var.retry
+  when                   = "destroy"
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+
+  depends_on = [
+    time_sleep.wait_account_creation,
+    time_sleep.wait_ai_service_creation,
+  ]
+}
+
+# The key is now set by the action above with the same values, so the AzureRM resource only leaves the
+# state. Destroying it would switch the account back to Microsoft-managed keys.
+removed {
+  from = azurerm_cognitive_account_customer_managed_key.this
+
+  lifecycle {
+    destroy = false
   }
 }
 
@@ -256,7 +327,7 @@ module "deployment" {
   version_upgrade_option = each.value.version_upgrade_option
 
   depends_on = [
-    azurerm_cognitive_account_customer_managed_key.this,
+    azapi_resource_action.customer_managed_key,
     module.rai_policy,
   ]
 }
@@ -282,12 +353,12 @@ locals {
   }
   customer_managed_key = try([
     {
-      key_vault_key_id   = azurerm_cognitive_account_customer_managed_key.this[0].key_vault_key_id
-      identity_client_id = azurerm_cognitive_account_customer_managed_key.this[0].identity_client_id
+      key_vault_key_id   = data.azapi_resource.customer_managed_key[0].output.key_uri_with_version
+      identity_client_id = local.managed_key_identity_client_id
     }], [
     {
       key_vault_key_id   = ""
-      managed_hsm_key_id = data.azurerm_key_vault_managed_hardware_security_module_key.this[0].versioned_id
+      managed_hsm_key_id = data.azapi_resource.managed_hsm_key[0].output.key_uri_with_version
       identity_client_id = local.managed_key_identity_client_id
   }], null)
   fqdns = try(azapi_resource.this[0].body.properties.allowedFqdnList, azapi_resource.ai_service[0].body.properties.allowedFqdnList, [])
