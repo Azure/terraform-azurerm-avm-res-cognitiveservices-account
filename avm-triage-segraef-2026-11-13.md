@@ -157,5 +157,6 @@ Commands below run from the repository root in PowerShell after `Import-Module A
 | `avm test unit` | Passed: 19 runs, including both new DNS regressions. |
 | `avm test` | Passed: module validation and initialization/validation of all seven examples; no Azure deployment. |
 | `avm pre-commit` | Blocked: required Pester 5.7.1 could not be downloaded because the public Gallery package connection failed. |
+| `AVM_NO_AUTO_INSTALL=1 pwsh -NoLogo -NoProfile -Command 'Import-Module Avm.Authoring -RequiredVersion 0.44.0; avm pr-check'` | Blocked on a clean committed worktree: Pester 5.7.1 is missing. Automatic installation was disabled only for this diagnostic after repeated download failures; the gate failed rather than skipping the dependency. |
 
 No Pester dependency was suppressed, no local rule exception was added, and no existing business-resource provider contract was widened. Live Azure integration, E2E and real-state upgrade tests were not run.
