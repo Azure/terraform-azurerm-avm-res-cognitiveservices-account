@@ -1,7 +1,4 @@
-moved {
-  from = azapi_resource.rai_policy
-  to   = module.rai_policy.azapi_resource.this
-}
+# Upgrades from root-level policies require consumer-declared per-key moves.
 
 module "rai_policy" {
   source   = "./modules/rai_policy"

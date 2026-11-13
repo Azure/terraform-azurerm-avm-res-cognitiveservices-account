@@ -642,3 +642,68 @@ run "invalid_delegated_identity" {
 
   expect_failures = [var.private_endpoints]
 }
+
+run "multiple_dns_zones_get_unique_config_names" {
+  command = apply
+
+  variables {
+    private_endpoints = {
+      multi = {
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/unit/subnets/endpoints"
+        private_dns_zone_resource_ids = [
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com",
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      azapi_resource.private_dns_zone_groups["multi"].name == "default" &&
+      length(azapi_resource.private_dns_zone_groups["multi"].body.properties.privateDnsZoneConfigs) == 3 &&
+      length(distinct([for c in azapi_resource.private_dns_zone_groups["multi"].body.properties.privateDnsZoneConfigs : c.name])) == 3 &&
+      alltrue([
+        for config in azapi_resource.private_dns_zone_groups["multi"].body.properties.privateDnsZoneConfigs :
+        config.name == "zone-${sha256(config.properties.privateDnsZoneId)}"
+      ])
+    )
+    error_message = "Each privateDnsZoneConfigs entry must have a unique name when a zone group links several zones."
+  }
+}
+
+run "dns_zone_names_do_not_collide_or_depend_on_group_order" {
+  command = apply
+
+  variables {
+    private_endpoints = {
+      first = {
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/unit/subnets/endpoints"
+        private_dns_zone_resource_ids = [
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-first/providers/Microsoft.Network/privateDnsZones/a.b",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-first/providers/Microsoft.Network/privateDnsZones/a-b",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-second/providers/Microsoft.Network/privateDnsZones/a.b",
+        ]
+      }
+      second = {
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/unit/subnets/endpoints"
+        private_dns_zone_resource_ids = [
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-second/providers/Microsoft.Network/privateDnsZones/a.b",
+          "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-first/providers/Microsoft.Network/privateDnsZones/a-b",
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      length(distinct([for config in azapi_resource.private_dns_zone_groups["first"].body.properties.privateDnsZoneConfigs : config.name])) == 3 &&
+      alltrue([
+        for config in azapi_resource.private_dns_zone_groups["second"].body.properties.privateDnsZoneConfigs :
+        contains([for original in azapi_resource.private_dns_zone_groups["first"].body.properties.privateDnsZoneConfigs : original.name], config.name)
+      ])
+    )
+    error_message = "Config names must distinguish colliding zone names and resource groups, and remain stable when other zones are removed."
+  }
+}
