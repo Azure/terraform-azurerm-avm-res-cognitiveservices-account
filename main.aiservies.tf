@@ -9,7 +9,7 @@ resource "azapi_resource" "ai_service" {
   location  = var.location
   name      = var.name
   parent_id = local.parent_id
-  type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  type      = var.resource_types.cognitiveservices_accounts
   body = { for k, v in {
     kind = "AIServices"
     sku = {
@@ -59,6 +59,7 @@ resource "azapi_resource" "ai_service" {
       } : k => v if v != null }
     )
   } : k => v if v != null }
+  ignore_body_changes       = length(var.ignore_body_changes.cognitiveservices_accounts) > 0 ? var.ignore_body_changes.cognitiveservices_accounts : null
   retry                     = var.retry
   schema_validation_enabled = false
   tags                      = var.tags
@@ -129,7 +130,7 @@ resource "azapi_update_resource" "ai_service_hsm_key" {
   count = var.kind == "AIServices" && var.is_hsm_key ? 1 : 0
 
   resource_id = azapi_resource.ai_service[0].id
-  type        = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  type        = var.resource_types.cognitiveservices_accounts
   body = {
     properties = {
       apiProperties = null

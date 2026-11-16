@@ -37,7 +37,7 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = var.name
   parent_id = local.parent_id
-  type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  type      = var.resource_types.cognitiveservices_accounts
   body = { for k, v in {
     kind = var.kind
     sku = {
@@ -77,7 +77,8 @@ resource "azapi_resource" "this" {
       }], null)
     } : k => v if v != null }
   } : k => v if v != null }
-  retry = var.retry
+  ignore_body_changes = length(var.ignore_body_changes.cognitiveservices_accounts) > 0 ? var.ignore_body_changes.cognitiveservices_accounts : null
+  retry               = var.retry
   # This weird workaround is needed to avoid configuration drift, the Terraform conditional expression `condition ? true_val : false_val` would execute implicitly type conversion, which would cause the `null` value to be converted to an `null` value with object type.
   sensitive_body = [{
     properties = {

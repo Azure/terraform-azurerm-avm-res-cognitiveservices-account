@@ -4,6 +4,91 @@
 
 This Terraform module is designed to manage Azure Cognitive Services. It provides a comprehensive set of variables and resources to configure and deploy Cognitive Services in Azure.
 
+## Project APIM connections (preview)
+
+For a runnable Terraform configuration using the connection child, see
+[`examples/project-connection`](examples/project-connection). It deploys a
+connection in an existing project against an existing gateway and includes
+instructions for supplying inputs, planning, applying and cleanup.
+
+`modules/project-connection` independently manages one
+`Microsoft.CognitiveServices/accounts/projects/connections` resource beneath an
+existing project. It exposes a static OpenAI model catalog through an existing
+APIM gateway using `ProjectManagedIdentity`. It does not create projects, gateways,
+routes, policies, identities or authorization, and catalog visibility does not
+prove inference readiness.
+
+The optional `project_connections` map composes these children for projects that
+already exist in this AIServices account. When another module creates the project
+using this account's ID, source the connection submodule directly with that project's
+ID instead, avoiding a dependency cycle. See the [submodule documentation](modules/project-connection/README.md)
+for the exact preview contract and runtime prerequisites. Existing account,
+deployment and RAI-policy addresses and defaults are unchanged.
+
+`resource_types.cognitiveservices_accounts` retains the account API default
+`2025-06-01`; the matching `ignore_body_changes` list defaults to empty and adds
+no ignores. Both account variants share these controls; the existing HSM
+encryption updater shares the API control only because its provider resource does
+not support `ignore_body_changes`. Matching controls for existing private endpoints,
+DNS zone groups, private endpoint role assignments and locks retain the exact API
+defaults from the pinned interfaces module and add no ignores by default. Existing
+static lifecycle ignores are preserved. These controls do not retrofit the
+deployment or RAI-policy interfaces or create any additional resources.
+
+### Example: use the connection child through the account module
+
+The following consumer configuration uses a local checkout of this repository.
+Keep the account module's existing name, inputs and state address when adding
+`project_connections`; do not create a second owner for an existing account.
+The `research` project must already exist in that account, with an identity
+authorized to call the existing gateway.
+
+```hcl
+module "cognitive_services" {
+  source = "./terraform-azurerm-avm-res-cognitiveservices-account"
+
+  kind               = "AIServices"
+  location           = var.location
+  name               = var.account_name
+  parent_id          = var.resource_group_resource_id
+  sku_name           = "S0"
+  local_auth_enabled = false
+
+  project_connections = {
+    gateway = {
+      project_name = "research"
+      name         = "enterprise-models"
+      audience     = "api://gateway"
+      target       = "https://gateway.example.com/ai/v1"
+      models = {
+        chat = {
+          model_name    = "gpt-4.1"
+          model_version = "2025-04-14"
+        }
+      }
+    }
+  }
+}
+
+output "gateway_model_reference" {
+  value = module.cognitive_services.project_connection_model_references["gateway"]["chat"]
+}
+```
+
+The consumer supplies `location`, `account_name` and `resource_group_resource_id`
+for its managed account. The output is `enterprise-models/chat`, which an agent
+must explicitly select. The parent creates one connection child per map entry
+and also exposes `project_connection_resource_ids` keyed by those entries.
+The example gateway URL and audience are placeholders: replace them with the
+gateway owner's values and verify routes, authorization and inference separately.
+
+This is not a fresh account-and-project deployment example: the account module
+does not create projects. If the project is created in the same Terraform graph
+using this account's output, call `modules/project-connection` directly with the
+project's ARM ID instead of feeding that project back into the account module.
+For Registry consumption, pin an actual release that contains the child;
+`v0.12.0` does not contain it.
+
 ## Private endpoint interface compatibility
 
 Private endpoints now honor `role_assignments[*].name`, `lock.notes`, `subresource_name`, and `ip_configurations[*].member_name`. Existing generated endpoint, NIC, connection and role assignment names are unchanged when these fields are omitted or null. Omitted or null lock notes are not sent to Azure; explicit notes, including an empty string, are preserved. The subresource still defaults to `account` and the IP configuration member to `default`. Per-endpoint tags remain independent of the account's tags.
@@ -387,6 +472,36 @@ Type: `list(string)`
 
 Default: `[]`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot paths ignored on owned resources and project connections. Ignored configuration is not sent to Azure; changes take effect only after apply. Defaults preserve existing behavior and all static lifecycle ignores. Deployment and RAI-policy ignores retain their existing configuration.
+
+- `cognitiveservices_accounts` - Primary account body paths. Defaults to `[]` (no additional ignores). The HSM updater does not support this provider argument and retains its existing static lifecycle ignore.
+- `network_private_endpoints` - Private endpoint body paths, for both DNS management variants.
+- `network_private_endpoints_private_dns_zone_groups` - Private endpoint DNS zone group body paths.
+- `authorization_role_assignments` - Existing private endpoint role assignment body paths.
+- `authorization_locks` - Existing private endpoint lock body paths.
+- `cognitiveservices_accounts_projects_connections` - Paths passed unchanged to each connection child.
+- `cognitiveservices_accounts_projects_connections.cognitiveservices_accounts_projects_connections` - Connection body paths; ignore whole lists, not individual indices.
+
+Type:
+
+```hcl
+object({
+    cognitiveservices_accounts                        = optional(list(string), [])
+    network_private_endpoints                         = optional(list(string), [])
+    network_private_endpoints_private_dns_zone_groups = optional(list(string), [])
+    authorization_role_assignments                    = optional(list(string), [])
+    authorization_locks                               = optional(list(string), [])
+
+    cognitiveservices_accounts_projects_connections = optional(object({
+      cognitiveservices_accounts_projects_connections = optional(list(string), [])
+    }), {})
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_is_hsm_key"></a> [is\_hsm\_key](#input\_is\_hsm\_key)
 
 Description: (Optional) Describes whether the Cognitive Account is using a Hardware Security Module (HSM) for encryption. Defaults to `false`.
@@ -608,6 +723,35 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_project_connections"></a> [project\_connections](#input\_project\_connections)
+
+Description: THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION.
+
+APIM connections keyed by caller-selected keys, created in existing projects in this account. Defaults to no connections. This does not create or adopt projects, gateways, routes, identities or authorization.
+
+- `project_name` - Name of an existing project in this account. For projects created by another module in the same graph, source `modules/project-connection` directly with the project's ARM ID to avoid a dependency cycle.
+- `name` - Project connection name.
+- `audience` - Entra token resource URI, not a JWT audience GUID or `/.default` scope.
+- `target` - HTTPS Chat Completions base URL.
+- `models` - Static catalog keyed by gateway deployment alias; each value contains `model_name` and optional `model_version` (default empty string). Agents explicitly select `connectionName/alias`. Catalog configuration does not publish or verify routes.
+
+Type:
+
+```hcl
+map(object({
+    project_name = string
+    name         = string
+    audience     = string
+    target       = string
+    models = map(object({
+      model_name    = string
+      model_version = optional(string, "")
+    }))
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled)
 
 Description: (Optional) Whether public network access is allowed for the Cognitive Account. Defaults to `true`.
@@ -711,6 +855,36 @@ map(object({
       update = optional(string)
     }))
   }))
+```
+
+Default: `{}`
+
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI overrides for owned resources and project-connection submodules. Existing API-version defaults are unchanged. Deployment and RAI-policy APIs retain their existing configuration.
+
+- `cognitiveservices_accounts` - Account resource and HSM encryption updater type/API version.
+- `network_private_endpoints` - Private endpoints and their existing-resource lookup.
+- `network_private_endpoints_private_dns_zone_groups` - Private endpoint DNS zone groups.
+- `authorization_role_assignments` - Existing private endpoint role assignments.
+- `authorization_locks` - Existing private endpoint locks.
+- `cognitiveservices_accounts_projects_connections` - Overrides passed unchanged to each connection child.
+- `cognitiveservices_accounts_projects_connections.cognitiveservices_accounts_projects_connections` - Connection resource type/API version override; the child owns the default.
+
+Type:
+
+```hcl
+object({
+    cognitiveservices_accounts                        = optional(string, "Microsoft.CognitiveServices/accounts@2025-06-01")
+    network_private_endpoints                         = optional(string, "Microsoft.Network/privateEndpoints@2024-05-01")
+    network_private_endpoints_private_dns_zone_groups = optional(string, "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01")
+    authorization_role_assignments                    = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    authorization_locks                               = optional(string, "Microsoft.Authorization/locks@2020-05-01")
+
+    cognitiveservices_accounts_projects_connections = optional(object({
+      cognitiveservices_accounts_projects_connections = optional(string)
+    }), {})
+  })
 ```
 
 Default: `{}`
@@ -851,6 +1025,14 @@ Description: A primary access key which can be used to connect to the Cognitive 
 
 Description:   A map of the private endpoints created.
 
+### <a name="output_project_connection_model_references"></a> [project\_connection\_model\_references](#output\_project\_connection\_model\_references)
+
+Description: Model references keyed first by project\_connections input key, then by gateway deployment alias. These references do not establish inference readiness.
+
+### <a name="output_project_connection_resource_ids"></a> [project\_connection\_resource\_ids](#output\_project\_connection\_resource\_ids)
+
+Description: Project connection ARM IDs keyed by project\_connections input keys.
+
 ### <a name="output_rai_policy_id"></a> [rai\_policy\_id](#output\_rai\_policy\_id)
 
 Description: The ID of the RAI policy created.
@@ -894,6 +1076,12 @@ Version:
 Source: Azure/avm-utl-interfaces/azure
 
 Version: 0.9.0
+
+### <a name="module_project_connection"></a> [project\_connection](#module\_project\_connection)
+
+Source: ./modules/project-connection
+
+Version:
 
 ### <a name="module_rai_policy"></a> [rai\_policy](#module\_rai\_policy)
 
