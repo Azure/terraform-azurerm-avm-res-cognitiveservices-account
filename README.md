@@ -893,7 +893,7 @@ Version:
 
 Source: Azure/avm-utl-interfaces/azure
 
-Version: 0.9.0
+Version: 0.10.0
 
 ### <a name="module_rai_policy"></a> [rai\_policy](#module\_rai\_policy)
 
