@@ -23,6 +23,12 @@ acceptance or release readiness.
 
 ## Run
 
+The example supplies illustrative defaults for `audience`, `parent_id` and
+`target` so automated policy planning can run without interactive input.
+These placeholders do not provision or identify real prerequisites. Replace
+all three with your existing infrastructure values before deployment. The
+reusable connection submodule still requires these inputs explicitly.
+
 From this directory, authenticate to Azure using your approved credential flow
 and supply the existing infrastructure through environment variables:
 

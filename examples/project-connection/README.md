@@ -25,6 +25,12 @@ acceptance or release readiness.
 
 ## Run
 
+The example supplies illustrative defaults for `audience`, `parent_id` and
+`target` so automated policy planning can run without interactive input.
+These placeholders do not provision or identify real prerequisites. Replace
+all three with your existing infrastructure values before deployment. The
+reusable connection submodule still requires these inputs explicitly.
+
 From this directory, authenticate to Azure using your approved credential flow
 and supply the existing infrastructure through environment variables:
 
@@ -93,29 +99,19 @@ No resources.
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_audience"></a> [audience](#input\_audience)
-
-Description: The existing gateway's Entra token resource URI, for example api://gateway; not a /.default scope.
-
-Type: `string`
-
-### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
-
-Description: The ARM ID of the existing Foundry project whose identity is authorized to call the gateway.
-
-Type: `string`
-
-### <a name="input_target"></a> [target](#input\_target)
-
-Description: The existing gateway's HTTPS Chat Completions base URL, without a trailing slash, operation path, query or fragment.
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_audience"></a> [audience](#input\_audience)
+
+Description: The existing gateway's Entra token resource URI, not a /.default scope. The default is a planning placeholder; replace it before deployment.
+
+Type: `string`
+
+Default: `"api://gateway"`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -164,6 +160,22 @@ Description: Name of the new connection. Choose a name not already owned by anot
 Type: `string`
 
 Default: `"enterprise-models"`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The ARM ID of the existing Foundry project whose identity is authorized to call the gateway. The default is a planning placeholder; replace it before deployment.
+
+Type: `string`
+
+Default: `"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.CognitiveServices/accounts/example-foundry/projects/research"`
+
+### <a name="input_target"></a> [target](#input\_target)
+
+Description: The existing gateway's HTTPS Chat Completions base URL, without a trailing slash, operation path, query or fragment. The default is a planning placeholder; replace it before deployment.
+
+Type: `string`
+
+Default: `"https://gateway.example.com/ai/v1"`
 
 ## Outputs
 
