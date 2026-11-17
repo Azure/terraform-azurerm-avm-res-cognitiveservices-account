@@ -20,9 +20,8 @@ adopt or modify an account, project, gateway, identity, network or role assignme
 
 The connection uses preview `ApiManagement` and `ProjectManagedIdentity` fields.
 See the [submodule contract](../../modules/project-connection/README.md) for schema
-limitations and runtime prerequisites. The current unreleased candidate still
-requires assigned child metadata and managed telemetry wiring before its full
-authoring gates can pass; this is not a claim of release readiness.
+limitations and runtime prerequisites. Local validation does not establish Azure
+acceptance or release readiness.
 
 ## Run
 
@@ -43,8 +42,10 @@ terraform output model_references
 
 Replace the placeholder project ID, gateway URL and audience before running.
 Telemetry is explicitly disabled in this invocation; the input retains the
-standard default of `true`. If telemetry is enabled after managed wiring is
-available, use the appropriate `location` and subscription deployment permissions.
+standard default of `true`. When telemetry is enabled, supply the appropriate
+`location` and ensure the deployment identity has
+`Microsoft.Resources/deployments/read`, `Microsoft.Resources/deployments/write`
+and `Microsoft.Resources/deployments/delete` at the active subscription scope.
 
 The default catalog produces `chat = "enterprise-models/chat"`. An agent must
 explicitly select this reference. Connection creation and catalog visibility do
@@ -52,7 +53,8 @@ not verify gateway routes, token validation, backend access or successful
 inference. No inference requests are made by this example.
 
 To remove only this example's connection, keep the same input values and run
-`terraform destroy` from this directory. The account, project and gateway are
+`terraform destroy` from this directory. If telemetry was enabled, its empty
+subscription deployment is also removed. The account, project and gateway are
 external prerequisites and are not destroyed by this configuration.
 
 The existing-project scenario deliberately consumes the child directly. For the
@@ -192,5 +194,5 @@ Version:
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
 
-The software may collect information about you and your use of the software and send it to Microsoft. You may turn off telemetry with `enable_telemetry = false`. See the [Microsoft privacy statement](https://go.microsoft.com/fwlink/?LinkID=824704) and the [module documentation](../../README.md) for more information.
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 <!-- END_TF_DOCS -->

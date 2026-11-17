@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Cognitive Services Project APIM Connection",
+  "moduleDescription": "Creates an API Management connection and static model catalog for an existing Cognitive Services project.",
+  "canonicalType": "Microsoft.CognitiveServices/accounts/projects/connections",
+  "telemetryIdPrefix": "46d3xtrf.res.29d7355"
+}

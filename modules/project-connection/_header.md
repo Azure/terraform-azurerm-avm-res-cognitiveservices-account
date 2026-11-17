@@ -31,6 +31,13 @@ DNS/TLS/network access, token validation, gateway readiness, backend access and
 request/response contract separately. Persistence and portal model visibility do
 not prove successful inference.
 
+Telemetry is enabled by default and creates an empty subscription-scoped ARM
+deployment in `location`. The deployment identity needs
+`Microsoft.Resources/deployments/read`, `Microsoft.Resources/deployments/write`
+and `Microsoft.Resources/deployments/delete` permissions at the active
+subscription scope. Set `enable_telemetry = false` to omit that deployment and
+its telemetry-only location requirement.
+
 ## Composition
 
 Source this submodule directly when another module owns or creates the project;

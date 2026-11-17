@@ -1,4 +1,10 @@
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   name             = "enterprise-models"
@@ -203,4 +209,45 @@ run "telemetry_requires_location" {
     enable_telemetry = true
   }
   expect_failures = [var.location]
+}
+
+run "telemetry_disabled_without_location" {
+  command = apply
+  module {
+    source = "./modules/project-connection"
+  }
+  assert {
+    condition = (
+      length(azapi_resource.telemetry) == 0 &&
+      length(terraform_data.telemetry) == 0 &&
+      length(data.azapi_client_config.telemetry) == 0 &&
+      azapi_resource.this.name == var.name
+    )
+    error_message = "Opting out without a location must create only the connection, without telemetry resources or client lookup."
+  }
+}
+
+run "telemetry_enabled" {
+  command = apply
+  module {
+    source = "./modules/project-connection"
+  }
+  variables {
+    enable_telemetry = true
+    location         = "westus3"
+  }
+  assert {
+    condition = (
+      length(azapi_resource.telemetry) == 1 &&
+      length(terraform_data.telemetry) == 1 &&
+      azapi_resource.telemetry[0].parent_id == "/subscriptions/00000000-0000-0000-0000-000000000000" &&
+      azapi_resource.telemetry[0].location == var.location &&
+      startswith(azapi_resource.telemetry[0].name, "${jsondecode(file("./modules/project-connection/metadata.json")).telemetryIdPrefix}.") &&
+      length(azapi_resource.telemetry[0].name) <= 64 &&
+      azapi_resource.telemetry[0].body.properties.mode == "Incremental" &&
+      length(azapi_resource.telemetry[0].body.properties.template.resources) == 0 &&
+      azapi_resource.this.name == var.name
+    )
+    error_message = "Telemetry must deploy one empty subscription-scoped template using the child metadata and requested region without changing the connection."
+  }
 }
