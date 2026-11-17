@@ -92,7 +92,7 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
 }
 
 resource "azapi_resource" "private_dns_zone_groups" {
-  for_each = module.private_endpoint_interfaces.private_dns_zone_groups_azapi
+  for_each = local.private_dns_zone_groups_azapi
 
   name      = each.value.name
   parent_id = azapi_resource.private_endpoints[each.key].id
@@ -149,4 +149,22 @@ resource "azapi_resource" "private_endpoint_locks" {
     azapi_resource.private_dns_zone_groups,
     azapi_resource.private_endpoint_role_assignments
   ]
+}
+
+locals {
+  # Hash the full zone ID to distinguish equal zone names in different resource groups
+  # and names that collide when dots are replaced by dashes. Keep single-zone names.
+  private_dns_zone_groups_azapi = {
+    for k, v in module.private_endpoint_interfaces.private_dns_zone_groups_azapi : k => merge(v, {
+      body = merge(v.body, {
+        properties = merge(v.body.properties, {
+          privateDnsZoneConfigs = length(v.body.properties.privateDnsZoneConfigs) > 1 ? [
+            for config in v.body.properties.privateDnsZoneConfigs : merge(config, {
+              name = "zone-${sha256(config.properties.privateDnsZoneId)}"
+            })
+          ] : v.body.properties.privateDnsZoneConfigs
+        })
+      })
+    })
+  }
 }

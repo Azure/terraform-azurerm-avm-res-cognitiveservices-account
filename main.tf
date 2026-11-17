@@ -221,15 +221,8 @@ resource "azurerm_cognitive_account_customer_managed_key" "this" {
   }
 }
 
-moved {
-  from = azurerm_cognitive_deployment.this
-  to   = azapi_resource.cognitive_deployment
-}
-
-moved {
-  from = azapi_resource.cognitive_deployment
-  to   = module.deployment.azapi_resource.this
-}
+# Resource instance keys cannot move into module instance keys generically.
+# Upgrades from root-level deployments require the per-key moves documented in _header.md.
 
 module "deployment" {
   source   = "./modules/deployment"
