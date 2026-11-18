@@ -1,68 +1,111 @@
 # Project APIM connection (preview)
 
-This standalone example deploys one connection using this repository's
-`modules/project-connection` submodule. It uses only AzAPI and does not create,
-adopt or modify an account, project, gateway, identity, network or role assignment.
+This runnable example consumes `modules/project-connection` directly. By default
+it provisions isolated, uniquely named prerequisites in the authenticated Azure
+subscription and passes their actual IDs and endpoint to the connection. Like
+the repository's other runnable examples, Terraform owns fixture creation,
+dependencies and cleanup; no hook, shared infrastructure ID or placeholder
+deployment input is required.
 
-## Prerequisites
+## Isolated example / E2E mode
 
-- An existing Foundry project and an existing APIM Chat Completions gateway.
-- A project identity already authorized by the gateway owner, with the correct
-  token audience and network access. No per-connection UAMI selector is provided.
-- A gateway model alias matching the static `models` catalog. The example's
-  default `chat` alias is illustrative; configure it to match the actual gateway.
-- Terraform 1.11 or later and Azure authentication authorized to manage
-  `Microsoft.CognitiveServices/accounts/projects/connections` in that project.
-- A connection name not already managed elsewhere. This example does not import
-  existing connections.
+Leave `parent_id`, `target` and `audience` null (their defaults). The example uses
+AzAPI to create:
+
+- A resource group and an AIServices account with project management enabled,
+  system-assigned identity and local authentication disabled.
+- A Foundry project with its own system-assigned identity.
+- A GlobalStandard deployment (capacity 1) for each alias in `models`. The default
+  is `chat`, backed by `gpt-4.1-mini`, version `2025-04-14`.
+- An APIM Consumption gateway with system-assigned identity and an HTTPS
+  `POST /ai/v1/chat/completions` route forwarding to the account's OpenAI v1 API.
+- An API policy validating the tenant, Cognitive Services token audience and
+  project identity's `oid` claim. APIM authenticates to the backend using its own
+  managed identity and an account-scoped Cognitive Services OpenAI User role.
+
+The connection uses the created project's ARM ID, the gateway's Azure-returned
+`gatewayUrl` plus `/ai/v1`, and the actual Cognitive Services Entra resource URI,
+`https://cognitiveservices.azure.com` (not a `/.default` scope).
+The reserved publisher contact `avm-tests@example.com` is fixture metadata only;
+use an appropriate monitored contact if adapting this gateway for production.
+
+Use an explicitly approved isolated subscription and region supporting Foundry
+projects, APIM Consumption, and the selected model versions and GlobalStandard
+quota. The deploying identity needs resource-group, Cognitive Services and APIM
+management permissions, plus role-assignment write/delete on the created account.
+Resource providers must already be registered; this example does not register
+providers or subscription features. Provisioning can incur costs and take time.
+
+The isolated fixture uses public gateway and backend endpoints secured by Entra
+tokens and managed identities, not API keys. It is not a private-network
+production blueprint. APIM Consumption cannot integrate with a virtual network,
+so use external mode for a gateway with existing private-network connectivity.
+Existing organizational and AVM policy gates still apply;
+no policy exceptions or deployment exclusions are supplied. Do not deploy this
+fixture where public endpoints are prohibited.
+
+After obtaining deployment and cleanup authorization, from the repository root:
+
+```powershell
+Import-Module Avm.Authoring
+avm test e2e --example project-connection
+```
+
+The managed E2E runner applies, checks refreshed idempotency, and destroys the
+example. It does not send an inference request. Connection creation, ARM route
+configuration and catalog visibility are not proof of token acquisition,
+backend access, RBAC propagation or successful inference.
+Provider-mocked unit tests prove wiring only, not Azure acceptance. Real Azure
+E2E and policy validation must pass separately before readiness is claimed.
+
+For manual deployment, run `terraform init`, inspect a saved `terraform plan`,
+then apply only after authorization. Keep the same state and inputs for
+`terraform destroy`; in fixture mode this removes the connection **and all
+fixture resources**, including its resource group. Verify cleanup independently.
+
+## Existing project and gateway
+
+To create only a connection against infrastructure owned elsewhere, supply
+**all three** of `parent_id`, `target` and `audience`. Partial external inputs are
+rejected. With all three supplied the example creates no account, project,
+gateway, model deployment, network or role assignment and does not adopt them.
+The reusable child still requires its inputs explicitly and never provisions a
+fixture.
+
+- Use the real ARM ID of an existing Foundry project.
+- Supply an existing HTTPS Chat Completions base URL without a trailing slash,
+  operation path, query or fragment, and its Entra token resource URI.
+- The project identity must already be authorized by the gateway owner with
+  correct token validation, network access and backend access. There is no
+  per-connection UAMI selector.
+- Set `models` to the gateway's actual deployment aliases. The default catalog
+  produces `chat = "enterprise-models/chat"`; an agent must select that reference
+  explicitly. In external mode the connection does not deploy models or routes.
+- Choose a connection name not already managed elsewhere. No import is performed.
+
+Set `TF_VAR_parent_id`, `TF_VAR_target` and `TF_VAR_audience` through your approved
+environment or protected variable file, then run `terraform init` and inspect
+`terraform plan -out=connection.tfplan` before applying. Do not copy fixture IDs
+or invent example subscription IDs. Keep the same external input values and
+state for `terraform destroy`; only the connection and any enabled deployment
+telemetry are removed, not the external prerequisites.
+
+Do not switch an applied state between fixture and external modes: that would
+plan deletion of the fixture prerequisites and replacement of the connection.
+Use a separate state for an existing-project deployment.
+
+## Contract and telemetry
 
 The connection uses preview `ApiManagement` and `ProjectManagedIdentity` fields.
 See the [submodule contract](../../modules/project-connection/README.md) for schema
-limitations and runtime prerequisites. Local validation does not establish Azure
-acceptance or release readiness.
+limitations and runtime prerequisites.
 
-## Run
+`enable_telemetry` defaults to `true`; CI may explicitly disable it. When enabled,
+the deployment identity also needs `Microsoft.Resources/deployments/read`,
+`Microsoft.Resources/deployments/write` and
+`Microsoft.Resources/deployments/delete` at the active subscription scope.
 
-The example supplies illustrative defaults for `audience`, `parent_id` and
-`target` so automated policy planning can run without interactive input.
-These placeholders do not provision or identify real prerequisites. Replace
-all three with your existing infrastructure values before deployment. The
-reusable connection submodule still requires these inputs explicitly.
-
-From this directory, authenticate to Azure using your approved credential flow
-and supply the existing infrastructure through environment variables:
-
-```powershell
-$env:TF_VAR_parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.CognitiveServices/accounts/example-foundry/projects/research"
-$env:TF_VAR_target = "https://gateway.example.com/ai/v1"
-$env:TF_VAR_audience = "api://gateway"
-$env:TF_VAR_enable_telemetry = "false"
-
-terraform init
-terraform plan -out=connection.tfplan
-terraform apply connection.tfplan
-terraform output model_references
-```
-
-Replace the placeholder project ID, gateway URL and audience before running.
-Telemetry is explicitly disabled in this invocation; the input retains the
-standard default of `true`. When telemetry is enabled, supply the appropriate
-`location` and ensure the deployment identity has
-`Microsoft.Resources/deployments/read`, `Microsoft.Resources/deployments/write`
-and `Microsoft.Resources/deployments/delete` at the active subscription scope.
-
-The default catalog produces `chat = "enterprise-models/chat"`. An agent must
-explicitly select this reference. Connection creation and catalog visibility do
-not verify gateway routes, token validation, backend access or successful
-inference. No inference requests are made by this example.
-
-To remove only this example's connection, keep the same input values and run
-`terraform destroy` from this directory. If telemetry was enabled, its empty
-subscription deployment is also removed. The account, project and gateway are
-external prerequisites and are not destroyed by this configuration.
-
-The existing-project scenario deliberately consumes the child directly. For the
-account module's `project_connections` composition interface, see the
+For the account module's `project_connections` composition interface, see the
 [root usage example](../../README.md#example-use-the-connection-child-through-the-account-module).
 Do not pass a separately created project's dependency back into its own account
 module; direct child consumption avoids that dependency cycle.

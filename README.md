@@ -7,9 +7,11 @@ This Terraform module is designed to manage Azure Cognitive Services. It provide
 ## Project APIM connections (preview)
 
 For a runnable Terraform configuration using the connection child, see
-[`examples/project-connection`](examples/project-connection). It deploys a
-connection in an existing project against an existing gateway and includes
-instructions for supplying inputs, planning, applying and cleanup.
+[`examples/project-connection`](examples/project-connection). By default it
+provisions isolated project and gateway prerequisites and passes their actual
+values to the child. Supplying all three external inputs instead creates only
+the connection in an existing project against an existing gateway. The example
+documents both modes, their costs, permissions and cleanup boundaries.
 
 `modules/project-connection` independently manages one
 `Microsoft.CognitiveServices/accounts/projects/connections` resource beneath an
