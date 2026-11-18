@@ -19,7 +19,8 @@ AzAPI to create:
 - A Foundry project with its own system-assigned identity.
 - A GlobalStandard deployment (capacity 1) for each alias in `models`. The default
   is `chat`, backed by `gpt-4.1-mini`, version `2025-04-14`.
-- An APIM Consumption gateway with system-assigned identity and an HTTPS
+- An APIM Premium gateway with two units across availability zones `1` and `2`,
+  system-assigned identity and an HTTPS
   `POST /ai/v1/chat/completions` route forwarding to the account's OpenAI v1 API.
 - An API policy validating the tenant, Cognitive Services token audience and
   project identity's `oid` claim. APIM authenticates to the backend using its own
@@ -32,16 +33,18 @@ The reserved publisher contact `avm-tests@example.com` is fixture metadata only;
 use an appropriate monitored contact if adapting this gateway for production.
 
 Use an explicitly approved isolated subscription and region supporting Foundry
-projects, APIM Consumption, and the selected model versions and GlobalStandard
+projects, APIM Premium in zones `1` and `2`, and the selected model versions and GlobalStandard
 quota. The deploying identity needs resource-group, Cognitive Services and APIM
 management permissions, plus role-assignment write/delete on the created account.
 Resource providers must already be registered; this example does not register
-providers or subscription features. Provisioning can incur costs and take time.
+providers or subscription features. Two Premium units incur substantially higher
+cost than Consumption and can take significant time to provision; approve the
+cost and cleanup scope before running the example.
 
 The isolated fixture uses public gateway and backend endpoints secured by Entra
 tokens and managed identities, not API keys. It is not a private-network
-production blueprint. APIM Consumption cannot integrate with a virtual network,
-so use external mode for a gateway with existing private-network connectivity.
+production blueprint. This fixture does not configure virtual-network integration;
+use external mode for a gateway with existing private-network connectivity.
 Existing organizational and AVM policy gates still apply;
 no policy exceptions or deployment exclusions are supplied. Do not deploy this
 fixture where public endpoints are prohibited.
@@ -186,7 +189,7 @@ Default: `true`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: Azure region for test prerequisites and deployment telemetry; does not change an externally supplied project's location. Must support AIServices projects, APIM Consumption and the selected GlobalStandard models.
+Description: Azure region for test prerequisites and deployment telemetry; does not change an externally supplied project's location. Must support AIServices projects, APIM Premium in availability zones 1 and 2, and the selected GlobalStandard models.
 
 Type: `string`
 

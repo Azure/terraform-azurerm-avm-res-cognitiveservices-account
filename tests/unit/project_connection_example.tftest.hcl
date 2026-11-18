@@ -54,10 +54,11 @@ run "runnable_example_provisions_prerequisites" {
       azapi_resource.resource_group[0].parent_id == data.azapi_client_config.this.subscription_resource_id &&
       azapi_resource.account[0].body.properties.allowProjectManagement &&
       azapi_resource.account[0].body.properties.disableLocalAuth &&
-      azapi_resource.gateway[0].body.sku.name == "Consumption" &&
-      azapi_resource.gateway[0].body.sku.capacity == 0
+      azapi_resource.gateway[0].body.sku.name == "Premium" &&
+      azapi_resource.gateway[0].body.sku.capacity == 2 &&
+      toset(azapi_resource.gateway[0].body.zones) == toset(["1", "2"])
     )
-    error_message = "Fixture inputs must derive from Terraform-owned prerequisites in the authenticated subscription, with project management and keyless auth."
+    error_message = "Fixture inputs must derive from Terraform-owned prerequisites with keyless auth and two Premium gateway units across zones 1 and 2."
   }
 
   assert {

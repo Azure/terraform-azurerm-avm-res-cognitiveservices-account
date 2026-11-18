@@ -14,7 +14,7 @@ variable "enable_telemetry" {
 variable "location" {
   type        = string
   default     = "eastus"
-  description = "Azure region for test prerequisites and deployment telemetry; does not change an externally supplied project's location. Must support AIServices projects, APIM Consumption and the selected GlobalStandard models."
+  description = "Azure region for test prerequisites and deployment telemetry; does not change an externally supplied project's location. Must support AIServices projects, APIM Premium in availability zones 1 and 2, and the selected GlobalStandard models."
   nullable    = false
 }
 

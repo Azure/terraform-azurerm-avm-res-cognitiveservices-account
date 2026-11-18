@@ -95,9 +95,10 @@ resource "azapi_resource" "gateway" {
   type      = "Microsoft.ApiManagement/service@2024-05-01"
   body = {
     sku = {
-      name     = "Consumption"
-      capacity = 0
+      name     = "Premium"
+      capacity = 2
     }
+    zones = ["1", "2"]
     properties = {
       publisherName  = "AVM connection example"
       publisherEmail = "avm-tests@example.com"
