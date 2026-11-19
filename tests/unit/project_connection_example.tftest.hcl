@@ -70,6 +70,10 @@ run "runnable_example_provisions_prerequisites" {
       azapi_resource.gateway_api[0].body.properties.serviceUrl == "https://fixture.openai.azure.com/openai/v1" &&
       azapi_resource.chat_completions[0].body.properties.method == "POST" &&
       azapi_resource.chat_completions[0].body.properties.urlTemplate == "/chat/completions" &&
+      azapi_resource.gateway_policy[0].body.properties.format == "xml" &&
+      strcontains(azapi_resource.gateway_policy[0].body.properties.value, "<policies>\r\n\t<inbound>") &&
+      strcontains(azapi_resource.gateway_policy[0].body.properties.value, "\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>") &&
+      endswith(azapi_resource.gateway_policy[0].body.properties.value, "\r\n</policies>") &&
       strcontains(azapi_resource.gateway_policy[0].body.properties.value, "<validate-azure-ad-token") &&
       strcontains(azapi_resource.gateway_policy[0].body.properties.value, "<claim name=\"oid\" match=\"all\">") &&
       strcontains(azapi_resource.gateway_policy[0].body.properties.value, "<value>${azapi_resource.project[0].identity[0].principal_id}</value>") &&

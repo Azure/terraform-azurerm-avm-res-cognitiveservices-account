@@ -179,8 +179,8 @@ resource "azapi_resource" "gateway_policy" {
   type      = "Microsoft.ApiManagement/service/apis/policies@2024-05-01"
   body = {
     properties = {
-      format = "rawxml"
-      value  = <<-XML
+      format = "xml"
+      value = replace(trimspace(replace(<<-XML
         <policies>
           <inbound>
             <base />
@@ -196,11 +196,18 @@ resource "azapi_resource" "gateway_policy" {
             </validate-azure-ad-token>
             <authentication-managed-identity resource="https://cognitiveservices.azure.com" />
           </inbound>
-          <backend><base /></backend>
-          <outbound><base /></outbound>
-          <on-error><base /></on-error>
+          <backend>
+            <base />
+          </backend>
+          <outbound>
+            <base />
+          </outbound>
+          <on-error>
+            <base />
+          </on-error>
         </policies>
       XML
+      , "  ", "\t")), "\n", "\r\n")
     }
   }
   response_export_values = []
