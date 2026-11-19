@@ -117,6 +117,17 @@ run "runnable_example_catalog_override" {
     )
     error_message = "Fixture deployments must match the selected aliases, omitting an unspecified model version."
   }
+
+  assert {
+    condition = (
+      azapi_resource.project[0].locks == tolist([azapi_resource.account[0].id]) &&
+      alltrue([
+        for deployment in azapi_resource.model :
+        deployment.locks == azapi_resource.project[0].locks
+      ])
+    )
+    error_message = "The project and every model deployment must share the account-scoped AzAPI lock to avoid concurrent account operations."
+  }
 }
 
 run "external_project_and_gateway_create_no_fixture" {

@@ -29,6 +29,10 @@ AzAPI to create:
 The connection uses the created project's ARM ID, the gateway's Azure-returned
 `gatewayUrl` plus `/ai/v1`, and the actual Cognitive Services Entra resource URI,
 `https://cognitiveservices.azure.com` (not a `/.default` scope).
+Model deployments explicitly depend on project creation. They also share an
+account-scoped AzAPI lock with the project because concurrent child operations
+can return `RequestConflict`, including concurrent model deployments. This is a
+provider-process mutex, not an Azure management lock.
 The reserved publisher contact `avm-tests@example.com` is fixture metadata only;
 use an appropriate monitored contact if adapting this gateway for production.
 

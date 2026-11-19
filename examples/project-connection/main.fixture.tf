@@ -58,6 +58,7 @@ resource "azapi_resource" "project" {
       description = "Isolated project for the standalone connection example."
     }
   }
+  locks                  = [azapi_resource.account[0].id]
   response_export_values = []
 
   identity {
@@ -83,7 +84,10 @@ resource "azapi_resource" "model" {
       }, each.value.model_version == "" ? {} : { version = each.value.model_version })
     }
   }
+  locks                  = [azapi_resource.account[0].id]
   response_export_values = []
+
+  depends_on = [azapi_resource.project]
 }
 
 resource "azapi_resource" "gateway" {
