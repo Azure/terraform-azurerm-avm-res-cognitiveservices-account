@@ -113,6 +113,12 @@ resource "azapi_resource" "gateway" {
   identity {
     type = "SystemAssigned"
   }
+
+  timeouts {
+    create = "60m"
+    delete = "60m"
+    update = "60m"
+  }
 }
 
 resource "azapi_resource" "gateway_openai_user" {

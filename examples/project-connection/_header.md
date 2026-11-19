@@ -42,6 +42,8 @@ Resource providers must already be registered; this example does not register
 providers or subscription features. Two Premium units incur substantially higher
 cost than Consumption and can take significant time to provision; approve the
 cost and cleanup scope before running the example.
+The APIM gateway allows 60 minutes each for creation, updates and deletion;
+the CI job must allow additional time for the remaining resources and cleanup.
 
 The isolated fixture uses public gateway and backend endpoints secured by Entra
 tokens and managed identities, not API keys. It is not a private-network
