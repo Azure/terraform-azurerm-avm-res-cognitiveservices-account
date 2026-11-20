@@ -215,5 +215,8 @@ resource "azapi_resource" "gateway_policy" {
   }
   response_export_values = []
 
-  depends_on = [azapi_resource.gateway_openai_user]
+  depends_on = [
+    azapi_resource.chat_completions,
+    azapi_resource.gateway_openai_user,
+  ]
 }

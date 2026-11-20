@@ -31,6 +31,8 @@ Model deployments explicitly depend on project creation. They also share an
 account-scoped AzAPI lock with the project because concurrent child operations
 can return `RequestConflict`, including concurrent model deployments. This is a
 provider-process mutex, not an Azure management lock.
+The API policy depends on the Chat Completions operation so Terraform deletes
+the policy before the operation instead of modifying both API children concurrently.
 The reserved publisher contact `avm-tests@example.com` is fixture metadata only;
 use an appropriate monitored contact if adapting this gateway for production.
 
