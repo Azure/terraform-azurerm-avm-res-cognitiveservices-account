@@ -93,15 +93,7 @@ resource "azapi_resource" "ai_service" {
 }
 
 locals {
-  ai_service_encryption = var.is_hsm_key && var.customer_managed_key != null ? {
-    keySource = "Microsoft.KeyVault"
-    keyVaultProperties = {
-      identityClientId = local.managed_key_identity_client_id
-      keyName          = data.azurerm_key_vault_managed_hardware_security_module_key.this[0].name
-      keyVaultUri      = data.azurerm_key_vault_managed_hardware_security_module.this[0].hsm_uri
-      keyVersion       = data.azurerm_key_vault_managed_hardware_security_module_key.this[0].version
-    }
-    } : {
+  ai_service_encryption = var.is_hsm_key && var.customer_managed_key != null ? local.customer_managed_key_encryption : {
     keySource          = "Microsoft.CognitiveServices"
     keyVaultProperties = null
   }
