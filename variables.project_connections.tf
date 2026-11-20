@@ -25,28 +25,53 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "project_connection_credentials" {
+  type        = map(map(string))
+  default     = {}
+  description = "Sensitive ephemeral credentials keyed by project_connections key. Each value uses the exact ARM credential fields described by modules/project-connection credentials. CustomKeys entries are wrapped in credentials.keys. Supply at plan and apply; increment the matching credentials_version on changes. Never put secrets in project_connections metadata or targets."
+  nullable    = false
+  sensitive   = true
+  ephemeral   = true
+
+  validation {
+    condition     = alltrue([for key in keys(var.project_connection_credentials) : contains(keys(var.project_connections), key)])
+    error_message = "Every project_connection_credentials key must match a project_connections key."
+  }
+}
+
 variable "project_connections" {
   type = map(object({
-    project_name = string
-    name         = string
-    audience     = string
-    target       = string
-    models = map(object({
+    project_name        = string
+    name                = string
+    audience            = optional(string)
+    target              = string
+    category            = optional(string, "ApiManagement")
+    auth_type           = optional(string, "ProjectManagedIdentity")
+    metadata            = optional(map(string), {})
+    is_shared_to_all    = optional(bool)
+    credentials_version = optional(string, "1")
+    models = optional(map(object({
       model_name    = string
       model_version = optional(string, "")
-    }))
+      model_format  = optional(string, "OpenAI")
+    })), {})
   }))
   default     = {}
   description = <<DESCRIPTION
 THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION.
 
-APIM connections keyed by caller-selected keys, created in existing projects in this account. Defaults to no connections. This does not create or adopt projects, gateways, routes, identities or authorization.
+Connections keyed by caller-selected keys, created in existing projects in this account. Defaults to no connections. This does not create or adopt projects, gateways, routes, identities or authorization. Secret credentials are supplied separately in project_connection_credentials with the same keys.
 
 - `project_name` - Name of an existing project in this account. For projects created by another module in the same graph, source `modules/project-connection` directly with the project's ARM ID to avoid a dependency cycle.
 - `name` - Project connection name.
-- `audience` - Entra token resource URI, not a JWT audience GUID or `/.default` scope.
-- `target` - HTTPS Chat Completions base URL.
-- `models` - Static catalog keyed by gateway deployment alias; each value contains `model_name` and optional `model_version` (default empty string). Agents explicitly select `connectionName/alias`. Catalog configuration does not publish or verify routes.
+- `category` - ARM connection category; defaults to ApiManagement. See the child documentation for supported categories.
+- `auth_type` - ARM authentication discriminator; defaults to ProjectManagedIdentity. Select a service-supported authentication type for other categories.
+- `audience` - APIM Entra token resource URI, not a JWT audience GUID or `/.default` scope. Required for APIM; omitted for other categories.
+- `target` - Service-specific target; APIM requires an HTTPS Chat Completions base URL.
+- `metadata` - Nonsecret string metadata for the selected service. APIM reserves models and deploymentInPath.
+- `is_shared_to_all` - Optional sharing override. Omitted by default except APIM, which explicitly defaults to false.
+- `credentials_version` - Nonsecret write-only credential revision; increment on rotation. Defaults to 1.
+- `models` - Required only for APIM. Static catalog keyed by gateway deployment alias; each value contains `model_name`, optional `model_version` (default empty string), and optional `model_format` (default OpenAI). Agents explicitly select `connectionName/alias`. Catalog configuration does not publish or verify routes.
 DESCRIPTION
   nullable    = false
 

@@ -2,19 +2,23 @@
 
 This Terraform module is designed to manage Azure Cognitive Services. It provides a comprehensive set of variables and resources to configure and deploy Cognitive Services in Azure.
 
-## Project APIM connections (preview)
+## Project connections (preview)
 
 For a runnable Terraform configuration using the connection child, see
-[`examples/project-connection`](examples/project-connection). By default it
+[`examples/project-connection`](examples/project-connection). It always
 provisions isolated project and gateway prerequisites and passes their actual
-values to the child. Supplying all three external inputs instead creates only
-the connection in an existing project against an existing gateway. The example
-documents both modes, their costs, permissions and cleanup boundaries.
+values to the child. For existing infrastructure, consume the child directly
+and supply its required inputs. The example documents costs, permissions and
+cleanup boundaries.
 
 `modules/project-connection` independently manages one
 `Microsoft.CognitiveServices/accounts/projects/connections` resource beneath an
-existing project. It exposes a static OpenAI model catalog through an existing
-APIM gateway using `ProjectManagedIdentity`. It does not create projects, gateways,
+existing project. It defaults to a static model catalog through an existing
+APIM gateway using `ProjectManagedIdentity`, with each model's format defaulting
+to `OpenAI`. Category, authentication type and model format can be overridden.
+Other documented ARM categories use service-specific targets and nonsecret
+metadata instead of the APIM audience/catalog. Secret credentials use the
+child's ephemeral `credentials` input and write-only AzAPI body. It does not create projects, gateways,
 routes, policies, identities or authorization, and catalog visibility does not
 prove inference readiness.
 
@@ -24,6 +28,13 @@ using this account's ID, source the connection submodule directly with that proj
 ID instead, avoiding a dependency cycle. See the [submodule documentation](modules/project-connection/README.md)
 for the exact preview contract and runtime prerequisites. Existing account,
 deployment and RAI-policy addresses and defaults are unchanged.
+
+Through the parent, supply `category`, `auth_type`, `metadata` and
+`credentials_version` per `project_connections` entry. Supply ephemeral secrets
+separately in `project_connection_credentials` keyed by the same entry key;
+increment the matching `credentials_version` on rotation. Non-APIM entries omit
+`audience` and `models`. See the child's authentication table for exact ARM
+credential fields and service-specific limitations.
 
 `resource_types.cognitiveservices_accounts` retains the account API default
 `2025-06-01`; the matching `ignore_body_changes` list defaults to empty and adds

@@ -137,9 +137,37 @@ run "reject_project_path" {
         audience     = "api://gateway"
         models       = { chat = { model_name = "gpt-4.1" } }
       }
+
     }
   }
   expect_failures = [var.project_connections]
+}
+
+run "compose_non_apim_connection" {
+  command = apply
+  variables {
+    project_connections = {
+      search = {
+        project_name        = "research"
+        name                = "knowledge-search"
+        category            = "CognitiveSearch"
+        auth_type           = "ApiKey"
+        target              = "https://search.example.com"
+        metadata            = { ApiType = "Azure" }
+        credentials_version = "2"
+      }
+    }
+    project_connection_credentials = {
+      search = { key = "unit-test-only" }
+    }
+  }
+  assert {
+    condition = (
+      length(output.project_connection_resource_ids) == 1 &&
+      length(output.project_connection_model_references["search"]) == 0
+    )
+    error_message = "The parent must propagate non-APIM category, auth, metadata and separate ephemeral credentials without requiring a gateway catalog or audience."
+  }
 }
 
 run "direct_payload_and_outputs" {

@@ -1,16 +1,15 @@
 # Project APIM connection (preview)
 
-This runnable example consumes `modules/project-connection` directly. By default
-it provisions isolated, uniquely named prerequisites in the authenticated Azure
-subscription and passes their actual IDs and endpoint to the connection. Like
-the repository's other runnable examples, Terraform owns fixture creation,
-dependencies and cleanup; no hook, shared infrastructure ID or placeholder
-deployment input is required.
+This runnable example consumes `modules/project-connection` directly. It always
+provisions isolated, uniquely named prerequisites in the authenticated Azure
+subscription and passes their actual IDs and endpoint to the connection.
+Terraform owns resource creation, dependencies and cleanup; no hook, shared
+infrastructure ID, external-infrastructure mode or placeholder input is required.
+All resources and the module call are in `main.tf`.
 
-## Isolated example / E2E mode
+## Resources and prerequisites
 
-Leave `parent_id`, `target` and `audience` null (their defaults). The example uses
-AzAPI to create:
+The example uses AzAPI to create:
 
 - A resource group and an AIServices account with project management enabled,
   system-assigned identity and local authentication disabled.
@@ -50,7 +49,7 @@ the CI job must allow additional time for the remaining resources and cleanup.
 The isolated fixture uses public gateway and backend endpoints secured by Entra
 tokens and managed identities, not API keys. It is not a private-network
 production blueprint. This fixture does not configure virtual-network integration;
-use external mode for a gateway with existing private-network connectivity.
+consume the submodule directly for a gateway with existing private-network connectivity.
 Existing organizational and AVM policy gates still apply;
 no policy exceptions or deployment exclusions are supplied. Do not deploy this
 fixture where public endpoints are prohibited.
@@ -71,39 +70,23 @@ E2E and policy validation must pass separately before readiness is claimed.
 
 For manual deployment, run `terraform init`, inspect a saved `terraform plan`,
 then apply only after authorization. Keep the same state and inputs for
-`terraform destroy`; in fixture mode this removes the connection **and all
-fixture resources**, including its resource group. Verify cleanup independently.
+`terraform destroy`; this removes the connection **and all example resources**,
+including its resource group. Verify cleanup independently.
 
 ## Existing project and gateway
 
-To create only a connection against infrastructure owned elsewhere, supply
-**all three** of `parent_id`, `target` and `audience`. Partial external inputs are
-rejected. With all three supplied the example creates no account, project,
-gateway, model deployment, network or role assignment and does not adopt them.
-The reusable child still requires its inputs explicitly and never provisions a
-fixture.
+This example no longer accepts `parent_id`, `target` or `audience` overrides.
+For existing infrastructure, use the direct call in the
+[submodule documentation](../../modules/project-connection/README.md#composition)
+and supply the required connection inputs in your own configuration. The
+submodule never creates projects, gateways, models or authorization.
 
-- Use the real ARM ID of an existing Foundry project.
-- Supply an existing HTTPS Chat Completions base URL without a trailing slash,
-  operation path, query or fragment, and its Entra token resource URI.
-- The project identity must already be authorized by the gateway owner with
-  correct token validation, network access and backend access. There is no
-  per-connection UAMI selector.
-- Set `models` to the gateway's actual deployment aliases. The default catalog
-  produces `chat = "enterprise-models/chat"`; an agent must select that reference
-  explicitly. In external mode the connection does not deploy models or routes.
-- Choose a connection name not already managed elsewhere. No import is performed.
-
-Set `TF_VAR_parent_id`, `TF_VAR_target` and `TF_VAR_audience` through your approved
-environment or protected variable file, then run `terraform init` and inspect
-`terraform plan -out=connection.tfplan` before applying. Do not copy fixture IDs
-or invent example subscription IDs. Keep the same external input values and
-state for `terraform destroy`; only the connection and any enabled deployment
-telemetry are removed, not the external prerequisites.
-
-Do not switch an applied state between fixture and external modes: that would
-plan deletion of the fixture prerequisites and replacement of the connection.
-Use a separate state for an existing-project deployment.
+The `moved` blocks preserve the prior example's singleton `[0]` resource
+addresses after removing conditional creation. Names, bodies and dependency
+ordering remain unchanged. Review the plan before reusing an existing example
+state. These moves do not convert the former external-only mode: keep that
+configuration for cleanup or consume the submodule in a separate configuration;
+applying this example would create all prerequisites.
 
 ## Contract and telemetry
 

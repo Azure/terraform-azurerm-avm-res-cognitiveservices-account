@@ -4,11 +4,11 @@ output "model_references" {
 }
 
 output "name" {
-  description = "Name of the project-scoped APIM connection."
+  description = "Name of the project-scoped connection."
   value       = azapi_resource.this.name
 }
 
 output "resource_id" {
-  description = "ARM resource ID of the project-scoped APIM connection."
+  description = "ARM resource ID of the project-scoped connection."
   value       = azapi_resource.this.id
 }

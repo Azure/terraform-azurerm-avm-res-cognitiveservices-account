@@ -4,19 +4,23 @@
 
 This Terraform module is designed to manage Azure Cognitive Services. It provides a comprehensive set of variables and resources to configure and deploy Cognitive Services in Azure.
 
-## Project APIM connections (preview)
+## Project connections (preview)
 
 For a runnable Terraform configuration using the connection child, see
-[`examples/project-connection`](examples/project-connection). By default it
+[`examples/project-connection`](examples/project-connection). It always
 provisions isolated project and gateway prerequisites and passes their actual
-values to the child. Supplying all three external inputs instead creates only
-the connection in an existing project against an existing gateway. The example
-documents both modes, their costs, permissions and cleanup boundaries.
+values to the child. For existing infrastructure, consume the child directly
+and supply its required inputs. The example documents costs, permissions and
+cleanup boundaries.
 
 `modules/project-connection` independently manages one
 `Microsoft.CognitiveServices/accounts/projects/connections` resource beneath an
-existing project. It exposes a static OpenAI model catalog through an existing
-APIM gateway using `ProjectManagedIdentity`. It does not create projects, gateways,
+existing project. It defaults to a static model catalog through an existing
+APIM gateway using `ProjectManagedIdentity`, with each model's format defaulting
+to `OpenAI`. Category, authentication type and model format can be overridden.
+Other documented ARM categories use service-specific targets and nonsecret
+metadata instead of the APIM audience/catalog. Secret credentials use the
+child's ephemeral `credentials` input and write-only AzAPI body. It does not create projects, gateways,
 routes, policies, identities or authorization, and catalog visibility does not
 prove inference readiness.
 
@@ -26,6 +30,13 @@ using this account's ID, source the connection submodule directly with that proj
 ID instead, avoiding a dependency cycle. See the [submodule documentation](modules/project-connection/README.md)
 for the exact preview contract and runtime prerequisites. Existing account,
 deployment and RAI-policy addresses and defaults are unchanged.
+
+Through the parent, supply `category`, `auth_type`, `metadata` and
+`credentials_version` per `project_connections` entry. Supply ephemeral secrets
+separately in `project_connection_credentials` keyed by the same entry key;
+increment the matching `credentials_version` on rotation. Non-APIM entries omit
+`audience` and `models`. See the child's authentication table for exact ARM
+credential fields and service-specific limitations.
 
 `resource_types.cognitiveservices_accounts` retains the account API default
 `2025-06-01`; the matching `ignore_body_changes` list defaults to empty and adds
@@ -779,30 +790,49 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_project_connection_credentials"></a> [project\_connection\_credentials](#input\_project\_connection\_credentials)
+
+Description: Sensitive ephemeral credentials keyed by project\_connections key. Each value uses the exact ARM credential fields described by modules/project-connection credentials. CustomKeys entries are wrapped in credentials.keys. Supply at plan and apply; increment the matching credentials\_version on changes. Never put secrets in project\_connections metadata or targets.
+
+Type: `map(map(string))`
+
+Default: `{}`
+
 ### <a name="input_project_connections"></a> [project\_connections](#input\_project\_connections)
 
 Description: THIS IS A VARIABLE USED FOR A PREVIEW SERVICE/FEATURE, MICROSOFT MAY NOT PROVIDE SUPPORT FOR THIS, PLEASE CHECK THE PRODUCT DOCS FOR CLARIFICATION.
 
-APIM connections keyed by caller-selected keys, created in existing projects in this account. Defaults to no connections. This does not create or adopt projects, gateways, routes, identities or authorization.
+Connections keyed by caller-selected keys, created in existing projects in this account. Defaults to no connections. This does not create or adopt projects, gateways, routes, identities or authorization. Secret credentials are supplied separately in project\_connection\_credentials with the same keys.
 
 - `project_name` - Name of an existing project in this account. For projects created by another module in the same graph, source `modules/project-connection` directly with the project's ARM ID to avoid a dependency cycle.
 - `name` - Project connection name.
-- `audience` - Entra token resource URI, not a JWT audience GUID or `/.default` scope.
-- `target` - HTTPS Chat Completions base URL.
-- `models` - Static catalog keyed by gateway deployment alias; each value contains `model_name` and optional `model_version` (default empty string). Agents explicitly select `connectionName/alias`. Catalog configuration does not publish or verify routes.
+- `category` - ARM connection category; defaults to ApiManagement. See the child documentation for supported categories.
+- `auth_type` - ARM authentication discriminator; defaults to ProjectManagedIdentity. Select a service-supported authentication type for other categories.
+- `audience` - APIM Entra token resource URI, not a JWT audience GUID or `/.default` scope. Required for APIM; omitted for other categories.
+- `target` - Service-specific target; APIM requires an HTTPS Chat Completions base URL.
+- `metadata` - Nonsecret string metadata for the selected service. APIM reserves models and deploymentInPath.
+- `is_shared_to_all` - Optional sharing override. Omitted by default except APIM, which explicitly defaults to false.
+- `credentials_version` - Nonsecret write-only credential revision; increment on rotation. Defaults to 1.
+- `models` - Required only for APIM. Static catalog keyed by gateway deployment alias; each value contains `model_name`, optional `model_version` (default empty string), and optional `model_format` (default OpenAI). Agents explicitly select `connectionName/alias`. Catalog configuration does not publish or verify routes.
 
 Type:
 
 ```hcl
 map(object({
-    project_name = string
-    name         = string
-    audience     = string
-    target       = string
-    models = map(object({
+    project_name        = string
+    name                = string
+    audience            = optional(string)
+    target              = string
+    category            = optional(string, "ApiManagement")
+    auth_type           = optional(string, "ProjectManagedIdentity")
+    metadata            = optional(map(string), {})
+    is_shared_to_all    = optional(bool)
+    credentials_version = optional(string, "1")
+    models = optional(map(object({
       model_name    = string
       model_version = optional(string, "")
-    }))
+      model_format  = optional(string, "OpenAI")
+    })), {})
   }))
 ```
 
