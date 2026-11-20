@@ -71,6 +71,7 @@ run "runnable_example_provisions_prerequisites" {
       azapi_resource.chat_completions[0].body.properties.method == "POST" &&
       azapi_resource.chat_completions[0].body.properties.urlTemplate == "/chat/completions" &&
       azapi_resource.gateway_policy[0].body.properties.format == "xml" &&
+      azapi_resource.gateway_policy[0].delete_headers["If-Match"] == "*" &&
       strcontains(azapi_resource.gateway_policy[0].body.properties.value, "<policies>\r\n\t<inbound>") &&
       strcontains(azapi_resource.gateway_policy[0].body.properties.value, "\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>") &&
       endswith(azapi_resource.gateway_policy[0].body.properties.value, "\r\n</policies>") &&

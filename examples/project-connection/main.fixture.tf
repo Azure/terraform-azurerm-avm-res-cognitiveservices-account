@@ -210,6 +210,9 @@ resource "azapi_resource" "gateway_policy" {
       , "  ", "\t")), "\n", "\r\n")
     }
   }
+  delete_headers = {
+    "If-Match" = "*"
+  }
   response_export_values = []
 
   depends_on = [azapi_resource.gateway_openai_user]
