@@ -2,6 +2,93 @@
 
 This Terraform module is designed to manage Azure Cognitive Services. It provides a comprehensive set of variables and resources to configure and deploy Cognitive Services in Azure.
 
+## Project APIM connections (preview)
+
+For a runnable Terraform configuration using the connection child, see
+[`examples/project-connection`](examples/project-connection). By default it
+provisions isolated project and gateway prerequisites and passes their actual
+values to the child. Supplying all three external inputs instead creates only
+the connection in an existing project against an existing gateway. The example
+documents both modes, their costs, permissions and cleanup boundaries.
+
+`modules/project-connection` independently manages one
+`Microsoft.CognitiveServices/accounts/projects/connections` resource beneath an
+existing project. It exposes a static OpenAI model catalog through an existing
+APIM gateway using `ProjectManagedIdentity`. It does not create projects, gateways,
+routes, policies, identities or authorization, and catalog visibility does not
+prove inference readiness.
+
+The optional `project_connections` map composes these children for projects that
+already exist in this AIServices account. When another module creates the project
+using this account's ID, source the connection submodule directly with that project's
+ID instead, avoiding a dependency cycle. See the [submodule documentation](modules/project-connection/README.md)
+for the exact preview contract and runtime prerequisites. Existing account,
+deployment and RAI-policy addresses and defaults are unchanged.
+
+`resource_types.cognitiveservices_accounts` retains the account API default
+`2025-06-01`; the matching `ignore_body_changes` list defaults to empty and adds
+no ignores. Both account variants share these controls; the existing HSM
+encryption updater shares the API control only because its provider resource does
+not support `ignore_body_changes`. Matching controls for existing private endpoints,
+DNS zone groups, private endpoint role assignments and locks retain the exact API
+defaults from the pinned interfaces module and add no ignores by default. Existing
+static lifecycle ignores are preserved. These controls do not retrofit the
+deployment or RAI-policy interfaces or create any additional resources.
+
+### Example: use the connection child through the account module
+
+The following consumer configuration uses a local checkout of this repository.
+Keep the account module's existing name, inputs and state address when adding
+`project_connections`; do not create a second owner for an existing account.
+The `research` project must already exist in that account, with an identity
+authorized to call the existing gateway.
+
+```hcl
+module "cognitive_services" {
+  source = "./terraform-azurerm-avm-res-cognitiveservices-account"
+
+  kind               = "AIServices"
+  location           = var.location
+  name               = var.account_name
+  parent_id          = var.resource_group_resource_id
+  sku_name           = "S0"
+  local_auth_enabled = false
+
+  project_connections = {
+    gateway = {
+      project_name = "research"
+      name         = "enterprise-models"
+      audience     = "api://gateway"
+      target       = "https://gateway.example.com/ai/v1"
+      models = {
+        chat = {
+          model_name    = "gpt-4.1"
+          model_version = "2025-04-14"
+        }
+      }
+    }
+  }
+}
+
+output "gateway_model_reference" {
+  value = module.cognitive_services.project_connection_model_references["gateway"]["chat"]
+}
+```
+
+The consumer supplies `location`, `account_name` and `resource_group_resource_id`
+for its managed account. The output is `enterprise-models/chat`, which an agent
+must explicitly select. The parent creates one connection child per map entry
+and also exposes `project_connection_resource_ids` keyed by those entries.
+The example gateway URL and audience are placeholders: replace them with the
+gateway owner's values and verify routes, authorization and inference separately.
+
+This is not a fresh account-and-project deployment example: the account module
+does not create projects. If the project is created in the same Terraform graph
+using this account's output, call `modules/project-connection` directly with the
+project's ARM ID instead of feeding that project back into the account module.
+For Registry consumption, pin an actual release that contains the child;
+`v0.12.0` does not contain it.
+
 ## Deployment capacity and quota
 
 `cognitive_deployments[*].scale.capacity` is the requested capacity, not an upper bound. The module does not automatically lower capacity when quota is insufficient. Request the required quota before deployment, or explicitly choose a lower initial capacity and increase it after quota approval.

@@ -72,6 +72,68 @@ variables {
   tags               = { account_only = "not-inherited" }
 }
 
+run "managed_resource_control_overrides" {
+  command = apply
+
+  variables {
+    resource_types = {
+      network_private_endpoints                         = "Microsoft.Network/privateEndpoints@2024-07-01"
+      network_private_endpoints_private_dns_zone_groups = "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-07-01"
+      authorization_role_assignments                    = "Microsoft.Authorization/roleAssignments@2020-04-01-preview"
+      authorization_locks                               = "Microsoft.Authorization/locks@2016-09-01"
+    }
+    ignore_body_changes = {
+      network_private_endpoints                         = ["properties.customDnsConfigs"]
+      network_private_endpoints_private_dns_zone_groups = ["properties.privateDnsZoneConfigs"]
+      authorization_role_assignments                    = ["properties.description"]
+      authorization_locks                               = ["properties.notes"]
+    }
+    private_endpoints = {
+      endpoint = {
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/unit/subnets/endpoints"
+        role_assignments = {
+          reader = {
+            principal_id               = "33333333-3333-4333-8333-333333333333"
+            role_definition_id_or_name = "Reader"
+          }
+        }
+        lock = { kind = "CanNotDelete" }
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      azapi_resource.private_endpoints["endpoint"].type == var.resource_types.network_private_endpoints &&
+      data.azapi_resource.existing_private_endpoints["endpoint"].type == var.resource_types.network_private_endpoints &&
+      azapi_resource.private_dns_zone_groups["endpoint"].type == var.resource_types.network_private_endpoints_private_dns_zone_groups &&
+      azapi_resource.private_endpoint_role_assignments["endpoint-reader"].type == var.resource_types.authorization_role_assignments &&
+      azapi_resource.private_endpoint_locks["endpoint"].type == var.resource_types.authorization_locks
+    )
+    error_message = "Owned-resource APIs must honor independent overrides; nonempty write-only ignore paths must be accepted without changing resource ownership."
+  }
+}
+
+run "unmanaged_resource_control_overrides" {
+  command = apply
+
+  variables {
+    private_endpoints_manage_dns_zone_group = false
+    resource_types                          = { network_private_endpoints = "Microsoft.Network/privateEndpoints@2024-07-01" }
+    ignore_body_changes                     = { network_private_endpoints = ["properties.customDnsConfigs"] }
+    private_endpoints = {
+      endpoint = {
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/unit/subnets/endpoints"
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.private_endpoints_unmanaged["endpoint"].type == var.resource_types.network_private_endpoints
+    error_message = "The unmanaged-DNS endpoint variant must honor the same API and ignore controls."
+  }
+}
+
 run "omitted_endpoints" {
   command = apply
 
