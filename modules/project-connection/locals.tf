@@ -1,6 +1,5 @@
 locals {
-  schema_extension_categories = toset(["ApiManagement", "AzureStorageAccount"])
-  azure_metadata_categories   = toset(["AzureStorageAccount", "CosmosDb", "CognitiveSearch"])
+  azure_metadata_categories = toset(["AzureStorageAccount", "CosmosDb", "CognitiveSearch"])
   # The ARM union is discriminated by authType, not category.
   credential_fields = {
     AAD                    = { required = [], optional = [] }
@@ -47,9 +46,7 @@ locals {
     "SqlServer", "Square", "Sybase", "Teradata", "Vertica", "WebTable", "Xero", "Zoho",
   ])
   category_properties = merge(
-    { for category in local.standard_categories : category => {
-      metadata = var.metadata
-    } },
+    { (var.category) = { metadata = var.metadata } },
     { for category in local.azure_metadata_categories : category => {
       metadata = merge({ ApiType = "Azure" }, var.metadata)
     } },

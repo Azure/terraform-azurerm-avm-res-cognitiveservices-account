@@ -64,7 +64,7 @@ Connections keyed by caller-selected keys, created in existing projects in this 
 
 - `project_name` - Name of an existing project in this account. For projects created by another module in the same graph, source `modules/project-connection` directly with the project's ARM ID to avoid a dependency cycle.
 - `name` - Project connection name.
-- `category` - ARM connection category; defaults to ApiManagement. See the child documentation for supported categories.
+- `category` - ARM connection category; defaults to ApiManagement. Any nonblank value is accepted; see the child documentation for categories known at authoring time and service-support requirements.
 - `auth_type` - ARM authentication discriminator; defaults to ProjectManagedIdentity. Select a service-supported authentication type for other categories.
 - `audience` - APIM Entra token resource URI, not a JWT audience GUID or `/.default` scope. Required for APIM; omitted for other categories.
 - `target` - Service-specific target; APIM requires an HTTPS Chat Completions base URL.

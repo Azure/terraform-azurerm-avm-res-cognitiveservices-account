@@ -301,6 +301,31 @@ run "search_aad_body" {
   }
 }
 
+run "non_apim_project_managed_identity" {
+  command = plan
+  module {
+    source = "./modules/project-connection"
+  }
+  variables {
+    category  = "CognitiveSearch"
+    auth_type = "ProjectManagedIdentity"
+    audience  = null
+    models    = {}
+    target    = "https://search.example.com/"
+  }
+  assert {
+    condition = (
+      azapi_resource.this.body.properties.category == "CognitiveSearch" &&
+      azapi_resource.this.body.properties.authType == "ProjectManagedIdentity" &&
+      jsonencode(azapi_resource.this.body.properties.credentials) == "{}" &&
+      !contains(keys(azapi_resource.this.body.properties), "audience") &&
+      !azapi_resource.this.schema_validation_enabled &&
+      azapi_resource.this.sensitive_body_version == null
+    )
+    error_message = "ProjectManagedIdentity must not be blocked by a non-APIM category or the published schema gap."
+  }
+}
+
 run "azure_openai_api_key" {
   command = apply
   module {
@@ -528,13 +553,41 @@ run "sharing_override" {
   }
 }
 
-run "reject_unknown_category" {
+run "unrecognized_category_common_body" {
   command = plan
   module {
     source = "./modules/project-connection"
   }
   variables {
-    category  = "NotAConnectionCategory"
+    category  = "FutureConnectionCategory"
+    auth_type = "AAD"
+    audience  = null
+    models    = {}
+    metadata  = { ApiVersion = "future-service-version" }
+  }
+  assert {
+    condition = (
+      jsonencode(azapi_resource.this.body) == jsonencode({
+        properties = {
+          category = "FutureConnectionCategory"
+          authType = "AAD"
+          target   = var.target
+          metadata = var.metadata
+        }
+      }) &&
+      !azapi_resource.this.schema_validation_enabled
+    )
+    error_message = "An unrecognized category must pass through with the common body and caller metadata without a schema-enum blocker."
+  }
+}
+
+run "reject_blank_category" {
+  command = plan
+  module {
+    source = "./modules/project-connection"
+  }
+  variables {
+    category  = " "
     auth_type = "AAD"
     audience  = null
     models    = {}

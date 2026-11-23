@@ -81,12 +81,10 @@ For existing infrastructure, use the direct call in the
 and supply the required connection inputs in your own configuration. The
 submodule never creates projects, gateways, models or authorization.
 
-The `moved` blocks preserve the prior example's singleton `[0]` resource
-addresses after removing conditional creation. Names, bodies and dependency
-ordering remain unchanged. Review the plan before reusing an existing example
-state. These moves do not convert the former external-only mode: keep that
-configuration for cleanup or consume the submodule in a separate configuration;
-applying this example would create all prerequisites.
+This example deploys fresh fixtures with new state on each test run; it does not
+provide an upgrade path for previous example state. Keep the original
+configuration for cleanup of an older deployment. Applying this example creates
+all prerequisites.
 
 ## Contract and telemetry
 

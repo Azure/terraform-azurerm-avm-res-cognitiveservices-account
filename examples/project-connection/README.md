@@ -83,12 +83,10 @@ For existing infrastructure, use the direct call in the
 and supply the required connection inputs in your own configuration. The
 submodule never creates projects, gateways, models or authorization.
 
-The `moved` blocks preserve the prior example's singleton `[0]` resource
-addresses after removing conditional creation. Names, bodies and dependency
-ordering remain unchanged. Review the plan before reusing an existing example
-state. These moves do not convert the former external-only mode: keep that
-configuration for cleanup or consume the submodule in a separate configuration;
-applying this example would create all prerequisites.
+This example deploys fresh fixtures with new state on each test run; it does not
+provide an upgrade path for previous example state. Keep the original
+configuration for cleanup of an older deployment. Applying this example creates
+all prerequisites.
 
 ## Contract and telemetry
 
@@ -328,51 +326,6 @@ module "project_connection" {
     azapi_resource.chat_completions,
     azapi_resource.model,
   ]
-}
-
-moved {
-  from = random_string.suffix[0]
-  to   = random_string.suffix
-}
-
-moved {
-  from = azapi_resource.resource_group[0]
-  to   = azapi_resource.resource_group
-}
-
-moved {
-  from = azapi_resource.account[0]
-  to   = azapi_resource.account
-}
-
-moved {
-  from = azapi_resource.project[0]
-  to   = azapi_resource.project
-}
-
-moved {
-  from = azapi_resource.gateway[0]
-  to   = azapi_resource.gateway
-}
-
-moved {
-  from = azapi_resource.gateway_openai_user[0]
-  to   = azapi_resource.gateway_openai_user
-}
-
-moved {
-  from = azapi_resource.gateway_api[0]
-  to   = azapi_resource.gateway_api
-}
-
-moved {
-  from = azapi_resource.chat_completions[0]
-  to   = azapi_resource.chat_completions
-}
-
-moved {
-  from = azapi_resource.gateway_policy[0]
-  to   = azapi_resource.gateway_policy
 }
 ```
 

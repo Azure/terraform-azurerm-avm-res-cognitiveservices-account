@@ -18,8 +18,9 @@ union. Category alone does not select authentication. Locals compose the common
 properties, category-specific properties and authentication properties into a
 body map selected by `category`.
 
-All case-sensitive categories listed by the configured default's ARM schema are
-accepted, plus the Foundry `ApiManagement` and `AzureStorageAccount` extensions. They include AI services
+Any nonblank case-sensitive category is accepted. Known categories at authoring
+time come from the `2025-04-01-preview` ARM schema and the Foundry
+`ApiManagement` and `AzureStorageAccount` extensions. They include AI services
 (`AzureOpenAI`, `AIServices`, `OpenAI`, `CognitiveSearch`, `CognitiveService`,
 `BingLLMSearch`, `Serverless`, `ManagedOnlineEndpoint`), storage (`AzureBlob`,
 `ADLSGen2`, `AzureOneLake`, `S3`), databases (`CosmosDb`, `AzureSqlDb`, `Snowflake`),
@@ -31,7 +32,7 @@ reference linked above contains the complete category enumeration.
 | --- | --- | --- |
 | `ApiManagement` | `audience`, JSON-string `metadata.models`, `metadata.deploymentInPath = "false"` | Audience resource URI and nonempty `models` catalog; HTTPS Chat Completions base target |
 | `AzureStorageAccount`, `CosmosDb`, `CognitiveSearch` | Default `metadata.ApiType = "Azure"`, merged with caller metadata | Explicit authentication, service endpoint, service metadata as appropriate; no APIM catalog |
-| Other documented ARM categories | Nonsecret `metadata` string map; no APIM audience or catalog | Service-specific target, explicit `auth_type`, service-specific metadata and credentials when applicable |
+| Other categories, including values not in the authoring-time schema | Nonsecret `metadata` string map; no APIM audience or catalog | Service-specific target, service-supported `auth_type`, service-specific metadata and credentials when applicable |
 
 `audience` and `models` must be omitted for non-APIM categories. APIM reserves
 the `models` and `deploymentInPath` metadata keys; other metadata is merged.
@@ -73,16 +74,20 @@ it is not treated as an implemented connection category here.
 The [Foundry connection guidance](https://learn.microsoft.com/azure/foundry/how-to/connections-add)
 describes the services exposed in the portal and their runtime limitations.
 Those are not identical to the ARM category enumeration or the data-plane
-connection types. Portal-only/newer category names are not guessed or silently
-passed through. Changing `resource_types` does not automatically add new body
-variants. Service-specific metadata, authentication compatibility, permissions
+connection types. Newer category names are passed through unchanged using the
+common body and caller metadata; no service-specific properties are guessed.
+Changing `resource_types` does not automatically add new body variants.
+Service-specific metadata, authentication compatibility, permissions
 and runtime behavior must be checked for the destination service; accepting an
 ARM category does not certify every category/authentication combination.
 
 APIM's preview category/authentication discriminators and Foundry's
 `AzureStorageAccount` category remain absent from the published ARM schema.
-Schema validation is disabled only for these two extensions; it is enabled for
-the documented categories, including `CosmosDb` and `CognitiveSearch`. The API-version default and
+Schema validation is disabled for categories outside the authoring-time
+`2025-04-01-preview` ARM enumeration or when
+`auth_type = "ProjectManagedIdentity"`; it remains enabled for documented
+category/authentication combinations, including `CosmosDb` and `CognitiveSearch`
+with `AAD`. The API-version default and
 existing APIM payload are unchanged. Azure acceptance and persistence of newly
 configured variants still require real deployment/readback.
 
@@ -90,6 +95,11 @@ configured variants still require real deployment/readback.
 
 `auth_type` can be overridden independently of `category`. The supported shapes
 are:
+
+At authoring time, only `ApiManagement` is known to support
+`ProjectManagedIdentity`. The module accepts it for other categories to avoid
+blocking future service support; verify acceptance and runtime behavior for the
+selected service and API version.
 
 | Authentication | `credentials` entries |
 | --- | --- |

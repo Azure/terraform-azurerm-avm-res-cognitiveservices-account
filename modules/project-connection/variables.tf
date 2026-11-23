@@ -52,28 +52,24 @@ variable "audience" {
 variable "auth_type" {
   type        = string
   default     = "ProjectManagedIdentity"
-  description = "ARM authentication discriminator. Defaults to ProjectManagedIdentity for the preview APIM connection. Other values are AAD, AccessKey, AccountKey, ApiKey, CustomKeys, ManagedIdentity, None, OAuth2, PAT, SAS, ServicePrincipal and UsernamePassword. Service support depends on the category; an ARM schema variant is not proof of runtime support."
+  description = "ARM authentication discriminator. Defaults to ProjectManagedIdentity; at authoring time, only ApiManagement is known to support it, but the module does not restrict it by category. Other values are AAD, AccessKey, AccountKey, ApiKey, CustomKeys, ManagedIdentity, None, OAuth2, PAT, SAS, ServicePrincipal and UsernamePassword. Verify service support for the selected category; accepting a value is not proof of runtime support."
   nullable    = false
 
   validation {
     condition     = contains(keys(local.credential_fields), var.auth_type)
     error_message = "auth_type must be a documented ARM connection authentication type or ProjectManagedIdentity."
   }
-  validation {
-    condition     = var.auth_type != "ProjectManagedIdentity" || var.category == "ApiManagement"
-    error_message = "ProjectManagedIdentity is supported here only for the preview ApiManagement category; select an explicit auth_type for another category."
-  }
 }
 
 variable "category" {
   type        = string
   default     = "ApiManagement"
-  description = "Case-sensitive ARM connection category. Supports the categories in the 2025-04-01-preview ARM reference, plus Foundry's ApiManagement and AzureStorageAccount extensions. Examples include AzureOpenAI, AIServices, CognitiveSearch, AzureBlob, CosmosDb, OpenAI, ApiKey, CustomKeys, Git and ContainerRegistry. Select a matching auth_type and provide service-specific metadata; see the submodule documentation."
+  description = "Case-sensitive ARM connection category; any nonblank value is accepted. Known categories at authoring time are documented by the 2025-04-01-preview ARM reference, plus Foundry's ApiManagement and AzureStorageAccount extensions. Examples include AzureOpenAI, AIServices, CognitiveSearch, AzureBlob, CosmosDb, OpenAI, ApiKey, CustomKeys, Git and ContainerRegistry. Other categories use the common body and caller metadata; verify support and required properties for the selected service and API version."
   nullable    = false
 
   validation {
-    condition     = contains(local.schema_extension_categories, var.category) || contains(local.standard_categories, var.category)
-    error_message = "category must be ApiManagement, AzureStorageAccount or a category documented in the 2025-04-01-preview ARM connection schema."
+    condition     = length(trimspace(var.category)) > 0
+    error_message = "category must not be blank."
   }
 }
 
