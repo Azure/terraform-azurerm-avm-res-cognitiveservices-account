@@ -5,7 +5,7 @@ data "azapi_resource" "existing_private_endpoints" {
 
   name                   = each.value.name != null ? each.value.name : "pep-${var.name}"
   parent_id              = local.private_endpoint_parent_ids[each.key]
-  type                   = "Microsoft.Network/privateEndpoints@2024-05-01"
+  type                   = var.resource_types.network_private_endpoints
   ignore_not_found       = true
   response_export_values = ["*"]
 
@@ -55,8 +55,9 @@ resource "azapi_resource" "private_endpoints" {
   location                = var.private_endpoints[each.key].location != null ? var.private_endpoints[each.key].location : var.location
   name                    = each.value.name
   parent_id               = local.private_endpoint_parent_ids[each.key]
-  type                    = each.value.type
+  type                    = var.resource_types.network_private_endpoints
   body                    = each.value.body
+  ignore_body_changes     = length(var.ignore_body_changes.network_private_endpoints) > 0 ? var.ignore_body_changes.network_private_endpoints : null
   ignore_missing_property = true
   retry = {
     error_message_regex = ["Account.*state Accepted"]
@@ -76,8 +77,9 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
   location                = var.private_endpoints[each.key].location != null ? var.private_endpoints[each.key].location : var.location
   name                    = each.value.name
   parent_id               = local.private_endpoint_parent_ids[each.key]
-  type                    = each.value.type
+  type                    = var.resource_types.network_private_endpoints
   body                    = each.value.body
+  ignore_body_changes     = length(var.ignore_body_changes.network_private_endpoints) > 0 ? var.ignore_body_changes.network_private_endpoints : null
   ignore_missing_property = true
   retry = {
     error_message_regex = ["Account.*state Accepted"]
@@ -94,10 +96,11 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
 resource "azapi_resource" "private_dns_zone_groups" {
   for_each = local.private_dns_zone_groups_azapi
 
-  name      = each.value.name
-  parent_id = azapi_resource.private_endpoints[each.key].id
-  type      = each.value.type
-  body      = each.value.body
+  name                = each.value.name
+  parent_id           = azapi_resource.private_endpoints[each.key].id
+  type                = var.resource_types.network_private_endpoints_private_dns_zone_groups
+  body                = each.value.body
+  ignore_body_changes = length(var.ignore_body_changes.network_private_endpoints_private_dns_zone_groups) > 0 ? var.ignore_body_changes.network_private_endpoints_private_dns_zone_groups : null
 
   lifecycle {
     # During migration, DNS zone groups may already exist as embedded blocks
@@ -121,10 +124,11 @@ moved {
 resource "azapi_resource" "private_endpoint_role_assignments" {
   for_each = module.private_endpoint_interfaces.role_assignments_private_endpoint_azapi
 
-  name      = each.value.name
-  parent_id = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
-  type      = each.value.type
-  body      = each.value.body
+  name                = each.value.name
+  parent_id           = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
+  type                = var.resource_types.authorization_role_assignments
+  body                = each.value.body
+  ignore_body_changes = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
 }
 
 resource "azapi_resource" "private_endpoint_locks" {
@@ -132,7 +136,7 @@ resource "azapi_resource" "private_endpoint_locks" {
 
   name      = each.value.name
   parent_id = var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints[each.value.pe_key].id : azapi_resource.private_endpoints_unmanaged[each.value.pe_key].id
-  type      = each.value.type
+  type      = var.resource_types.authorization_locks
   body = merge(each.value.body, {
     properties = merge(
       {
@@ -144,6 +148,7 @@ resource "azapi_resource" "private_endpoint_locks" {
       }
     )
   })
+  ignore_body_changes = length(var.ignore_body_changes.authorization_locks) > 0 ? var.ignore_body_changes.authorization_locks : null
 
   depends_on = [
     azapi_resource.private_dns_zone_groups,
