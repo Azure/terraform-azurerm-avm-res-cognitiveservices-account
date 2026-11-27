@@ -29,7 +29,7 @@ locals {
 
 module "private_endpoint_interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.9.0"
+  version = "0.10.1"
 
   location = var.location
   # Disable other interfaces - only using private endpoints
