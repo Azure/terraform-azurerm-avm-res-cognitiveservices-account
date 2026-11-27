@@ -29,13 +29,13 @@ locals {
 
 module "private_endpoint_interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.9.0"
+  version = "0.10.1"
 
-  location = var.location
   # Disable other interfaces - only using private endpoints
   customer_managed_key = null
   diagnostic_settings  = null
   enable_telemetry     = var.enable_telemetry
+  location             = var.location
   lock                 = null
   managed_identities   = null
   private_endpoints = { for k, v in local.private_endpoints_with_nic : k => merge(v, {
