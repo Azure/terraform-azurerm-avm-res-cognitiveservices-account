@@ -1161,7 +1161,7 @@ Version:
 
 Source: Azure/avm-utl-interfaces/azure
 
-Version: 0.9.0
+Version: 0.10.1
 
 ### <a name="module_project_connection"></a> [project\_connection](#module\_project\_connection)
 
